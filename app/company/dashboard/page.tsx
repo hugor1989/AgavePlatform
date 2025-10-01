@@ -1,8 +1,13 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Play, MapPin } from "lucide-react"
+import { Card, CardContent} from "@/components/ui/card"
+import { Play, MapPin, Calendar, Clock, Camera, Share2 } from "lucide-react"
 import { CompanyLayout } from "@/components/company-layout"
+import { Button } from "@/components/ui/button"
+import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
+
+
 
 export default function CompanyDashboard() {
   // Datos de ejemplo para historias de jima
@@ -71,49 +76,160 @@ export default function CompanyDashboard() {
       <div className="min-w-0 overflow-x-hidden">
         <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
           {/* Feed de Historias de Jima */}
-          {jimaStories.map((story) => (
-            <Card key={story.id} className="overflow-hidden bg-white shadow-sm border border-gray-200">
-              {/* Header del post */}
-              <div className="p-4 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-teal-600 font-semibold text-sm">A</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{story.author}</h3>
-                      <span className="text-gray-500 text-xs sm:text-sm">•</span>
-                      <span className="text-gray-500 text-xs sm:text-sm">{formatTimeAgo(story.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                      <span className="text-gray-500 text-xs sm:text-sm break-words">{story.location}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contenido del post */}
-              <div className="px-4 sm:px-6 pb-4">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 break-words leading-tight">
-                  {story.title}
-                </h2>
-                <p className="text-gray-700 text-sm sm:text-base break-words leading-relaxed">{story.description}</p>
-              </div>
-
-              {/* Video */}
-              <div className="relative">
-                <div className="aspect-video bg-gray-200 flex items-center justify-center relative">
+         <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="relative">
+             <div className="aspect-video bg-gray-200 flex items-center justify-center relative">
                   <Play className="h-12 w-12 sm:h-16 sm:w-16 text-white bg-black bg-opacity-50 rounded-full p-3 sm:p-4 hover:bg-opacity-70 transition-all cursor-pointer" />
 
                   {/* Duración del video */}
                   <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                    {story.duration}
+                    5
+                  </div>
+                </div>
+            </div>
+
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <h3 className="font-semibold text-lg text-gray-900">HUERTA LOS MOLINOS</h3>
+                <p className="text-sm text-gray-500">#123455</p>
+              </div>
+
+              <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+                <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                <span className="text-sm font-medium text-gray-900">TEQUILA</span>
+              </div>
+
+              <div className="text-center py-2">
+                <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
+                <span className="text-2xl font-bold text-blue-600">400</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Estado</p>
+                    <p className="text-sm font-medium text-gray-900">JALISCO</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm text-gray-500">Municipio</p>
+                    <p className="text-sm font-medium text-gray-900">AMATITAN</p>
                   </div>
                 </div>
               </div>
-            </Card>
-          ))}
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Año</p>
+                    <p className="text-sm font-medium text-gray-900">2009</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Edad</p>
+                    <p className="text-sm font-medium text-gray-900">2 años</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-700 font-medium">Ubicación</p>
+                    <p className="text-sm font-mono text-green-800">20.8818, -103.8370</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+                    <Share2 className="w-4 h-4 text-green-700" />
+                  </Button>
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="relative">
+             <div className="aspect-video bg-gray-200 flex items-center justify-center relative">
+                  <Play className="h-12 w-12 sm:h-16 sm:w-16 text-white bg-black bg-opacity-50 rounded-full p-3 sm:p-4 hover:bg-opacity-70 transition-all cursor-pointer" />
+
+                  {/* Duración del video */}
+                  <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                    5
+                  </div>
+                </div>
+            </div>
+
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <h3 className="font-semibold text-lg text-gray-900">HUERTA LOS MOLINOS</h3>
+                <p className="text-sm text-gray-500">#123455</p>
+              </div>
+
+              <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+                <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                <span className="text-sm font-medium text-gray-900">TEQUILA</span>
+              </div>
+
+              <div className="text-center py-2">
+                <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
+                <span className="text-2xl font-bold text-blue-600">400</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-gray-500">Estado</p>
+                    <p className="text-sm font-medium text-gray-900">JALISCO</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full mt-2"></div>
+                  <div>
+                    <p className="text-sm text-gray-500">Municipio</p>
+                    <p className="text-sm font-medium text-gray-900">AMATITAN</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Año</p>
+                    <p className="text-sm font-medium text-gray-900">2009</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Edad</p>
+                    <p className="text-sm font-medium text-gray-900">2 años</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-700 font-medium">Ubicación</p>
+                    <p className="text-sm font-mono text-green-800">20.8818, -103.8370</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+                    <Share2 className="w-4 h-4 text-green-700" />
+                  </Button>
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
 
           {/* Indicador de fin del feed */}
           <div className="text-center py-8">
