@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import {
   Search,
   Calendar,
@@ -121,6 +121,76 @@ export default function FarmerSoldPage() {
         paymentDetails: "Pago quincenal por viajes jimados, liquidación inmediata al entregar en báscula",
         logistics: "La empresa se encarga de toda la logística desde el corte hasta la entrega en fábrica",
       },
+      jimaSchedule: {
+      totalPhases: 2,
+      completedPhases: 2,
+      inProgressPhases: 0,
+      scheduledPhases: 0,
+      weeklySchedule: [
+        {
+          week: "Semana 1 (Feb 1-7, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-01", trips: 5 },
+            { day: "Martes", date: "2024-02-02", trips: 4 },
+            { day: "Miércoles", date: "2024-02-03", trips: 6 },
+            { day: "Jueves", date: "2024-02-04", trips: 3 },
+            { day: "Viernes", date: "2024-02-05", trips: 5 },
+            { day: "Sábado", date: "2024-02-06", trips: 2 },
+            { day: "Domingo", date: "2024-02-07", trips: 0 },
+          ],
+          totalTrips: 25,
+          status: "completed",
+        },
+        {
+          week: "Semana 2 (Feb 8-14, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-08", trips: 4 },
+            { day: "Martes", date: "2024-02-09", trips: 5 },
+            { day: "Miércoles", date: "2024-02-10", trips: 4 },
+            { day: "Jueves", date: "2024-02-11", trips: 6 },
+            { day: "Viernes", date: "2024-02-12", trips: 3 },
+            { day: "Sábado", date: "2024-02-13", trips: 2 },
+            { day: "Domingo", date: "2024-02-14", trips: 1 },
+          ],
+          totalTrips: 25,
+          status: "in_progress",
+        },
+        {
+          week: "Semana 3 (Feb 15-21, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-15", trips: 5 },
+            { day: "Martes", date: "2024-02-16", trips: 4 },
+            { day: "Miércoles", date: "2024-02-17", trips: 5 },
+            { day: "Jueves", date: "2024-02-18", trips: 4 },
+            { day: "Viernes", date: "2024-02-19", trips: 6 },
+            { day: "Sábado", date: "2024-02-20", trips: 3 },
+            { day: "Domingo", date: "2024-02-21", trips: 0 },
+          ],
+          totalTrips: 27,
+          status: "scheduled",
+        },
+      ],
+      guidePhotos: [
+        {
+          id: 1,
+          title: "Entrada Principal",
+          url: "/agave-field-plantation.png",
+          description: "Acceso principal a la huerta desde carretera",
+        },
+        {
+          id: 2,
+          title: "Punto de Referencia",
+          url: "/placeholder-n4bzz.png",
+          description: "Casa del agricultor como punto de referencia",
+        },
+        {
+          id: 3,
+          title: "Área de Carga",
+          url: "/agave-field-plantation.png",
+          description: "Zona designada para carga de camiones",
+        },
+      ],
+    },
     },
     {
       id: "VND-2024-002",
@@ -159,6 +229,76 @@ export default function FarmerSoldPage() {
         paymentDetails: "Pago semanal por viajes jimados, con adelanto del 20% al iniciar",
         logistics: "Agricultor entrega agave puesto en fábrica, empresa proporciona transporte",
       },
+      jimaSchedule: {
+      totalPhases: 2,
+      completedPhases: 2,
+      inProgressPhases: 0,
+      scheduledPhases: 0,
+      weeklySchedule: [
+        {
+          week: "Semana 1 (Feb 1-7, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-01", trips: 5 },
+            { day: "Martes", date: "2024-02-02", trips: 4 },
+            { day: "Miércoles", date: "2024-02-03", trips: 6 },
+            { day: "Jueves", date: "2024-02-04", trips: 3 },
+            { day: "Viernes", date: "2024-02-05", trips: 5 },
+            { day: "Sábado", date: "2024-02-06", trips: 2 },
+            { day: "Domingo", date: "2024-02-07", trips: 0 },
+          ],
+          totalTrips: 25,
+          status: "completed",
+        },
+        {
+          week: "Semana 2 (Feb 8-14, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-08", trips: 4 },
+            { day: "Martes", date: "2024-02-09", trips: 5 },
+            { day: "Miércoles", date: "2024-02-10", trips: 4 },
+            { day: "Jueves", date: "2024-02-11", trips: 6 },
+            { day: "Viernes", date: "2024-02-12", trips: 3 },
+            { day: "Sábado", date: "2024-02-13", trips: 2 },
+            { day: "Domingo", date: "2024-02-14", trips: 1 },
+          ],
+          totalTrips: 25,
+          status: "in_progress",
+        },
+        {
+          week: "Semana 3 (Feb 15-21, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-15", trips: 5 },
+            { day: "Martes", date: "2024-02-16", trips: 4 },
+            { day: "Miércoles", date: "2024-02-17", trips: 5 },
+            { day: "Jueves", date: "2024-02-18", trips: 4 },
+            { day: "Viernes", date: "2024-02-19", trips: 6 },
+            { day: "Sábado", date: "2024-02-20", trips: 3 },
+            { day: "Domingo", date: "2024-02-21", trips: 0 },
+          ],
+          totalTrips: 27,
+          status: "scheduled",
+        },
+      ],
+      guidePhotos: [
+        {
+          id: 1,
+          title: "Entrada Principal",
+          url: "/agave-field-plantation.png",
+          description: "Acceso principal a la huerta desde carretera",
+        },
+        {
+          id: 2,
+          title: "Punto de Referencia",
+          url: "/placeholder-n4bzz.png",
+          description: "Casa del agricultor como punto de referencia",
+        },
+        {
+          id: 3,
+          title: "Área de Carga",
+          url: "/agave-field-plantation.png",
+          description: "Zona designada para carga de camiones",
+        },
+      ],
+    },
     },
     {
       id: "VND-2023-015",
@@ -197,6 +337,76 @@ export default function FarmerSoldPage() {
         paymentDetails: "Pago mensual por viajes jimados, bonificación por calidad superior",
         logistics: "Empresa se encarga de toda la logística, incluye seguro de transporte",
       },
+      jimaSchedule: {
+      totalPhases: 2,
+      completedPhases: 2,
+      inProgressPhases: 0,
+      scheduledPhases: 0,
+      weeklySchedule: [
+        {
+          week: "Semana 1 (Feb 1-7, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-01", trips: 5 },
+            { day: "Martes", date: "2024-02-02", trips: 4 },
+            { day: "Miércoles", date: "2024-02-03", trips: 6 },
+            { day: "Jueves", date: "2024-02-04", trips: 3 },
+            { day: "Viernes", date: "2024-02-05", trips: 5 },
+            { day: "Sábado", date: "2024-02-06", trips: 2 },
+            { day: "Domingo", date: "2024-02-07", trips: 0 },
+          ],
+          totalTrips: 25,
+          status: "completed",
+        },
+        {
+          week: "Semana 2 (Feb 8-14, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-08", trips: 4 },
+            { day: "Martes", date: "2024-02-09", trips: 5 },
+            { day: "Miércoles", date: "2024-02-10", trips: 4 },
+            { day: "Jueves", date: "2024-02-11", trips: 6 },
+            { day: "Viernes", date: "2024-02-12", trips: 3 },
+            { day: "Sábado", date: "2024-02-13", trips: 2 },
+            { day: "Domingo", date: "2024-02-14", trips: 1 },
+          ],
+          totalTrips: 25,
+          status: "in_progress",
+        },
+        {
+          week: "Semana 3 (Feb 15-21, 2024)",
+          days: [
+            { day: "Lunes", date: "2024-02-15", trips: 5 },
+            { day: "Martes", date: "2024-02-16", trips: 4 },
+            { day: "Miércoles", date: "2024-02-17", trips: 5 },
+            { day: "Jueves", date: "2024-02-18", trips: 4 },
+            { day: "Viernes", date: "2024-02-19", trips: 6 },
+            { day: "Sábado", date: "2024-02-20", trips: 3 },
+            { day: "Domingo", date: "2024-02-21", trips: 0 },
+          ],
+          totalTrips: 27,
+          status: "scheduled",
+        },
+      ],
+      guidePhotos: [
+        {
+          id: 1,
+          title: "Entrada Principal",
+          url: "/agave-field-plantation.png",
+          description: "Acceso principal a la huerta desde carretera",
+        },
+        {
+          id: 2,
+          title: "Punto de Referencia",
+          url: "/placeholder-n4bzz.png",
+          description: "Casa del agricultor como punto de referencia",
+        },
+        {
+          id: 3,
+          title: "Área de Carga",
+          url: "/agave-field-plantation.png",
+          description: "Zona designada para carga de camiones",
+        },
+      ],
+    },
     },
   ]
 
@@ -216,10 +426,34 @@ export default function FarmerSoldPage() {
     console.log("Ver huerta:", sale.name)
   }
 
+   const getPhaseStatusText = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "Completada"
+      case "in_progress":
+        return "En Progreso"
+      case "scheduled":
+        return "Programada"
+      default:
+        return status
+    }
+  }
   const handleIdPhoto = (sale: any) => {
     console.log("ID Foto para huerta:", sale.name)
   }
 
+  const getPhaseStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800"
+      case "in_progress":
+        return "bg-blue-100 text-blue-800"
+      case "scheduled":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
   const handleViewSchedule = (sale: any) => {
     setSelectedSale(sale)
     setShowScheduleDialog(true)
@@ -244,6 +478,14 @@ export default function FarmerSoldPage() {
       month: "short",
       day: "numeric",
     })
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+      minimumFractionDigits: 0,
+    }).format(amount)
   }
 
   return (
@@ -494,6 +736,99 @@ export default function FarmerSoldPage() {
           )}
         </DialogContent>
       </Dialog>
+
+       <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Programa de Jimas</DialogTitle>
+              <DialogDescription>
+                {selectedSale?.name} - {selectedSale?.companyName}
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedSale && (
+              <div className="space-y-6 py-4">
+                {/* Información básica de la huerta */}
+                <div className="border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-medium text-gray-900 mb-4">Información de la Huerta</h4>
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Nombre:</span>
+                      <span className="text-gray-900">{selectedSale.name}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Empresa:</span>
+                      <span className="text-gray-900">{selectedSale.companyName}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Total Plantas:</span>
+                      <span className="text-gray-900">{selectedSale.plants.toLocaleString()}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Precio de Venta:</span>
+                      <span className="text-green-600 font-semibold">{formatCurrency(selectedSale.salePrice)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Programación Semanal */}
+                <div className="border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-medium text-gray-900 mb-4">Programación Semanal de Viajes</h4>
+                  <div className="space-y-6">
+                    {selectedSale.jimaSchedule.weeklySchedule?.map((week: any, weekIndex: number) => (
+                      <div key={weekIndex} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-4">
+                          <h5 className="font-medium text-gray-900">{week.week}</h5>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getPhaseStatusColor(week.status)}>
+                              {getPhaseStatusText(week.status)}
+                            </Badge>
+                            <span className="text-sm font-semibold text-blue-600">Total: {week.totalTrips} viajes</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                          {week.days.map((day: any, dayIndex: number) => (
+                            <div key={dayIndex} className="text-center p-3 bg-white rounded border">
+                              <div className="text-xs font-medium text-gray-600 mb-1">{day.day}</div>
+                              <div className="text-xs text-gray-500 mb-2">{formatDate(day.date)}</div>
+                              <div
+                                className={`text-2xl font-bold ${day.trips > 0 ? "text-green-600" : "text-gray-400"}`}
+                              >
+                                {day.trips}
+                              </div>
+                              <div className="text-xs text-gray-500">viajes</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fotos de Guías */}
+                <div className="border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-medium text-gray-900 mb-4">Fotos de Guías para la Empresa</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedSale.jimaSchedule.guidePhotos?.map((photo: any) => (
+                      <div key={photo.id} className="bg-gray-50 rounded-lg overflow-hidden">
+                        <img
+                          src={photo.url || "/placeholder.svg"}
+                          alt={photo.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="p-3">
+                          <h6 className="font-medium text-gray-900 text-sm mb-1">{photo.title}</h6>
+                          <p className="text-xs text-gray-600">{photo.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
     </div>
   )
 }
