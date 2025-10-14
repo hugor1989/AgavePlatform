@@ -332,7 +332,7 @@ const mockSoldHuertas = [
   },
 ]
 
-export default function AdminHuertasVendidasPage() {
+export default function AdminJimasTerminadasPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCompany, setSelectedCompany] = useState<string>("all")
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
@@ -459,14 +459,13 @@ export default function AdminHuertasVendidasPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Huertas Vendidas</h1>
-            <p className="text-gray-600">Gestiona las huertas vendidas y supervisa las jimas programadas</p>
+            <h1 className="text-2xl font-bold text-gray-900">Jimas Terminadas</h1>
           </div>
         </div>
 
         {/* Búsqueda y filtros */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+          {/* <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Buscar por huerta, empresa o identificador..."
@@ -474,8 +473,8 @@ export default function AdminHuertasVendidasPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
-          </div>
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+          </div> */}
+          {/* <Select value={selectedCompany} onValueChange={setSelectedCompany}>
             <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filtrar por empresa" />
             </SelectTrigger>
@@ -487,7 +486,7 @@ export default function AdminHuertasVendidasPage() {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
 
         {/* Grid de huertas vendidas */}
@@ -630,17 +629,7 @@ export default function AdminHuertasVendidasPage() {
                       <Camera className="h-4 w-4 mr-1" />
                       Ver Id Foto
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        // Función para ver ID Foto
-                        toast.info("Funcionalidad de Ver ID Foto en desarrollo")
-                      }}
-                      className="w-full bg-green-600 text-white hover:bg-orange-600"
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Terminar Jima
-                    </Button>
+                    
                   </div>
                 </div>
               </div>

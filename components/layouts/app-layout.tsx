@@ -52,6 +52,7 @@ const NAVIGATION: Record<LayoutType, { name: string; href: string; icon: any }[]
     { name: "Huertas", href: "/admin/huertas", icon: Sprout },
     { name: "Ofertas", href: "/admin/ofertas", icon: DollarSign },
     { name: "Huertas Vendidas", href: "/admin/huertas-vendidas", icon: CheckCircle },
+    { name: "Jimas Terminada", href: "/admin/jimas-terminadas", icon: CheckCircle },
     { name: "Configuración", href: "/admin/settings", icon: Settings },
   ],
   company: [
