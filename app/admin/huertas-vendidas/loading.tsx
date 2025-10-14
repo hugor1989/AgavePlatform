@@ -2,9 +2,11 @@ import { AdminLayout } from "@/components/admin-layout"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+import { AppLayout } from "@/components/layouts/app-layout"
+
 export default function AdminHuertasVendidasLoading() {
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header Skeleton */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -78,6 +80,6 @@ export default function AdminHuertasVendidasLoading() {
           ))}
         </div>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

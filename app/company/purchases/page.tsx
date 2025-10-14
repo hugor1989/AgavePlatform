@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { MapPin, CalendarIcon, Clock, Camera, Share2, FileText, Eye, Download } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 const compras = [
   {
@@ -211,7 +212,7 @@ export default function CompanyPurchasesPage() {
   const weekDays = getCurrentWeekDays()
 
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mis Compras</h1>
@@ -643,6 +644,6 @@ export default function CompanyPurchasesPage() {
           ))}
         </div>
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

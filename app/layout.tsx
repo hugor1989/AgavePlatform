@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from '@/hooks/useAuth' // 👈 importa tu AuthProvider
+
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -111,9 +113,13 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          {children}
-          <Toaster />
+          {/* ✅ Aquí envolvemos todo dentro del AuthProvider */}
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
+        
       </body>
     </html>
   )

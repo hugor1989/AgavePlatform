@@ -21,6 +21,7 @@ import {
   Building,
 } from "lucide-react"
 import { CompanyLayout } from "@/components/company-layout"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 // Icono de Agave personalizado
 const AgaveIcon = ({ className }: { className?: string }) => (
@@ -360,7 +361,7 @@ export default function CompanyNegotiations() {
   )
 
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">
           <div className="space-y-4 sm:space-y-6">
@@ -443,6 +444,6 @@ export default function CompanyNegotiations() {
           </div>
         </div>
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

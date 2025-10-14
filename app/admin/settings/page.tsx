@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { AdminLayout } from "@/components/admin-layout"
 import { Settings, Mail } from "lucide-react"
+import { AppLayout } from "@/components/layouts/app-layout"
+
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState({
@@ -33,7 +35,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -167,6 +169,6 @@ export default function AdminSettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

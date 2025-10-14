@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { CompanyLayout } from "@/components/company-layout"
 import { Building2, Mail, Save, Edit, Camera } from "lucide-react"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 // Icono de Agave con el SVG proporcionado
 const AgaveIcon = ({ className }: { className?: string }) => (
@@ -94,7 +95,7 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -345,6 +346,6 @@ export default function CompanyProfilePage() {
           </CardContent>
         </Card>
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

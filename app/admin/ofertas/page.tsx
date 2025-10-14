@@ -33,6 +33,7 @@ import {
   User,
 } from "lucide-react"
 import { toast } from "sonner"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 // Datos simulados de ofertas
 const mockOffers = [
@@ -330,7 +331,7 @@ export default function AdminOfertasPage() {
   const acceptedOffers = offers.filter((o) => o.status === "accepted").length
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="min-w-0 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* Header */}
@@ -681,6 +682,6 @@ export default function AdminOfertasPage() {
           </Dialog>
         </div>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

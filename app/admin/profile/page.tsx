@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Mail, MapPin, Calendar, Shield, Key, Activity, Save, Camera, Eye, EyeOff } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 export default function AdminProfilePage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -109,7 +110,7 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -375,6 +376,6 @@ export default function AdminProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

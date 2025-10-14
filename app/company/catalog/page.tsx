@@ -15,7 +15,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { CompanyLayout } from "@/components/company-layout"
-import { Search, MapPin, Calendar, Clock, Share2, Camera, DollarSign } from "lucide-react"
+import { AppLayout } from "@/components/layouts/app-layout"
+
+import { Search, 
+         MapPin, 
+         Calendar, 
+         Clock, 
+         Share2, 
+         Camera, 
+         DollarSign } from "lucide-react"
 import Image from "next/image"
 
 // Icono de Agave con el SVG proporcionado
@@ -171,7 +179,7 @@ export default function CompanyCatalogPage() {
   }
 
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -476,6 +484,6 @@ export default function CompanyCatalogPage() {
           </Card>
         )}
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

@@ -41,6 +41,9 @@ import {
 } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
 
+import { AppLayout } from "@/components/layouts/app-layout"
+
+
 export default function AdminCompaniesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -192,7 +195,7 @@ export default function AdminCompaniesPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -483,6 +486,6 @@ export default function AdminCompaniesPage() {
           </Dialog>
         )}
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

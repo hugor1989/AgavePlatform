@@ -1,10 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CompanyLayout } from "@/components/company-layout"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 export default function CompanyCatalogLoading() {
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="space-y-6">
         {/* Header Skeleton */}
         <div>
@@ -62,6 +63,6 @@ export default function CompanyCatalogLoading() {
           ))}
         </div>
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

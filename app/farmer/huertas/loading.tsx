@@ -1,10 +1,11 @@
 import { FarmerLayout } from "@/components/farmer-layout"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 export default function Loading() {
   return (
-    <FarmerLayout>
+    <AppLayout type="farmer">
       <div className="space-y-6">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between">
@@ -76,6 +77,6 @@ export default function Loading() {
           ))}
         </div>
       </div>
-    </FarmerLayout>
+    </AppLayout>
   )
 }

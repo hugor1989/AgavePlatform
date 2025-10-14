@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Building2, Calendar, Eye, MapPin, Clock, Leaf, Share2, Camera } from "lucide-react"
 import { toast } from "sonner"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 // Datos simulados de huertas vendidas
 const mockSoldHuertas = [
@@ -453,7 +454,7 @@ export default function AdminHuertasVendidasPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -810,6 +811,6 @@ export default function AdminHuertasVendidasPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

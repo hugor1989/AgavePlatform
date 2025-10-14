@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Search, Plus, MoreHorizontal, Eye, Edit, Trash2, User, Building2, UserCheck } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
+import { AppLayout } from "@/components/layouts/app-layout"
+
 
 // Datos simulados de usuarios
 const users = [
@@ -126,7 +128,7 @@ export default function UsersPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -375,6 +377,6 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }
