@@ -101,37 +101,6 @@ const mockOffers = [
     },
   },
   {
-    id: 3,
-    huertaId: 3,
-    huertaName: "Agavera San Miguel",
-    companyId: 3,
-    companyName: "Destilería Tradicional",
-    companyContact: "ventas@destileriatradicional.mx",
-    farmerName: "Carlos Rodríguez Mendoza",
-    farmerUniqueId: "1707345678",
-    farmerEmail: "carlos.rodriguez@email.com",
-    farmerPhone: "+52 33 3456 7890",
-    amount: 650000,
-    originalAmount: 650000,
-    status: "accepted",
-    createdAt: "2024-01-12T16:45:00Z",
-    updatedAt: "2024-01-17T11:30:00Z",
-    message: "Excelente huerta joven con gran potencial. Precio justo para ambas partes.",
-    farmerNotified: true,
-    farmerAmount: 585000,
-    adminCommission: 39000,
-    adminExpenses: 26000,
-    offerDetails: {
-      precio: 650000,
-      cmJima: 12,
-      mesesFinanciado: 6,
-      fechaMesJima: "Febrero 2025",
-      kilosMinimos: 300,
-      pagosViajes: "Pago al contado por cada viaje",
-      logistica: "La fábrica recoge el agave en campo",
-    },
-  },
-  {
     id: 4,
     huertaId: 1,
     huertaName: "Huerta Los Altos Premium",
@@ -440,65 +409,119 @@ export default function AdminOfertasPage() {
                       {/* Contenido principal */}
                       <div className="p-4 sm:p-6 space-y-4">
                         {/* Información de la oferta */}
-                        <div className="bg-blue-50 rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-3">
+                        <div className="bg-blue-50 rounded-lg p-6">
+                          <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
                             <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                            <h4 className="font-medium text-gray-900">Información de la Oferta</h4>
-                          </div>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Precio $:</span>
-                              <span className="font-bold text-blue-600 text-lg break-all">
-                                {formatCurrency(offer.offerDetails?.precio || offer.amount)}
-                              </span>
+                            Información de la Oferta
+                          </h4>
+
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="precio">Precio $ *</Label>
+                              <Input
+                                id="precio"
+                                type="number"
+                                readOnly
+                                placeholder="0"
+                                value={offer.offerDetails?.precio || offer.amount || ""}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Cm de Jima:</span>
-                              <span className="break-all">{offer.offerDetails?.cmJima || "No especificado"}</span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="cm-jima">Cm de Jima *</Label>
+                              <Input
+                                id="cm-jima"
+                                type="number"
+                                placeholder="Centímetros"
+                                readOnly
+                                value={offer.offerDetails?.cmJima || ""}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Meses Financiado:</span>
-                              <span className="break-all">
-                                {offer.offerDetails?.mesesFinanciado || "No especificado"}
-                              </span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="meses-financiado">Meses financiado *</Label>
+                              <Input
+                                id="meses-financiado"
+                                type="number"
+                                placeholder="Número de meses"
+                                readOnly
+                                value={offer.offerDetails?.mesesFinanciado || ""}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Fecha de Mes de Jima:</span>
-                              <span className="break-all">{offer.offerDetails?.fechaMesJima || "No especificado"}</span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
+                              <Input
+                                id="fecha-jima"
+                                type="text"
+                                readOnly
+                                placeholder="Ej. Marzo 2025"
+                                value={offer.offerDetails?.fechaMesJima || ""}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Se Jimará a Partir de:</span>
-                              <span className="break-all">
-                                {offer.offerDetails?.kilosMinimos || "No especificado"} kilos para arriba
-                              </span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
+                              <Input
+                                id="kilos-minimo"
+                                type="number"
+                                placeholder="Kilos mínimos"
+                                readOnly
+                                value={offer.offerDetails?.kilosMinimos || ""}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Cómo Serían los Pagos de Viajes Jimados:</span>
-                              <span className="break-all">{offer.offerDetails?.pagosViajes || "No especificado"}</span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
+                              <textarea
+                                id="pagos-viajes"
+                                placeholder="Describe cómo serían los pagos..."
+                                readOnly
+                                value={offer.offerDetails?.pagosViajes || "No especificado"}
+                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                rows={2}
+                              />
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">
-                                El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
-                              </span>
-                              <span className="break-all">{offer.offerDetails?.logistica || "No especificado"}</span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="logistica">
+                                El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
+                              </Label>
+                              <textarea
+                                id="logistica"
+                                placeholder="Especifica la logística..."
+                                readOnly
+                                value={offer.offerDetails?.logistica || "No especificado"}
+                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                rows={2}
+                              />
                             </div>
+
                             {offer.farmerAmount && (
-                              <>
-                                <hr className="my-2" />
-                                <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                                  <span className="text-gray-600">Para Agricultor:</span>
-                                  <span className="font-semibold text-green-600 break-all">
-                                    {formatCurrency(offer.farmerAmount)}
-                                  </span>
-                                </div>
-                              </>
+                              <div className="space-y-2">
+                                <Label htmlFor="farmer-amount">Para Agricultor</Label>
+                                <Input
+                                  id="farmer-amount"
+                                  type="text"
+                                  readOnly
+                                  value={formatCurrency(offer.farmerAmount)}
+                                  className="font-semibold text-green-600"
+                                />
+                              </div>
                             )}
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
-                              <span className="text-gray-600">Contacto:</span>
-                              <span className="break-all">{offer.companyContact}</span>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="contacto">Contacto</Label>
+                              <Input
+                                id="contacto"
+                                type="text"
+                                readOnly
+                                value={offer.companyContact || ""}
+                              />
                             </div>
                           </div>
                         </div>
+
 
                         {/* Información del agricultor */}
                         <div className="bg-green-50 rounded-lg p-4">
@@ -567,16 +590,7 @@ export default function AdminOfertasPage() {
                                 <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
                                 Aceptar
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRejectOffer(offer.id)}
-                                disabled={isLoading}
-                                className="text-red-600 border-red-600 hover:bg-red-50 w-full sm:w-auto"
-                              >
-                                <XCircle className="h-4 w-4 mr-2 flex-shrink-0" />
-                                Rechazar
-                              </Button>
+                            
                             </>
                           )}
 
