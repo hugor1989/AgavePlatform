@@ -5,7 +5,7 @@ export interface LoginData {
   password: string;
 }
 
-export interface Admin {
+export interface User {
   id: number;
   name: string;
   email: string;
@@ -15,9 +15,7 @@ export interface Admin {
 export interface LoginResponse {
   success: boolean;
   token: string;
-  data: {
-    admin: Admin;
-  };
+  data: User;
   message: string;
   status_code: number;
 }
@@ -28,6 +26,12 @@ export const authService = {
 
     if (response.data.success && response.data.token) {
       setAuthToken(response.data.token);
+
+      // 👇 Guardar la información del usuario
+      const { email, name, role } = response.data.data;
+      localStorage.setItem('auth_email', email);
+      localStorage.setItem('auth_name', name);
+      localStorage.setItem('auth_role', role);
     }
 
     return response.data;
@@ -43,8 +47,8 @@ export const authService = {
     }
   },
 
-  async getProfile(): Promise<Admin> {
-    const response = await api.get<{ data: Admin }>('/profile');
+  async getProfile(): Promise<User> {
+    const response = await api.get<{ data: User }>('/profile');
     return response.data.data;
   },
 

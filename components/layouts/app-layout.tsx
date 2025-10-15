@@ -93,11 +93,23 @@ export function AppLayout({ type, children }: AppLayoutProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const [email, setEmail] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+
   const navigation = NAVIGATION[type]
 
   const handleLogout = () => {
     window.location.href = "/login"
   }
+
+  React.useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setEmail(localStorage.getItem('auth_email'));
+    setName(localStorage.getItem('auth_name'));
+    setRole(localStorage.getItem('auth_role'));
+  }
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -200,9 +212,9 @@ export function AppLayout({ type, children }: AppLayoutProps) {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none capitalize">{type}</p>
+                      <p className="text-sm font-medium leading-none capitalize">{name ?? type}</p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {type}@productoresagave.com
+                        {email ?? `${type}@productoresagave.com`}
                       </p>
                     </div>
                   </DropdownMenuLabel>

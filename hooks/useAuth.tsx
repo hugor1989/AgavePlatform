@@ -1,20 +1,20 @@
 'use client'
 
 import { useState, useEffect, createContext, useContext } from 'react'
-import { authService, Admin, LoginData, LoginResponse } from '@/services/authService'
+import { authService, User, LoginData, LoginResponse } from '@/services/authService'
 
 interface AuthContextType {
-  user: Admin | null
+  user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (credentials: LoginData) => Promise<LoginResponse> // 👈 CAMBIA AQUÍ
+  login: (credentials: LoginData) => Promise<LoginResponse>  
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<Admin | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   setIsLoading(true)
   try {
     const response = await authService.login(credentials)
-    if (response?.success && response?.data?.admin) {
-      setUser(response.data.admin)
+    if (response?.success && response?.data) {
+      setUser(response.data)
       return response
     } else {
       throw new Error(response?.message || 'Login failed')
