@@ -50,6 +50,15 @@ export default function AdminCompaniesPage() {
   const [editOpen, setEditOpen] = useState(false)
 
   const [selectedCompanyEditar, setSelectedCompanyEditar] = useState<any | null>(null)
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
+
+  const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
+
+  interface FarmerCredentials {
+    email: string
+    password: string
+    unique_identifier: string | number
+  }
 
 
   const [newCompanyForm, setNewCompanyForm] = useState({
@@ -98,10 +107,21 @@ export default function AdminCompaniesPage() {
         status: 1,
       }
 
-      await companiService.create(payload)
+      const response =  await companiService.create(payload)
       toast.success("Empresa registrada exitosamente")
 
+
+      const credentials = response?.data?.credentials
+
+     await fetchCompanies()
+
+
+      // 🔹 Cierra el diálogo de registro y abre el de credenciales
       setIsAddingCompany(false)
+      setNewFarmerCredentials(credentials)
+      setIsCredentialsDialogOpen(true)
+
+
       setNewCompanyForm({
         name: "",
         email: "",
@@ -110,7 +130,7 @@ export default function AdminCompaniesPage() {
         rfc: "",
         address: "",
       })
-      await fetchCompanies()
+      
     } catch (error) {
       console.error("Error al crear empresa:", error)
       toast.error("No se pudo registrar la empresa")
@@ -326,6 +346,30 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
               </form>
             </DialogContent>
           </Dialog>
+
+          {/* 🔹 Segundo diálogo: Mostrar credenciales */}
+        <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
+              <DialogDescription>
+                Aquí están las credenciales del nuevo agricultor:
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
+              <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
+              <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
+              <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
+            </div>
+
+            <DialogFooter className="mt-6">
+              <Button onClick={() => setIsCredentialsDialogOpen(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
 
         {/* Tabla */}

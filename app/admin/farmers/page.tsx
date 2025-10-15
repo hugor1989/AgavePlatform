@@ -14,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { UserPlus, Copy, Info, CheckCircle, XCircle, Search, Eye } from "lucide-react"
@@ -26,14 +28,21 @@ export default function AdminFarmersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
+  const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
+
+  interface FarmerCredentials {
+    email: string
+    password: string
+    unique_identifier: string | number
+  }
   const [newFarmerForm, setNewFarmerForm] = useState({
     name: "",
-    email: "",
+    email: "",  
     phone: "",
     address: "",
     gender: "",
   })
-  const [newFarmerCredentials, setNewFarmerCredentials] = useState<{ username: string; password: string } | null>(null)
   const [showCredentialsAlert, setShowCredentialsAlert] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -69,25 +78,19 @@ export default function AdminFarmersPage() {
       status: 1
     }
       const response = await farmerService.create(payload)
-      // 🔹 Recargar lista desde backend
-    await fetchFarmers()
+      const credentials = response?.data?.credentials
 
-    // 🔹 Mostrar notificación o alerta
-    toast.success("Agricultor agregado correctamente", {
-      description: `${payload.full_name} se registró con éxito.`,
-      duration: 4000,
-      action: {
-        label: "Ver lista",
-        onClick: () => console.log("Ir a lista"),
-      },
-    })  
-    
-    
-    setNewFarmerCredentials(response.credentials || null)
-    setShowCredentialsAlert(true)
+      await fetchFarmers()
 
-    // 🔹 Cerrar modal y limpiar formulario
-    setIsAddDialogOpen(false)
+      toast.success("Agricultor agregado correctamente", {
+        description: `${payload.full_name} se registró con éxito.`,
+      })
+
+      // 🔹 Cierra el diálogo de registro y abre el de credenciales
+      setIsAddDialogOpen(false)
+      setNewFarmerCredentials(credentials)
+      setIsCredentialsDialogOpen(true)
+
     setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "" })
 
     } catch (err) {
@@ -176,19 +179,34 @@ export default function AdminFarmersPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* 🔹 Segundo diálogo: Mostrar credenciales */}
+        <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
+              <DialogDescription>
+                Aquí están las credenciales del nuevo agricultor:
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
+              <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
+              <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
+              <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
+            </div>
+
+            <DialogFooter className="mt-6">
+              <Button onClick={() => setIsCredentialsDialogOpen(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         </div>
 
-        {showCredentialsAlert && newFarmerCredentials && (
-          <Alert className="border-green-200 bg-green-50">
-            <Info className="h-4 w-4 text-green-600" />
-            <AlertTitle>¡Agricultor creado!</AlertTitle>
-            <AlertDescription>
-              Usuario: {newFarmerCredentials.username}
-              <br />
-              Contraseña: {newFarmerCredentials.password}
-            </AlertDescription>
-          </Alert>
-        )}
+        
+        
 
         <Card>
           <CardHeader>
