@@ -32,7 +32,7 @@ export default function LoginPage() {
 
       if (response?.success) {
         // Redirigir según el rol del usuario autenticado
-        const role = response.data?.admin?.role ?? 'admin'
+        const role = response.data?.role ?? 'admin'
 
         switch (role) {
           case 'admin':
@@ -41,7 +41,7 @@ export default function LoginPage() {
           case 'farmer':
             router.push('/farmer/dashboard')
             break
-          case 'company':
+          case 'compani':
             router.push('/company/dashboard')
             break
           default:
