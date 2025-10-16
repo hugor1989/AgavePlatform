@@ -463,31 +463,6 @@ export default function AdminJimasTerminadasPage() {
           </div>
         </div>
 
-        {/* Búsqueda y filtros */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Buscar por huerta, empresa o identificador..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div> */}
-          {/* <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Filtrar por empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las empresas</SelectItem>
-              {companies.map((company) => (
-                <SelectItem key={company} value={company}>
-                  {company}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select> */}
-        </div>
 
         {/* Grid de huertas vendidas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -499,7 +474,7 @@ export default function AdminJimasTerminadasPage() {
             filteredHuertas.map((huerta) => (
               <div
                 key={huerta.id}
-                className="bg-orange-50 border border-orange-200 rounded-lg shadow-sm overflow-hidden"
+                className="bg-red-50 border border-red-200 rounded-lg shadow-sm overflow-hidden"
               >
                 {/* Imagen con badges */}
                 <div className="relative h-48">
@@ -758,51 +733,51 @@ export default function AdminJimasTerminadasPage() {
                 </div>
 
                 {/* Información de la oferta en un solo contenedor */}
-                <div className="border border-gray-200 rounded-lg p-6 space-y-4">
+               <div className="border border-gray-200 rounded-lg p-6 space-y-4">
                   <h4 className="font-medium text-gray-900 mb-4">Detalles de la Oferta</h4>
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Precio $:</span>
-                      <span className="text-gray-900">${selectedHuerta.acceptedOffer.price} MXN/kg</span>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">Precio $:</span>
+                      <p className="text-gray-900 text-base">${selectedHuerta.acceptedOffer.price} MXN/kg</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Cm de Jima:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.jimaSize}</span>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">Cm de Jima:</span>
+                      <p className="text-gray-900 text-base">{selectedHuerta.acceptedOffer.jimaSize}</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Meses Financiado:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.financedMonths}</span>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">Meses Financiado:</span>
+                      <p className="text-gray-900 text-base">{selectedHuerta.acceptedOffer.financedMonths}</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Fecha de Mes de Jima:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.jimaDate}</span>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">Fecha de Mes de Jima:</span>
+                      <p className="text-gray-900 text-base">{selectedHuerta.acceptedOffer.jimaDate}</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Se Jimará a Partir de:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.minimumKilos} para arriba</span>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">Se Jimará a Partir de:</span>
+                      <p className="text-gray-900 text-base">{selectedHuerta.acceptedOffer.minimumKilos} para arriba</p>
                     </div>
 
                     <hr className="border-gray-200" />
 
-                    <div className="space-y-2">
-                      <span className="text-sm font-medium text-gray-600">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">
                         Cómo Serían los Pagos de Viajes Jimados:
                       </span>
-                      <p className="text-gray-900 text-sm">{selectedHuerta.acceptedOffer.paymentDetails}</p>
+                      <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.paymentDetails}</p>
                     </div>
 
                     <hr className="border-gray-200" />
 
-                    <div className="space-y-2">
-                      <span className="text-sm font-medium text-gray-600">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 block">
                         El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
                       </span>
-                      <p className="text-gray-900 text-sm">{selectedHuerta.acceptedOffer.logistics}</p>
+                      <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.logistics}</p>
                     </div>
                   </div>
                 </div>

@@ -373,7 +373,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
         </div>
 
         {/* Tabla */}
-        <Card>
+        <div className="w-full max-w-[100vw] overflow-x-hidden px-2">
+          <Card className="w-full overflow-hidden">
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -405,8 +406,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
+          <CardContent className="overflow-x-auto w-full no-scrollbar">
+            <div className="w-full min-w-[600px] table-fixed">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -485,6 +486,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
             </div>
           </CardContent>
         </Card>
+        </div>
+        
 
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogContent className="sm:max-w-md">

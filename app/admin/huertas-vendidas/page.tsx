@@ -772,50 +772,51 @@ export default function AdminHuertasVendidasPage() {
                 <div className="border border-gray-200 rounded-lg p-6 space-y-4">
                   <h4 className="font-medium text-gray-900 mb-4">Detalles de la Oferta</h4>
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Precio $:</span>
-                      <span className="text-gray-900">${selectedHuerta.acceptedOffer.price} MXN/kg</span>
+                  <div className="space-y-4">
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">Precio $:</span>
+                        <p className="text-gray-900 text-base mt-1">${selectedHuerta.acceptedOffer.price} MXN/kg</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">Cm de Jima:</span>
+                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.jimaSize}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">Meses Financiado:</span>
+                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.financedMonths}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">Fecha de Mes de Jima:</span>
+                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.jimaDate}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">Se Jimará a Partir de:</span>
+                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.minimumKilos} para arriba</p>
+                      </div>
+
+                      <hr className="border-gray-200" />
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">
+                          Cómo Serían los Pagos de Viajes Jimados:
+                        </span>
+                        <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.paymentDetails}</p>
+                      </div>
+
+                      <hr className="border-gray-200" />
+
+                      <div>
+                        <span className="text-sm font-medium text-gray-600 block">
+                          El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
+                        </span>
+                        <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.logistics}</p>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Cm de Jima:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.jimaSize}</span>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Meses Financiado:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.financedMonths}</span>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Fecha de Mes de Jima:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.jimaDate}</span>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[140px]">Se Jimará a Partir de:</span>
-                      <span className="text-gray-900">{selectedHuerta.acceptedOffer.minimumKilos} para arriba</span>
-                    </div>
-
-                    <hr className="border-gray-200" />
-
-                    <div className="space-y-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Cómo Serían los Pagos de Viajes Jimados:
-                      </span>
-                      <p className="text-gray-900 text-sm">{selectedHuerta.acceptedOffer.paymentDetails}</p>
-                    </div>
-
-                    <hr className="border-gray-200" />
-
-                    <div className="space-y-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
-                      </span>
-                      <p className="text-gray-900 text-sm">{selectedHuerta.acceptedOffer.logistics}</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
