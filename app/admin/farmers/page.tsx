@@ -20,7 +20,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { UserPlus, Copy, Info, CheckCircle, XCircle, Search, Eye } from "lucide-react"
-import { toast } from "sonner"
+import { alert } from "@/lib/alert"
 
 
 export default function AdminFarmersPage() {
@@ -31,10 +31,18 @@ export default function AdminFarmersPage() {
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
   const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
 
+  // 🔹 Estado nuevo
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState("")
+  const [verifying, setVerifying] = useState(false)
+
+
   interface FarmerCredentials {
     email: string
     password: string
     unique_identifier: string | number
+    id: string | number
+
   }
   const [newFarmerForm, setNewFarmerForm] = useState({
     name: "",
@@ -82,12 +90,12 @@ export default function AdminFarmersPage() {
 
       await fetchFarmers()
 
-      toast.success("Agricultor agregado correctamente", {
-        description: `${payload.full_name} se registró con éxito.`,
-      })
-
       // 🔹 Cierra el diálogo de registro y abre el de credenciales
       setIsAddDialogOpen(false)
+
+      //Despues se muestra el mensa
+      //await alert.success("Agricultor agregado correctamente", "Favor de validar OTP.")
+
       setNewFarmerCredentials(credentials)
       setIsCredentialsDialogOpen(true)
 
@@ -95,7 +103,9 @@ export default function AdminFarmersPage() {
 
     } catch (err) {
       console.error("Error al crear agricultor:", err)
-      alert("No se pudo crear el agricultor.")
+      
+      await alert.error("No se pudo crear el agricultor.", "")
+
     }
   }
 
@@ -181,33 +191,96 @@ export default function AdminFarmersPage() {
           </Dialog>
 
           {/* 🔹 Segundo diálogo: Mostrar credenciales */}
-        <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
-              <DialogDescription>
-                Aquí están las credenciales del nuevo agricultor:
-              </DialogDescription>
-            </DialogHeader>
+          <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
+                <DialogDescription>
+                  Aquí están las credenciales del nuevo agricultor:
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
-              <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
-              <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
-              <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
-            </div>
+              <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
+                <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
+                <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
+                <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
+              </div>
 
-            <DialogFooter className="mt-6">
-              <Button onClick={() => setIsCredentialsDialogOpen(false)}>
-                Cerrar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter className="mt-6">
+                <Button onClick={() => setIsCredentialsDialogOpen(false)}>
+                  Cerrar
+                </Button>
+                <Button
+                    onClick={() => {
+                      setIsCredentialsDialogOpen(false)
+                      setIsOtpDialogOpen(true)
+                    }}
+                    className="bg-green-600 hover:bg-green-700">
+                  Verificar Código OTP
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* 🔹 Diálogo para ingresar OTP */}
+          <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Verificar Código de Activación</DialogTitle>
+                <DialogDescription>
+                  Ingresa el código OTP que el agricultor te haya proporcionado.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <Input
+                  placeholder="Código OTP"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="text-center text-lg font-mono tracking-widest"
+                />
+              </div>
+
+              <DialogFooter className="mt-6 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOtpDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={verifying || otpCode.trim().length === 0}
+                  onClick={async () => {
+                    try {
+                      setVerifying(true)
+                      const confirmotp = {
+                        user_type: "farmer",
+                        user_id: newFarmerCredentials?.id,
+                        code: otpCode.trim()
+                        
+                      }
+                      console.log(confirmotp);
+                      const res = await farmerService.verifyCode(confirmotp)
+                      console.log(res);
+                      await alert.success("Código verificado correctamente", "El agricultor ha sido validado con éxito.")
+                      setIsOtpDialogOpen(false)
+                      await fetchFarmers()
+                    } catch (err) {
+                      console.error(err)
+                      await alert.error("Código inválido o expirado", "Por favor verifica e intenta de nuevo.")
+                    } finally {
+                      setVerifying(false)
+                    }
+                  }}
+                >
+                  {verifying ? "Verificando..." : "Verificar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
         </div>
-
-        
-        
-
         <Card>
           <CardHeader>
             <CardTitle>Listado de Agricultores</CardTitle>
