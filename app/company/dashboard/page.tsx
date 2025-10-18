@@ -2,7 +2,6 @@
 
 import { Card, CardContent} from "@/components/ui/card"
 import { Play, MapPin, Calendar, Clock, Camera, Share2 } from "lucide-react"
-import { CompanyLayout } from "@/components/company-layout"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
