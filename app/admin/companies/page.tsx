@@ -38,13 +38,14 @@ import {
   XCircle,
 } from "lucide-react"
 import { AppLayout } from "@/components/layouts/app-layout"
-import { toast } from "sonner"
+import { alert } from "@/lib/alert"
 
 export default function AdminCompaniesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
   const [isAddingCompany, setIsAddingCompany] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditingCompany, setIsEditingCompany] = useState(false)
   const [companies, setCompanies] = useState<any[]>([])
   const [editOpen, setEditOpen] = useState(false)
@@ -54,10 +55,15 @@ export default function AdminCompaniesPage() {
 
   const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
 
+  //Estado nuevo
+    const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
+    const [otpCode, setOtpCode] = useState("")
+    const [verifying, setVerifying] = useState(false)
+
   interface FarmerCredentials {
     email: string
     password: string
-    unique_identifier: string | number
+    id: string | number
   }
 
 
@@ -70,7 +76,7 @@ export default function AdminCompaniesPage() {
     address: "",
   })
 
-  // 🔹 Obtener lista de empresas desde el servicio
+  //Obtener lista de empresas desde el servicio
   const fetchCompanies = async () => {
     try {
       const data = await companiService.getAll()
@@ -84,7 +90,8 @@ export default function AdminCompaniesPage() {
       setCompanies(mapped)
     } catch (error) {
       console.error("Error al obtener empresas:", error)
-      toast.error("No se pudieron cargar las empresas")
+
+      await alert.error("No se pudieron cargar las empresas")
     }
   }
 
@@ -92,7 +99,7 @@ export default function AdminCompaniesPage() {
     fetchCompanies()
   }, [])
 
-  // 🔹 Agregar nueva empresa usando el servicio
+  //Agregar nueva empresa usando el servicio
   const handleAddCompany = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsAddingCompany(true)
@@ -108,7 +115,6 @@ export default function AdminCompaniesPage() {
       }
 
       const response =  await companiService.create(payload)
-      toast.success("Empresa registrada exitosamente")
 
 
       const credentials = response?.data?.credentials
@@ -116,8 +122,9 @@ export default function AdminCompaniesPage() {
      await fetchCompanies()
 
 
-      // 🔹 Cierra el diálogo de registro y abre el de credenciales
-      setIsAddingCompany(false)
+      //Cierra el diálogo de registro y abre el de credenciales
+     // el modal de creación
+    setIsAddDialogOpen(false)
       setNewFarmerCredentials(credentials)
       setIsCredentialsDialogOpen(true)
 
@@ -133,7 +140,9 @@ export default function AdminCompaniesPage() {
       
     } catch (error) {
       console.error("Error al crear empresa:", error)
-      toast.error("No se pudo registrar la empresa")
+      
+      await alert.error("No se pudo registrar la empresa", "")
+      
     } finally {
       setIsAddingCompany(false)
     }
@@ -247,7 +256,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Gestión de Empresas</h1>
             <p className="text-gray-600">Administra las empresas registradas en la plataforma</p>
           </div>
-          <Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
                 <Plus className="h-4 w-4 mr-2" />
@@ -360,16 +369,81 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
             <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
               <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
               <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
-              <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
             </div>
 
             <DialogFooter className="mt-6">
               <Button onClick={() => setIsCredentialsDialogOpen(false)}>
                 Cerrar
               </Button>
+              <Button
+                    onClick={() => {
+                      setIsCredentialsDialogOpen(false)
+                      setIsOtpDialogOpen(true)
+                    }}
+                    className="bg-green-600 hover:bg-green-700">
+                  Verificar Código OTP
+                </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+{/* 🔹 Diálogo para ingresar OTP */}
+          <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Verificar Código de Activación</DialogTitle>
+                <DialogDescription>
+                  Ingresa el código OTP que el agricultor te haya proporcionado.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <Input
+                  placeholder="Código OTP"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="text-center text-lg font-mono tracking-widest"
+                />
+              </div>
+
+              <DialogFooter className="mt-6 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOtpDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={verifying || otpCode.trim().length === 0}
+                  onClick={async () => {
+                    try {
+                      setVerifying(true)
+                      const confirmotp = {
+                        user_type: "company",
+                        user_id: newFarmerCredentials?.id,
+                        code: otpCode.trim()
+                        
+                      }
+                      console.log(confirmotp);
+                      const res = await companiService.verifyCode(confirmotp)
+                      console.log(res);
+                      await alert.success("Código verificado correctamente", "La empresa ha sido validado con éxito.")
+                      setIsOtpDialogOpen(false)
+                      await fetchCompanies()
+                    } catch (err) {
+                      console.error(err)
+                      await alert.error("Código inválido o expirado", "Por favor verifica e intenta de nuevo.")
+                    } finally {
+                      setVerifying(false)
+                    }
+                  }}
+                >
+                  {verifying ? "Verificando..." : "Verificar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Tabla */}

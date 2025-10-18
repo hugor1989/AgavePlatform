@@ -83,7 +83,7 @@ export default function AdminFarmersPage() {
       phone,
       address,
       gender: gender === "masculino" ? "M" : "F",
-      status: 1
+      status: 0
     }
       const response = await farmerService.create(payload)
       const credentials = response?.data?.credentials
@@ -99,7 +99,7 @@ export default function AdminFarmersPage() {
       setNewFarmerCredentials(credentials)
       setIsCredentialsDialogOpen(true)
 
-    setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "" })
+       setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "" })
 
     } catch (err) {
       console.error("Error al crear agricultor:", err)

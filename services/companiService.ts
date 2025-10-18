@@ -27,4 +27,8 @@ export const companiService = {
     const { data } = await api.delete(`/companies/delete/${id}`)
     return data
   },
+  verifyCode: async (otpData: any) => {
+    const response = await api.post("/admin/verify-code", otpData)
+    return response.data
+  },
 }

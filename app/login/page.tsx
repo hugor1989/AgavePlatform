@@ -12,6 +12,9 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { Logo } from '@/components/logo'
 import { useAuth } from '@/hooks/useAuth'
 
+import { alert } from "@/lib/alert"
+
+
 export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading: isAuthLoading } = useAuth()
@@ -29,7 +32,7 @@ export default function LoginPage() {
 
     try {
       const response = await login(formData)
-
+      console.log(response);
       if (response?.success) {
         // Redirigir según el rol del usuario autenticado
         const role = response.data?.role ?? 'admin'
@@ -49,11 +52,13 @@ export default function LoginPage() {
             break
         }
       } else {
-        setError(response?.message || 'Credenciales incorrectas. Intenta de nuevo.')
+
+        await alert.error("Credenciales incorrectas. Intenta de nuevo.", "")
+
+        //setError(response?.message || 'Credenciales incorrectas. Intenta de nuevo.')
       }
     } catch (err) {
-      console.error('Login error:', err)
-      setError('Error al iniciar sesión. Intenta de nuevo más tarde.')
+      await alert.error("Error al iniciar sesión. Intenta de nuevo más tarde.", "")
     }
   }
 
