@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Building2, Calendar, Eye, MapPin, Clock, Leaf, Share2, Camera, Check } from "lucide-react"
 import { toast } from "sonner"
 import { AppLayout } from "@/components/layouts/app-layout"
+import Image from "next/image"
 
 // Datos simulados de huertas vendidas
 const mockSoldHuertas = [
@@ -533,7 +534,7 @@ export default function AdminHuertasVendidasPage() {
 
                   {/* Tipo de agave */}
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Leaf className="h-4 w-4 text-green-600" />
+                  <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
                     <span>{huerta.type}</span>
                   </div>
 
@@ -636,7 +637,7 @@ export default function AdminHuertasVendidasPage() {
                         // Función para ver ID Foto
                         toast.info("Funcionalidad de Ver ID Foto en desarrollo")
                       }}
-                      className="w-full bg-green-600 text-white hover:bg-orange-600"
+                      className="w-full bg-red-600 text-white hover:bg-red-600"
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Terminar Jima

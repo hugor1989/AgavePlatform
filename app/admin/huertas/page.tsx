@@ -478,7 +478,7 @@ export default function AdminHuertasPage() {
                       </div>
 
                       <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                        <AgaveIcon className="w-4 h-4 text-green-600" />
+                        <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
                         <span className="text-sm font-medium text-gray-900">{huerta.type}</span>
                       </div>
 

@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
 import { useRequireAuth } from "@/hooks/useRequireAuth"
 import { useAuth } from "@/hooks/useAuth"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 interface JimaStory {
   id: number | string
@@ -35,6 +37,8 @@ interface JimaStory {
   age: string
   location: string
 }
+
+
 
 const jimaStories: JimaStory[] = [
   {
@@ -70,6 +74,10 @@ const jimaStories: JimaStory[] = [
 ]
 
 export default function AdminDashboard() {
+  const [farmers] = useState([
+    { id: 1, name: "Huerta El Rosario", uniqueId: "HUE12345" },
+    { id: 2, name: "AgroCampo del Sol", uniqueId: "AGS98765" },
+  ])
   // 🚀 Protección de ruta
   const { isLoading } = useRequireAuth()
   const { user } = useAuth()
@@ -148,39 +156,23 @@ export default function AdminDashboard() {
               </DialogHeader>
 
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    value={newStory.title}
-                    onChange={(e) =>
-                      setNewStory({ ...newStory, title: e.target.value })
-                    }
-                    placeholder="Ej: Jima en Los Altos"
-                  />
+               <div className="space-y-2">
+                  <Label htmlFor="farmer">Agricultor *</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar huerta" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       {farmers.map((farmer) => (
+                          <SelectItem key={farmer.id} value={farmer.id.toString()}>
+                            {farmer.name} - Identificador: {farmer.uniqueId}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <Label htmlFor="farmer">Agricultor</Label>
-                  <Input
-                    id="farmer"
-                    value={newStory.farmer}
-                    onChange={(e) =>
-                      setNewStory({ ...newStory, farmer: e.target.value })
-                    }
-                    placeholder="Nombre del agricultor"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Ubicación</Label>
-                  <Input
-                    id="location"
-                    value={newStory.location}
-                    onChange={(e) =>
-                      setNewStory({ ...newStory, location: e.target.value })
-                    }
-                    placeholder="Ej: Arandas, Jalisco"
-                  />
-                </div>
+                
+                
                 <div>
                   <Label htmlFor="video">Video</Label>
                   <Input
