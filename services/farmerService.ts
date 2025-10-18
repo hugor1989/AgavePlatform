@@ -32,4 +32,8 @@ export const farmerService = {
     const response = await api.post("/admin/verify-code", otpData)
     return response.data
   },
+
+    async resetPassword(payload: any) {
+    return api.post(`/farmer/reset-password`, payload)
+  }
 }

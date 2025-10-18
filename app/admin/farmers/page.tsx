@@ -16,10 +16,29 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { UserPlus, Copy, Info, CheckCircle, XCircle, Search, Eye } from "lucide-react"
+import {
+  Building2,
+  Plus,
+  Search,
+  Eye,
+  EyeOff,
+  Edit,
+  MoreHorizontal,
+  CheckCircle,
+  UserPlus,
+  XCircle,
+} from "lucide-react"
 import { alert } from "@/lib/alert"
 
 
@@ -36,6 +55,16 @@ export default function AdminFarmersPage() {
   const [otpCode, setOtpCode] = useState("")
   const [verifying, setVerifying] = useState(false)
 
+
+  const [selectedFarmer, setSelectedFarmer] = useState<any | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  // Estado y funciones para cambiar contraseña
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+    const [selectedFarmerPassword, setSelectedFarmerPassword] = useState<any | null>(null)
+    const [newPassword, setNewPassword] = useState("")
+    const [changingPassword, setChangingPassword] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
   interface FarmerCredentials {
     email: string
@@ -108,6 +137,38 @@ export default function AdminFarmersPage() {
 
     }
   }
+
+  //Cammbiar contraseña
+const handleOpenPasswordDialog = (farmer: any) => {
+  setSelectedFarmerPassword(farmer)
+  setNewPassword("")
+  setIsPasswordDialogOpen(true)
+}
+
+const handleChangePassword = async () => {
+  if (!selectedFarmerPassword) return
+
+  try {
+    setChangingPassword(true)
+    const payload = {
+      id: selectedFarmerPassword.id,
+      new_password: newPassword,
+    }
+
+    console.log(payload);
+    const res = await farmerService.resetPassword(payload)
+
+    console.log(res);
+    await alert.success("Contraseña actualizada correctamente", "El usuario podrá iniciar sesión con la nueva contraseña.")
+
+    setIsPasswordDialogOpen(false)
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error)
+    await alert.error("No se pudo actualizar la contraseña", "Verifica la conexión o intenta más tarde.")
+  } finally {
+    setChangingPassword(false)
+  }
+}
 
   const filteredFarmers = farmers.filter((farmer) => {
   const name = farmer.full_name ?? ""
@@ -280,6 +341,135 @@ export default function AdminFarmersPage() {
             </DialogContent>
           </Dialog>
 
+          <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Cambiar contraseña</DialogTitle>
+                      <DialogDescription>
+                        Ingresa una nueva contraseña para la empresa{" "}
+                        <strong>{selectedFarmerPassword?.full_name}</strong>
+                      </DialogDescription>
+                    </DialogHeader>
+          
+                    <div className="space-y-4 py-4">
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Nueva contraseña</label>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="********"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+          
+                        {/*Mensaje de ayuda */}
+                        <p className="text-xs text-gray-500">
+                          La contraseña debe tener al menos <strong>6 caracteres</strong>.
+                        </p>
+          
+                        {/*Mensaje de error opcional */}
+                        {newPassword && newPassword.length < 6 && (
+                          <p className="text-xs text-red-500">
+                            La contraseña es demasiado corta.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+          
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        disabled={newPassword.length < 6 || changingPassword}
+                        onClick={handleChangePassword}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {changingPassword ? "Guardando..." : "Guardar"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+          </Dialog>
+
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalles del Agricultor</DialogTitle>
+            <DialogDescription>Información completa del agricultor</DialogDescription>
+          </DialogHeader>
+
+          {selectedFarmer ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label>Identificador Único</label>
+                  <p className="font-medium">{selectedFarmer.unique_identifier}</p>
+                </div>
+                <div>
+                  <label>Nombre Completo</label>
+                  <p className="font-medium">{selectedFarmer.full_name}</p>
+                </div>
+                <div>
+                  <label>Usuario</label>
+                  <p className="font-medium">{selectedFarmer.email}</p>
+                </div>
+                <div>
+                  <label>Email</label>
+                  <p className="font-medium">{selectedFarmer.email}</p>
+                </div>
+                <div>
+                  <label>Teléfono</label>
+                  <p className="font-medium">{selectedFarmer.phone}</p>
+                </div>
+                <div>
+                  <label>Dirección</label>
+                  <p className="font-medium">{selectedFarmer.address}</p>
+                </div>
+                <div>
+                  <label>Sexo</label>
+                  <p className="font-medium capitalize">{selectedFarmer.gender}</p>
+                </div>
+                <div>
+                  <label>Fecha de Registro</label>
+                  <p className="font-medium">{selectedFarmer.created_at}</p>
+                </div>
+                <div>
+                  <label>Última Actividad</label>
+                  <p className="font-medium">NA</p>
+                </div>
+                <div>
+                  <label>Estado</label>
+                  <p className="font-medium capitalize">
+                    {selectedFarmer.status === 1 ? "Activo" : "Inactivo"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label>Huertas Registradas</label>
+                  <p className="font-medium">0</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-6">Cargando datos...</p>
+          )}
+        </DialogContent>
+      </Dialog>
         </div>
         <Card>
           <CardHeader>
@@ -346,72 +536,52 @@ export default function AdminFarmersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4 mr-1" />
-                              Ver
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Detalles del Agricultor</DialogTitle>
-                              <DialogDescription>Información completa del agricultor</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label>Identificador Único</label>
-                                  <p className="font-medium">{farmer.unique_identifier}</p>
-                                </div>
-                                <div>
-                                  <label>Nombre Completo</label>
-                                  <p className="font-medium">{farmer.full_name}</p>
-                                </div>
-                                <div>
-                                  <label>Usuario</label>
-                                  <p className="font-medium">{farmer.email}</p>
-                                </div>
-                                <div>
-                                  <label>Email</label>
-                                  <p className="font-medium">{farmer.email}</p>
-                                </div>
-                                <div>
-                                  <label>Teléfono</label>
-                                  <p className="font-medium">{farmer.phone}</p>
-                                </div>
-                                <div>
-                                  <label>Dirección</label>
-                                  <p className="font-medium">{farmer.address}</p>
-                                </div>
-                                <div>
-                                  <label>Sexo</label>
-                                  <p className="font-medium capitalize">{farmer.gender}</p>
-                                </div>
-                                <div>
-                                  <label>Fecha de Registro</label>
-                                  <p className="font-medium">{farmer.created_at}</p>
-                                </div>
-                                <div>
-                                  <label>Última Actividad</label>
-                                  <p className="font-medium">NA</p>
-                                </div>
-                                <div>
-                                  <label>Estado</label>
-                                  <p className="font-medium capitalize">
-                                    {farmer.status === 1 ? "Activo" : "Inactivo"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 gap-4">
-                                <div>
-                                  <label>Huertas Registradas</label>
-                                  <p className="font-medium">0</p>
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedFarmer(farmer)
+                                  setIsViewDialogOpen(true)
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver detalles
+                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem onClick={() => handleEditClick(farmer)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem> */}
+                            <DropdownMenuItem onClick={() => handleOpenPasswordDialog(farmer)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Cambiar contraseña
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {farmer.status === "active" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusChange(farmer.id, "inactive")
+                                }
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Desactivar
+                              </DropdownMenuItem>
+                            )}
+                            {farmer.status === "inactive" && (
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChange(farmer.id, "active")}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Activar
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}

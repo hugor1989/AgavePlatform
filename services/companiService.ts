@@ -31,4 +31,7 @@ export const companiService = {
     const response = await api.post("/admin/verify-code", otpData)
     return response.data
   },
+  async resetPassword(payload: any) {
+    return api.post(`/companies/reset-password`, payload)
+  }
 }

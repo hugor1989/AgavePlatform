@@ -32,6 +32,7 @@ import {
   Plus,
   Search,
   Eye,
+  EyeOff,
   Edit,
   MoreHorizontal,
   CheckCircle,
@@ -54,6 +55,14 @@ export default function AdminCompaniesPage() {
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
 
   const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
+
+  // Estado y funciones para cambiar contraseña
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+  const [selectedCompanyPassword, setSelectedCompanyPassword] = useState<any | null>(null)
+  const [newPassword, setNewPassword] = useState("")
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
 
   //Estado nuevo
     const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
@@ -180,6 +189,35 @@ const handleUpdateCompany = async () => {
   } catch (error) {
     console.error("Error al actualizar empresa:", error)
     toast.error("No se pudo actualizar la empresa")
+  }
+}
+
+//Cammbiar contraseña
+const handleOpenPasswordDialog = (company: any) => {
+  setSelectedCompanyPassword(company)
+  setNewPassword("")
+  setIsPasswordDialogOpen(true)
+}
+
+const handleChangePassword = async () => {
+  if (!selectedCompanyPassword) return
+
+  try {
+    setChangingPassword(true)
+    const payload = {
+      id: selectedCompanyPassword.id,
+      new_password: newPassword,
+    }
+
+    await companiService.resetPassword(payload)
+
+    await alert.success("Contraseña actualizada correctamente", "El usuario podrá iniciar sesión con la nueva contraseña.")
+    setIsPasswordDialogOpen(false)
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error)
+    await alert.error("No se pudo actualizar la contraseña", "Verifica la conexión o intenta más tarde.")
+  } finally {
+    setChangingPassword(false)
   }
 }
 
@@ -356,7 +394,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
             </DialogContent>
           </Dialog>
 
-          {/* 🔹 Segundo diálogo: Mostrar credenciales */}
+          {/*Segundo diálogo: Mostrar credenciales */}
         <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -387,7 +425,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
           </DialogContent>
         </Dialog>
 
-{/* 🔹 Diálogo para ingresar OTP */}
+          {/*Diálogo para ingresar OTP */}
           <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
@@ -530,6 +568,10 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                             <DropdownMenuItem onClick={() => handleEditClick(company)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenPasswordDialog(company)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Cambiar contraseña
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {company.status === "active" && (
@@ -727,6 +769,72 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
             </DialogContent>
           </Dialog>
         )}
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cambiar contraseña</DialogTitle>
+            <DialogDescription>
+              Ingresa una nueva contraseña para la empresa{" "}
+              <strong>{selectedCompanyPassword?.business_name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Nueva contraseña</label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="********"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+
+              {/*Mensaje de ayuda */}
+              <p className="text-xs text-gray-500">
+                La contraseña debe tener al menos <strong>6 caracteres</strong>.
+              </p>
+
+              {/*Mensaje de error opcional */}
+              {newPassword && newPassword.length < 6 && (
+                <p className="text-xs text-red-500">
+                  La contraseña es demasiado corta.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={newPassword.length < 6 || changingPassword}
+              onClick={handleChangePassword}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {changingPassword ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       </div>
     </AppLayout>
   )
