@@ -60,6 +60,7 @@ const NAVIGATION: Record<LayoutType, { name: string; href: string; icon: any }[]
     { name: "Comprar Huertas", href: "/company/catalog", icon: Search },
     { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare },
     { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
+
   ],
   farmer: [
     { name: "Historias de Jima", href: "/farmer/dashboard", icon: Home },

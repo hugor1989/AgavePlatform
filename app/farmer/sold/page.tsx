@@ -21,60 +21,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 
-// Icono de Agave con el SVG proporcionado
-const AgaveIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 512 512" fill="currentColor">
-    <path
-      fill="#91CC04"
-      d="M217.081,418.866c23.418,7.837,48.756-4.794,56.594-28.213c7.837-23.419-4.794-48.756-28.213-56.594
-      c-23.419-7.837-229.718-55.766-237.555-32.348C0.07,325.129,193.662,411.029,217.081,418.866z"
-    />
-    <path
-      fill="#85BB04"
-      d="M245.462,334.059c-14.861-4.973-103.365-26.091-168.066-34.876
-      c6.584,7.874,72.569,80.301,91.733,99.441c23.381,10.518,41.712,18.152,47.953,20.24c23.418,7.837,48.756-4.794,56.594-28.213
-      C281.512,367.235,268.881,341.897,245.462,334.059z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M294.891,418.866c-23.418,7.837-48.756-4.794-56.594-28.213
-      c-7.837-23.418,4.794-48.756,28.213-56.594c23.419-7.837,229.718-55.767,237.556-32.349
-      C511.903,325.129,318.309,411.029,294.891,418.866z"
-    />
-    <path
-      fill="#91CC04"
-      d="M434.577,299.183c-64.702,8.786-153.206,29.903-168.066,34.876
-      c-23.418,7.837-36.049,33.175-28.213,56.593c7.837,23.418,33.175,36.049,56.594,28.213c6.241-2.089,24.571-9.723,47.953-20.24
-      C362.008,379.484,427.993,307.058,434.577,299.183z"
-    />
-    <path
-      fill="#85BB04"
-      d="M198.507,350.579c10.667,22.273,37.369,31.681,59.642,21.015
-      c22.273-10.667,31.681-37.369,21.015-59.642c-10.667-22.273-119.792-203.79,142.064-193.124S187.84,328.306,198.507,350.579z"
-    />
-    <path
-      fill="#85BB04"
-      d="M319.087,350.579c-10.667,22.273-37.369,31.681-59.642,21.015
-      c-22.273-10.667-31.681-37.369-21.015-59.642c10.667-22.273,119.792-203.79,142.064-193.124
-      C402.767,129.495,329.752,328.306,319.087,350.579z"
-    />
-    <path
-      fill="#91CC04"
-      d="M214.084,326.516c-0.201,24.694,19.654,44.876,44.348,45.077
-      c24.694,0.201,44.876-19.654,45.077-44.348S285.411,91.549,260.718,91.348S214.285,301.821,214.084,326.516z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M210.663,395.976c18.87,15.93,47.081,13.547,63.011-5.323c15.93-18.87,13.547-47.081-5.323-63.011
-      c-18.87-15.93-192.895-136.646-208.825-117.776S191.793,380.046,210.663,395.976z"
-    />
-    <path
-      fill="#C2FB3B"
-      d="M301.309,395.976c-18.87,15.93-47.081,13.547-63.011-5.323c-15.930-18.87-13.547-47.081,5.323-63.011
-      c18.87-15.93,192.895-136.646,208.825-117.776C468.375,228.736,320.179,380.046,301.309,395.976z"
-    />
-  </svg>
-)
+
 
 export default function FarmerSoldPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -546,7 +493,7 @@ export default function FarmerSoldPage() {
               </div>
 
               <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                <AgaveIcon className="w-4 h-4 text-green-600" />
+                <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
                 <span className="text-sm font-medium text-gray-900">{sale.type}</span>
               </div>
 
@@ -752,21 +699,15 @@ export default function FarmerSoldPage() {
                 <div className="border border-gray-200 rounded-lg p-6">
                   <h4 className="font-medium text-gray-900 mb-4">Información de la Huerta</h4>
                   <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Nombre:</span>
-                      <span className="text-gray-900">{selectedSale.name}</span>
-                    </div>
+                    
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm font-medium text-gray-600 min-w-[120px]">Empresa:</span>
-                      <span className="text-gray-900">{selectedSale.companyName}</span>
+                      <span className="text-gray-900">PATITA</span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Total Plantas:</span>
-                      <span className="text-gray-900">{selectedSale.plants.toLocaleString()}</span>
-                    </div>
+                    
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm font-medium text-gray-600 min-w-[120px]">Precio de Venta:</span>
-                      <span className="text-green-600 font-semibold">{formatCurrency(selectedSale.salePrice)}</span>
+                      <span className="text-green-600 font-semibold">500</span>
                     </div>
                   </div>
                 </div>
