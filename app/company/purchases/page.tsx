@@ -1,4 +1,5 @@
 "use client"
+import { Calendar } from "@/components/ui/calendar";
 
 import { CompanyLayout } from "@/components/company-layout"
 import { Button } from "@/components/ui/button"
@@ -136,7 +137,10 @@ const compras = [
 ]
 
 export default function CompanyPurchasesPage() {
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [viajesPorDia, setViajesPorDia] = useState<{ [key: string]: string }>({
+  
     lunes: "",
     martes: "",
     miercoles: "",
@@ -164,6 +168,8 @@ export default function CompanyPurchasesPage() {
     const dayKeys = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"]
     const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
 
+   
+
     for (let i = 0; i < 7; i++) {
       const day = new Date(monday)
       day.setDate(monday.getDate() + i)
@@ -180,7 +186,7 @@ export default function CompanyPurchasesPage() {
     return weekDays
   }
 
-  const handleViajesChange = (dayKey: string, value: string) => {
+  const handleViajesChange1 = (dayKey: string, value: string) => {
     setViajesPorDia((prev) => ({
       ...prev,
       [dayKey]: value,
@@ -211,6 +217,12 @@ export default function CompanyPurchasesPage() {
 
   const weekDays = getCurrentWeekDays()
 
+  const handleViajesChange = (dayKey: string, value: string) => {
+      setViajesPorDia((prev) => ({
+        ...prev,
+        [dayKey]: value,
+      }));
+    };
   return (
     <AppLayout type="company">
       <div className="space-y-6">
@@ -316,10 +328,11 @@ export default function CompanyPurchasesPage() {
                         Programar Jima
                       </Button>
                     </DialogTrigger>
+
                     <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-5xl max-h-[90vh] p-0">
                       <DialogHeader className="px-6 py-4 border-b">
                         <DialogTitle className="text-center text-lg sm:text-xl">
-                          Programar Jima - Semana Actual
+                          Programar Jima
                         </DialogTitle>
                       </DialogHeader>
 
@@ -331,66 +344,60 @@ export default function CompanyPurchasesPage() {
                             Programación de Viajes
                           </h3>
 
-                          {/* Contenedor principal con scroll */}
-                          <div className="w-full overflow-x-auto">
-                            <div className="min-w-[600px]">
-                              <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
-                                <thead>
-                                  <tr className="bg-gray-50">
-                                    {weekDays.map((day) => (
-                                      <th
-                                        key={day.key}
-                                        className="px-3 py-3 text-center border-r border-gray-200 last:border-r-0"
-                                      >
-                                        <div className="space-y-1">
-                                          <p className="font-semibold text-gray-900 text-sm">{day.name}</p>
-                                          <p className="text-xs text-gray-600">
-                                            {day.date} {day.month}
-                                          </p>
-                                        </div>
-                                      </th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr className="bg-white">
-                                    {weekDays.map((day) => (
-                                      <td
-                                        key={day.key}
-                                        className="px-3 py-4 text-center border-r border-gray-200 last:border-r-0"
-                                      >
-                                        <div className="space-y-2">
-                                          <Label
-                                            htmlFor={`viajes-${day.key}`}
-                                            className="text-xs font-medium text-gray-700 block"
-                                          >
-                                            Viajes
-                                          </Label>
-                                          <Input
-                                            id={`viajes-${day.key}`}
-                                            type="number"
-                                            placeholder="0"
-                                            value={viajesPorDia[day.key]}
-                                            onChange={(e) => handleViajesChange(day.key, e.target.value)}
-                                            className="text-center text-sm h-9 w-16 mx-auto"
-                                            min="0"
-                                            max="99"
-                                          />
-                                        </div>
-                                      </td>
-                                    ))}
-                                  </tr>
-                                </tbody>
-                              </table>
+                          {/* Calendario y detalle del día */}
+                          <div className="flex flex-col sm:flex-row gap-6">
+                            {/* Calendario */}
+                            <div className="flex-1">
+                              <Calendar
+                            selected={selectedDate ?? undefined}
+                            onDayClick={(date) => setSelectedDate(date)}
+                            className="rounded-md border"
+                          />
                             </div>
-                          </div>
 
-                          {/* Indicador de scroll para móvil */}
-                          <div className="block sm:hidden text-center">
-                            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-xs">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                              <span>Desliza para ver todos los días</span>
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            {/* Información del día seleccionado */}
+                            <div className="flex-1 space-y-4 border rounded-lg p-4 bg-gray-50">
+                              {selectedDate ? (
+                                <>
+                                  <div className="text-center">
+                                    <p className="font-semibold text-gray-900 text-base capitalize">
+                                      {selectedDate.toLocaleDateString("es-MX", {
+                                        weekday: "long",
+                                        day: "numeric",
+                                        month: "short",
+                                      })}
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-2 text-center">
+                                    <Label
+                                      htmlFor="viajes"
+                                      className="text-sm font-medium text-gray-700 block"
+                                    >
+                                      Viajes
+                                    </Label>
+                                    <Input
+                                      id="viajes"
+                                      type="number"
+                                      placeholder="0"
+                                      value={viajesPorDia[selectedDate.toISOString()] || ""}
+                                      onChange={(e) =>
+                                        handleViajesChange(
+                                          selectedDate.toISOString(),
+                                          e.target.value
+                                        )
+                                      }
+                                      className="text-center text-sm h-9 w-24 mx-auto"
+                                      min="0"
+                                      max="99"
+                                    />
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center text-gray-500 text-sm">
+                                  Selecciona un día en el calendario para programar viajes
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -451,7 +458,9 @@ export default function CompanyPurchasesPage() {
                           ) : (
                             <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                              <p className="text-gray-500 text-sm">No hay guías de transporte agregadas aún</p>
+                              <p className="text-gray-500 text-sm">
+                                No hay guías de transporte agregadas aún
+                              </p>
                               <p className="text-gray-400 text-xs mt-1">
                                 Las guías aparecerán aquí cuando el admin las agregue
                               </p>
@@ -466,7 +475,7 @@ export default function CompanyPurchasesPage() {
                           </Button>
                           <Button
                             className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto"
-                            onClick={() => handleGuardarProgramacion(compra.id)}
+                            onClick={() => handleGuardarProgramacion(compra.id, viajesPorDia)}
                           >
                             Guardar Programación
                           </Button>
