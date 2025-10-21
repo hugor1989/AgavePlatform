@@ -409,117 +409,72 @@ export default function AdminOfertasPage() {
                       {/* Contenido principal */}
                       <div className="p-4 sm:p-6 space-y-4">
                         {/* Información de la oferta */}
-                        <div className="bg-blue-50 rounded-lg p-6">
+                        <div className="bg-white-50 rounded-lg p-6">
                           <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                            <DollarSign className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                            <DollarSign className="h-5 w-5 text-white-600 flex-shrink-0" />
                             Información de la Oferta
                           </h4>
 
                           <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="precio">Precio $ *</Label>
-                              <Input
-                                id="precio"
-                                type="number"
-                                readOnly
-                                placeholder="0"
-                                value={offer.offerDetails?.precio || offer.amount || ""}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="cm-jima">Cm de Jima *</Label>
-                              <Input
-                                id="cm-jima"
-                                type="number"
-                                placeholder="Centímetros"
-                                readOnly
-                                value={offer.offerDetails?.cmJima || ""}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="meses-financiado">Meses financiado *</Label>
-                              <Input
-                                id="meses-financiado"
-                                type="number"
-                                placeholder="Número de meses"
-                                readOnly
-                                value={offer.offerDetails?.mesesFinanciado || ""}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
-                              <Input
-                                id="fecha-jima"
-                                type="text"
-                                readOnly
-                                placeholder="Ej. Marzo 2025"
-                                value={offer.offerDetails?.fechaMesJima || ""}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
-                              <Input
-                                id="kilos-minimo"
-                                type="number"
-                                placeholder="Kilos mínimos"
-                                readOnly
-                                value={offer.offerDetails?.kilosMinimos || ""}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
-                              <textarea
-                                id="pagos-viajes"
-                                placeholder="Describe cómo serían los pagos..."
-                                readOnly
-                                value={offer.offerDetails?.pagosViajes || "No especificado"}
-                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                rows={2}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="logistica">
-                                El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
-                              </Label>
-                              <textarea
-                                id="logistica"
-                                placeholder="Especifica la logística..."
-                                readOnly
-                                value={offer.offerDetails?.logistica || "No especificado"}
-                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                rows={2}
-                              />
-                            </div>
-
-                            {offer.farmerAmount && (
-                              <div className="space-y-2">
-                                <Label htmlFor="farmer-amount">Para Agricultor</Label>
-                                <Input
-                                  id="farmer-amount"
-                                  type="text"
-                                  readOnly
-                                  value={formatCurrency(offer.farmerAmount)}
-                                  className="font-semibold text-green-600"
-                                />
-                              </div>
-                            )}
-
-                            <div className="space-y-2">
-                              <Label htmlFor="contacto">Contacto</Label>
-                              <Input
-                                id="contacto"
-                                type="text"
-                                readOnly
-                                value={offer.companyContact || ""}
-                              />
-                            </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="precio">Precio $ *</Label>
+                            <Input
+                              id="precio"
+                              type="number"
+                              readOnly
+                              placeholder="0"
+                              value="500"
+                            />
                           </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="cm-jima">Cm de Jima *</Label>
+                            <Input id="cm-jima" type="number" placeholder="Centímetros" readOnly value={5} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="meses-financiado">Meses financiado *</Label>
+                            <Input id="meses-financiado" type="number" placeholder="Número de meses" readOnly value={5} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
+                            <Input id="fecha-jima" type="date" readOnly value={"Marzo 2025"} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
+                            <Input id="kilos-minimo" type="number" placeholder="Kilos mínimos" readOnly value={15} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
+                            <textarea
+                              id="pagos-viajes"
+                              placeholder="Describe cómo serían los pagos..."
+                              readOnly
+                              value={"Pago contra entrega por viaje completado"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="logistica">
+                              El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
+                            </Label>
+                            <textarea
+                              id="logistica"
+                              placeholder="Especifica la logística..."
+                              readOnly
+                              value={"La fábrica se encarga de toda la logística de transporte"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
+
+                         
+                    </div>
                         </div>
 
 

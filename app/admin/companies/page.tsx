@@ -398,9 +398,9 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
         <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
+              <DialogTitle>✅ Empresa creada correctamente</DialogTitle>
               <DialogDescription>
-                Aquí están las credenciales del nuevo agricultor:
+                Aquí están las credenciales de la nueva empresa:
               </DialogDescription>
             </DialogHeader>
 
@@ -431,7 +431,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
               <DialogHeader>
                 <DialogTitle>Verificar Código de Activación</DialogTitle>
                 <DialogDescription>
-                  Ingresa el código OTP que el agricultor te haya proporcionado.
+                  Ingresa el código OTP que la empresa te haya proporcionado.
                 </DialogDescription>
               </DialogHeader>
 

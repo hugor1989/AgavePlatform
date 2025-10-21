@@ -412,56 +412,58 @@ const handleChangePassword = async () => {
           </DialogHeader>
 
           {selectedFarmer ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Datos principales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label>Identificador Único</label>
-                  <p className="font-medium">{selectedFarmer.unique_identifier}</p>
+                  <label className="text-sm text-gray-500">Identificador Único</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.unique_identifier}</p>
                 </div>
                 <div>
-                  <label>Nombre Completo</label>
-                  <p className="font-medium">{selectedFarmer.full_name}</p>
+                  <label className="text-sm text-gray-500">Nombre Completo</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.full_name}</p>
                 </div>
                 <div>
-                  <label>Usuario</label>
-                  <p className="font-medium">{selectedFarmer.email}</p>
+                  <label className="text-sm text-gray-500">Usuario</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.email}</p>
                 </div>
                 <div>
-                  <label>Email</label>
-                  <p className="font-medium">{selectedFarmer.email}</p>
+                  <label className="text-sm text-gray-500">Email</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.email}</p>
                 </div>
                 <div>
-                  <label>Teléfono</label>
-                  <p className="font-medium">{selectedFarmer.phone}</p>
+                  <label className="text-sm text-gray-500">Teléfono</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.phone}</p>
                 </div>
                 <div>
-                  <label>Dirección</label>
-                  <p className="font-medium">{selectedFarmer.address}</p>
+                  <label className="text-sm text-gray-500">Dirección</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.address}</p>
                 </div>
                 <div>
-                  <label>Sexo</label>
-                  <p className="font-medium capitalize">{selectedFarmer.gender}</p>
+                  <label className="text-sm text-gray-500">Sexo</label>
+                  <p className="font-semibold text-gray-800 capitalize">{selectedFarmer.gender}</p>
                 </div>
                 <div>
-                  <label>Fecha de Registro</label>
-                  <p className="font-medium">{selectedFarmer.created_at}</p>
+                  <label className="text-sm text-gray-500">Fecha de Registro</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.created_at}</p>
                 </div>
                 <div>
-                  <label>Última Actividad</label>
-                  <p className="font-medium">NA</p>
+                  <label className="text-sm text-gray-500">Última Actividad</label>
+                  <p className="font-semibold text-gray-800">NA</p>
                 </div>
                 <div>
-                  <label>Estado</label>
-                  <p className="font-medium capitalize">
+                  <label className="text-sm text-gray-500">Estado</label>
+                  <p className="font-semibold text-gray-800 capitalize">
                     {selectedFarmer.status === 1 ? "Activo" : "Inactivo"}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              {/* Huertas registradas */}
+              <div className="border-t pt-4">
                 <div>
-                  <label>Huertas Registradas</label>
-                  <p className="font-medium">0</p>
+                  <label className="text-sm text-gray-500">Huertas Registradas</label>
+                  <p className="font-semibold text-gray-800">0</p>
                 </div>
               </div>
             </div>

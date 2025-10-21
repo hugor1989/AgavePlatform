@@ -7,6 +7,7 @@ import { AdminLayout } from "@/components/admin-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Building2, Calendar, Eye, MapPin, Clock, Leaf, Share2, Camera, Check } from "lucide-react"
@@ -774,48 +775,64 @@ export default function AdminHuertasVendidasPage() {
                   <h4 className="font-medium text-gray-900 mb-4">Detalles de la Oferta</h4>
 
                   <div className="space-y-4">
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Precio $:</span>
-                        <p className="text-gray-900 text-base mt-1">${selectedHuerta.acceptedOffer.price} MXN/kg</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="precio">Precio $ *</Label>
+                            <Input
+                              id="precio"
+                              type="number"
+                              readOnly
+                              placeholder="0"
+                              value="500"
+                            />
+                          </div>
 
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Cm de Jima:</span>
-                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.jimaSize}</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="cm-jima">Cm de Jima *</Label>
+                            <Input id="cm-jima" type="number" placeholder="Centímetros" readOnly value={5} />
+                          </div>
 
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Meses Financiado:</span>
-                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.financedMonths}</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="meses-financiado">Meses financiado *</Label>
+                            <Input id="meses-financiado" type="number" placeholder="Número de meses" readOnly value={5} />
+                          </div>
 
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Fecha de Mes de Jima:</span>
-                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.jimaDate}</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
+                            <Input id="fecha-jima" type="date" readOnly value={"Marzo 2025"} />
+                          </div>
 
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">Se Jimará a Partir de:</span>
-                        <p className="text-gray-900 text-base mt-1">{selectedHuerta.acceptedOffer.minimumKilos} para arriba</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
+                            <Input id="kilos-minimo" type="number" placeholder="Kilos mínimos" readOnly value={15} />
+                          </div>
 
-                      <hr className="border-gray-200" />
+                          <div className="space-y-2">
+                            <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
+                            <textarea
+                              id="pagos-viajes"
+                              placeholder="Describe cómo serían los pagos..."
+                              readOnly
+                              value={"Pago contra entrega por viaje completado"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
 
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">
-                          Cómo Serían los Pagos de Viajes Jimados:
-                        </span>
-                        <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.paymentDetails}</p>
-                      </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="logistica">
+                              El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
+                            </Label>
+                            <textarea
+                              id="logistica"
+                              placeholder="Especifica la logística..."
+                              readOnly
+                              value={"La fábrica se encarga de toda la logística de transporte"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
 
-                      <hr className="border-gray-200" />
-
-                      <div>
-                        <span className="text-sm font-medium text-gray-600 block">
-                          El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
-                        </span>
-                        <p className="text-gray-900 text-sm mt-1">{selectedHuerta.acceptedOffer.logistics}</p>
-                      </div>
+                         
                     </div>
 
                 </div>
