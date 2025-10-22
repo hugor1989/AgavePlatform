@@ -27,40 +27,40 @@ export default function LoginPage() {
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+  e.preventDefault()
+  setError('')
 
-    try {
-      const response = await login(formData)
-      console.log(response);
-      if (response?.success) {
-        // Redirigir según el rol del usuario autenticado
-        const role = response.data?.role ?? 'admin'
+  try {
+    const response = await login(formData)
+    console.log("Respuesta del login:", response)
 
-        switch (role) {
-          case 'admin':
-            router.push('/admin/dashboard')
-            break
-          case 'farmer':
-            router.push('/farmer/dashboard')
-            break
-          case 'compani':
-            router.push('/company/dashboard')
-            break
-          default:
-            //router.push('/')
-            break
-        }
-      } else {
+    if (response.success) {
+      const role = response.data?.role ?? 'admin'
 
-        await alert.error("Credenciales incorrectas. Intenta de nuevo.", "")
-
-        //setError(response?.message || 'Credenciales incorrectas. Intenta de nuevo.')
+      switch (role) {
+        case 'admin':
+          router.push('/admin/dashboard')
+          break
+        case 'farmer':
+          router.push('/farmer/dashboard')
+          break
+        case 'compani':
+          router.push('/company/dashboard')
+          break
+        default:
+          router.push('/')
+          break
       }
-    } catch (err) {
-      await alert.error("Error al iniciar sesión. Intenta de nuevo más tarde.", "")
+    } else {
+      // Muestra el mensaje de error sin recargar
+      setError(response.message || 'Credenciales incorrectas. Intenta de nuevo.')
     }
+  } catch (err: any) {
+    console.error("Error al intentar login:", err)
+    setError(err.message || 'Error inesperado al intentar iniciar sesión.')
   }
+}
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target

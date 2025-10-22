@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
+
 interface JimaStory {
   id: number | string
   name: string
@@ -79,7 +80,9 @@ export default function AdminDashboard() {
     { id: 2, name: "AgroCampo del Sol", uniqueId: "AGS98765" },
   ])
   // 🚀 Protección de ruta
-  const { isLoading } = useRequireAuth()
+  const { isAuthenticated, isLoading } = useRequireAuth()
+
+  //const { isLoading } = useRequireAuth()
   const { user } = useAuth()
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
@@ -122,6 +125,11 @@ export default function AdminDashboard() {
         <p className="text-gray-600 text-lg">Verificando sesión...</p>
       </div>
     )
+  }
+
+  if (!isAuthenticated) {
+    //Evita que se renderice contenido antes de redirigir
+    return null
   }
 
   return (

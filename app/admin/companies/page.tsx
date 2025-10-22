@@ -267,7 +267,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
   try {
     // Encuentra la empresa actual
     const company = companies.find((c) => c.id === companyId)
-    if (!company) return toast.error("Empresa no encontrada")
+    if (!company) return await alert.error("Empresa no encontrada")
 
     // Prepara el payload que exige el backend
     const payload = {
@@ -279,20 +279,28 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
     // Llama al endpoint de actualización
     const response = await companiService.update(companyId, payload)
 
-    console.log(response);
-    // Actualiza estado local
+    if(response.success){
+
+       // Actualiza estado local
     setCompanies((prev) =>
       prev.map((c) =>
         c.id === companyId ? { ...c, status: newStatus } : c
       )
     )
 
-    toast.success(
+    await alert.success(
       `Empresa marcada como ${newStatus === "active" ? "activa" : "inactiva"}`
     )
+
+    }else{
+
+      await alert.error(response.message)
+
+    }
+   
   } catch (error) {
-    console.error("Error al cambiar estado:", error)
-    toast.error("No se pudo actualizar el estado")
+
+    await alert.error(error.message)
   }
 }
 

@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (credentials: LoginData) => Promise<LoginResponse>  
+  login: (credentials: LoginData) => Promise<LoginResponse>
   logout: () => Promise<void>
 }
 
@@ -17,50 +17,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // ✅ Restaurar sesión desde localStorage
   useEffect(() => {
-    initializeAuth()
+    if (typeof window === 'undefined') return
+
+    const storedUser = localStorage.getItem('auth_user')
+    const storedToken = localStorage.getItem('auth_token')
+
+    if (storedUser && storedToken) {
+      setUser(JSON.parse(storedUser))
+    }
+
+    setIsLoading(false)
   }, [])
 
-  async function initializeAuth() {
-    if (typeof window === 'undefined') return
-    if (authService.isAuthenticated()) {
-      try {
-        const userData = await authService.getProfile()
-        setUser(userData)
-      } catch (error) {
-        console.error('Auth error:', error)
-        await authService.logout()
-        setUser(null)
-      }
-    }
-    setIsLoading(false)
-  }
-
+  // ✅ Login (guarda usuario y token)
   const login = async (credentials: LoginData): Promise<LoginResponse> => {
-  setIsLoading(true)
-  try {
-    const response = await authService.login(credentials)
-    if (response?.success && response?.data) {
-      setUser(response.data)
+    setIsLoading(true)
+    try {
+      const response = await authService.login(credentials)
+      if (response.success && response.data) {
+        setUser(response.data)
+        localStorage.setItem('auth_user', JSON.stringify(response.data))
+      }
       return response
-    } else {
-      throw new Error(response?.message || 'Login failed')
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    console.error('Login error:', error)
-    throw error
-  } finally {
-    setIsLoading(false)
   }
-}
 
+  // ✅ Logout (limpia localStorage)
   const logout = async (): Promise<void> => {
     setIsLoading(true)
     try {
       await authService.logout()
+      localStorage.removeItem('auth_user')
       setUser(null)
-    } catch (error) {
-      console.error('Logout error:', error)
     } finally {
       setIsLoading(false)
     }

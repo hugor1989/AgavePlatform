@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -31,10 +31,10 @@ import {
   MessageSquare,
   Search,
   ShoppingCart,
-  Clock,
-  Eye,
+  
 } from "lucide-react"
 import { Logo } from "@/components/logo"
+import { useAuth } from '@/hooks/useAuth'
 
 type LayoutType = "admin" | "company" | "farmer"
 
@@ -91,8 +91,10 @@ const ACTIVE_COLOR: Record<LayoutType, string> = {
 }
 
 export function AppLayout({ type, children }: AppLayoutProps) {
-  const pathname = usePathname()
+  const pathname = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { logout } = useAuth()
+
 
   const [email, setEmail] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
@@ -100,8 +102,9 @@ export function AppLayout({ type, children }: AppLayoutProps) {
 
   const navigation = NAVIGATION[type]
 
-  const handleLogout = () => {
-    window.location.href = "/login"
+  const handleLogout = async () => {
+    await logout() // 🧹 limpia localStorage y user del contexto
+    pathname.push('/login') //redirige al login
   }
 
   React.useEffect(() => {

@@ -14,32 +14,25 @@ let authToken: string | null = null
 
 export const setAuthToken = (token: string) => {
   authToken = token
-
   if (typeof window !== 'undefined') {
     localStorage.setItem('auth_token', token)
   }
-
-  // ✅ Actualiza inmediatamente el header de axios
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }
 
 export const clearAuthToken = () => {
   authToken = null
-
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth_token')
   }
-
-  // ✅ Limpia el header global
   delete api.defaults.headers.common['Authorization']
 }
 
-// Cargar token almacenado al iniciar
+// --- Cargar token almacenado al iniciar ---
 if (typeof window !== 'undefined') {
   const storedToken = localStorage.getItem('auth_token')
   if (storedToken) {
     authToken = storedToken
-    // ✅ Cargarlo también al header si existe
     api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
   }
 }
@@ -58,13 +51,39 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      clearAuthToken()
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
+    if (error.response) {
+      const { status, data, config } = error.response
+
+      // ⚡ Evitar redirección si es el login
+      if (status === 401 && !config.url.includes('/login')) {
+        clearAuthToken()
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
       }
+
+      const customError = {
+        success: false,
+        status,
+        message:
+          data?.message ||
+          (status === 403
+            ? 'No tienes permisos para realizar esta acción.'
+            : status === 404
+            ? 'Recurso no encontrado.'
+            : status === 422
+            ? 'Error de validación en los datos.'
+            : 'Ocurrió un error inesperado.'),
+        errors: data?.errors || null,
+      }
+
+      return Promise.reject(customError)
     }
-    return Promise.reject(error)
+
+    return Promise.reject({
+      success: false,
+      message: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+    })
   }
 )
 
