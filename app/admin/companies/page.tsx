@@ -125,35 +125,76 @@ export default function AdminCompaniesPage() {
 
       const response =  await companiService.create(payload)
 
+      if(response.success){
 
-      const credentials = response?.data?.credentials
+        const credentials = response?.data?.credentials
 
-     await fetchCompanies()
-
-
-      //Cierra el diálogo de registro y abre el de credenciales
-     // el modal de creación
-    setIsAddDialogOpen(false)
-      setNewFarmerCredentials(credentials)
-      setIsCredentialsDialogOpen(true)
+        await fetchCompanies()
 
 
-      setNewCompanyForm({
-        name: "",
-        email: "",
-        phone: "",
-        factoryLocation: "",
-        rfc: "",
-        address: "",
-      })
+          //Cierra el diálogo de registro y abre el de credenciales
+          setIsAddDialogOpen(false)
+          setNewFarmerCredentials(credentials)
+          setIsCredentialsDialogOpen(true)
+
+
+          setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+      }else{
+          
+          await fetchCompanies()
+
+          await alert.error("No se pudo registrar la empresa", response.message)
+
+
+          //Cierra el diálogo de registro y abre el de credenciales
+          setIsAddDialogOpen(false)
+
+          setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+      }
+
+     
       
     } catch (error) {
       console.error("Error al crear empresa:", error)
       
-      await alert.error("No se pudo registrar la empresa", "")
+      setIsAddDialogOpen(false)
+
+      await alert.error("No se pudo registrar la empresa")
+
+      setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
       
     } finally {
-      setIsAddingCompany(false)
+      setIsAddDialogOpen(false)
+
+       setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
     }
   }
 
@@ -310,6 +351,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
               </DialogHeader>
               <form onSubmit={handleAddCompany} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Razón social */}
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Razón Social *</Label>
                     <Input
@@ -321,17 +363,24 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                       required
                     />
                   </div>
+
+                  {/* RFC */}
                   <div className="space-y-2">
                     <Label htmlFor="companyRfc">RFC *</Label>
                     <Input
                       id="companyRfc"
                       value={newCompanyForm.rfc}
-                      onChange={(e) =>
-                        setNewCompanyForm((prev) => ({ ...prev, rfc: e.target.value }))
-                      }
+                      maxLength={13}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                        setNewCompanyForm((prev) => ({ ...prev, rfc: value }));
+                      }}
                       required
                     />
+                    <small className="text-gray-500 text-xs">Máx. 13 caracteres (solo letras y números)</small>
                   </div>
+
+                  {/* Email */}
                   <div className="space-y-2">
                     <Label htmlFor="companyEmail">Email *</Label>
                     <Input
@@ -344,17 +393,27 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                       required
                     />
                   </div>
+
+                  {/* Teléfono */}
                   <div className="space-y-2">
                     <Label htmlFor="companyPhone">Teléfono *</Label>
                     <Input
                       id="companyPhone"
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       value={newCompanyForm.phone}
-                      onChange={(e) =>
-                        setNewCompanyForm((prev) => ({ ...prev, phone: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setNewCompanyForm((prev) => ({ ...prev, phone: value }));
+                      }}
                       required
                     />
+                    <small className="text-gray-500 text-xs">Debe tener 10 dígitos numéricos</small>
                   </div>
+
+                  {/* Ubicación de Fábrica */}
                   <div className="space-y-2">
                     <Label htmlFor="companyFactoryLocation">Ubicación de Fábrica *</Label>
                     <Input
@@ -369,6 +428,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                       required
                     />
                   </div>
+
+                  {/* Dirección Fiscal */}
                   <div className="space-y-2">
                     <Label htmlFor="companyAddress">Dirección Fiscal *</Label>
                     <Input
@@ -381,6 +442,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                     />
                   </div>
                 </div>
+
+                {/* Botón */}
                 <div className="flex gap-2 pt-4">
                   <Button
                     type="submit"
@@ -391,6 +454,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                   </Button>
                 </div>
               </form>
+
             </DialogContent>
           </Dialog>
 
