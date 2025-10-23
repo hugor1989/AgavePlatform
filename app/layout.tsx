@@ -97,14 +97,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
+                window.addEventListener('load', async function() {
+                  try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    await registration.update(); //fuerza buscar versión nueva
+                    console.log('Service Worker (solo manifest e íconos) registrado');
+                  } catch (e) {
+                    console.log('Fallo al registrar SW:', e);
+                  }
                 });
               }
             `,

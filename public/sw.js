@@ -1,79 +1,43 @@
 const CACHE_NAME = "productores-agave-v2"
 const urlsToCache = [
-  "/login",
   "/manifest.json",
   "/icon-192x192.png",
   "/icon-512x512.png",
-  "/agave-field-plantation.png",
-  "/_next/static/css/app/layout.css",
-  "/_next/static/css/app/globals.css",
 ]
 
+// Instala el SW y cachea solo los íconos y el manifest
 self.addEventListener("install", (event) => {
+  console.log("SW instalado (solo cachea manifest e íconos).");
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache).catch((error) => {
-        console.log("Cache addAll failed:", error)
-      })
-    }),
-  )
-  self.skipWaiting()
-})
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting(); // activa inmediatamente
+});
 
-self.addEventListener("fetch", (event) => {
-  // Skip caching for API routes and dynamic content
-  if (
-    event.request.url.includes("/api/") ||
-    event.request.url.includes("/_next/webpack-hmr") ||
-    event.request.method !== "GET"
-  ) {
-    return
-  }
-
-  event.respondWith(
-    caches
-      .match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return (
-          response ||
-          fetch(event.request).then((fetchResponse) => {
-            // Don't cache if not a valid response
-            if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type !== "basic") {
-              return fetchResponse
-            }
-
-            // Clone the response
-            const responseToCache = fetchResponse.clone()
-
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache)
-            })
-
-            return fetchResponse
-          })
-        )
-      })
-      .catch(() => {
-        // Fallback for offline
-        if (event.request.destination === "document") {
-          return caches.match("/login")
-        }
-      }),
-  )
-})
-
+// Activa el nuevo SW y limpia versiones viejas
 self.addEventListener("activate", (event) => {
+  console.log("SW activado.");
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName)
-          }
-        }),
-      ),
-    ),
-  )
-  self.clients.claim()
-})
+          if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+        })
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// Solo responde desde cache para los íconos o manifest
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (urlsToCache.includes(new URL(request.url).pathname)) {
+    event.respondWith(
+      caches.match(request).then((cached) => cached || fetch(request))
+    );
+  } else {
+    // 🚀 todo lo demás va directo a red (sin cache)
+    event.respondWith(fetch(request));
+  }
+});
