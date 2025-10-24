@@ -474,7 +474,7 @@ export default function AdminOfertasPage() {
                           </div>
 
                          
-                    </div>
+                          </div>
                         </div>
 
 
