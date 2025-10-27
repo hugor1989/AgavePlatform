@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Building2, Calendar, Eye, MapPin, Clock, Leaf, Share2, Camera, Check } from "lucide-react"
 import { toast } from "sonner"
 import { AppLayout } from "@/components/layouts/app-layout"
+import Image from "next/image"
+
 
 // Datos simulados de huertas vendidas
 const mockSoldHuertas = [
@@ -256,16 +258,16 @@ export default function AdminJimasTerminadasPage() {
 
 
         {/* Grid de huertas vendidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredHuertas.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-500">No se encontraron huertas vendidas</p>
+            <div className="col-span-full text-center py-12 bg-red-500 rounded-lg">
+              <p className="text-white">No se encontraron huertas vendidas</p>
             </div>
           ) : (
             filteredHuertas.map((huerta) => (
               <div
                 key={huerta.id}
-                className="bg-red-50 border border-red-200 rounded-lg shadow-sm overflow-hidden"
+                className="bg-red-500 border border-red-600 rounded-lg shadow-sm overflow-hidden"
               >
                 {/* Imagen con badges */}
                 <div className="relative h-48">
@@ -286,73 +288,73 @@ export default function AdminJimasTerminadasPage() {
                 </div>
 
                 {/* Contenido */}
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 bg-red-500">
                   {/* Título y status */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">{huerta.name}</h3>
-                      <Badge className={getStatusColor(huerta.status)}>{huerta.status}</Badge>
+                      <h3 className="text-lg font-semibold text-white">{huerta.name}</h3>
+                      <Badge className="bg-white text-red-600">{huerta.status}</Badge>
                     </div>
-                    <p className="text-sm text-gray-500">{huerta.number}</p>
+                    <p className="text-sm text-red-100">{huerta.number}</p>
                   </div>
 
                   {/* Tipo de agave */}
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Leaf className="h-4 w-4 text-green-600" />
+                  <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
+                  <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
                     <span>{huerta.type}</span>
                   </div>
 
                   {/* Cantidad de plantas */}
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-1">Cantidad de Plantas</p>
-                    <p className="text-3xl font-bold text-blue-600">{huerta.plants.toLocaleString()}</p>
+                  <div className="text-center bg-red-600 p-3 rounded-lg">
+                    <p className="text-sm text-red-100 mb-1">Cantidad de Plantas</p>
+                    <p className="text-3xl font-bold text-white">{huerta.plants.toLocaleString()}</p>
                   </div>
 
                   {/* Información de ubicación */}
                   <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                    <div className="bg-red-600 p-2 rounded">
+                      <div className="flex items-center gap-2 text-sm text-red-100 mb-1">
                         <MapPin className="h-4 w-4" />
                         <span className="font-medium">Estado</span>
                       </div>
-                      <p className="text-sm text-gray-900 ml-6">{huerta.state}</p>
+                      <p className="text-sm text-white ml-6">{huerta.state}</p>
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <div className="h-2 w-2 bg-gray-400 rounded-full ml-1" />
+                    <div className="bg-red-600 p-2 rounded">
+                      <div className="flex items-center gap-2 text-sm text-red-100 mb-1">
+                        <div className="h-2 w-2 bg-red-300 rounded-full ml-1" />
                         <span className="font-medium">Municipio</span>
                       </div>
-                      <p className="text-sm text-gray-900 ml-6">{huerta.municipality}</p>
+                      <p className="text-sm text-white ml-6">{huerta.municipality}</p>
                     </div>
                   </div>
 
                   {/* Año y edad */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
                       <Calendar className="h-4 w-4" />
                       <div>
                         <p className="font-medium">Año</p>
-                        <p className="text-gray-900">{huerta.year}</p>
+                        <p className="text-red-100">{huerta.year}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
                       <Clock className="h-4 w-4" />
                       <div>
                         <p className="font-medium">Edad</p>
-                        <p className="text-gray-900">{huerta.age}</p>
+                        <p className="text-red-100">{huerta.age}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Ubicación con coordenadas */}
-                  <div className="bg-green-50 p-3 rounded-lg">
+                  <div className="bg-red-600 p-3 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-green-800">Ubicación</p>
-                        <p className="text-sm text-green-700">{huerta.coordinates}</p>
+                        <p className="text-sm font-medium text-white">Ubicación</p>
+                        <p className="text-sm text-red-100">{huerta.coordinates}</p>
                       </div>
-                      <Share2 className="h-4 w-4 text-green-600" />
+                      <Share2 className="h-4 w-4 text-red-200" />
                     </div>
                   </div>
 
@@ -387,7 +389,6 @@ export default function AdminJimasTerminadasPage() {
                     <Button
                       size="sm"
                       onClick={() => {
-                        // Función para ver ID Foto
                         toast.info("Funcionalidad de Ver ID Foto en desarrollo")
                       }}
                       className="w-full bg-orange-600 text-white hover:bg-orange-700"
@@ -395,7 +396,6 @@ export default function AdminJimasTerminadasPage() {
                       <Camera className="h-4 w-4 mr-1" />
                       Ver Id Foto
                     </Button>
-                    
                   </div>
                 </div>
               </div>
