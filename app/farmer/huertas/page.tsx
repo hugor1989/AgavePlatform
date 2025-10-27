@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Search, Calendar, MapPin, Camera, Eye, Clock, Share2, Award as IdCard } from "lucide-react"
 import Image from "next/image"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 
 
@@ -96,6 +97,7 @@ export default function FarmerHuertasPage() {
   }
 
   return (
+    <AppLayout type="farmer">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Mis Huertas</h1>
@@ -309,5 +311,6 @@ export default function FarmerHuertasPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </AppLayout>
   )
 }

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
+import { AppLayout } from "@/components/layouts/app-layout"
+
 
 
 interface JimaStory {
@@ -72,6 +74,7 @@ export default function FarmerDashboard() {
   }
 
   return (
+    <AppLayout type="farmer">
     <div className="min-w-0 overflow-x-hidden">
       <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
         {/* Feed de Historias de Jima */}
@@ -93,5 +96,6 @@ export default function FarmerDashboard() {
         </div>
       </div>
     </div>
+    </AppLayout>
   )
 }

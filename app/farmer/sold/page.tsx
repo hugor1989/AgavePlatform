@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { AppLayout } from "@/components/layouts/app-layout"
 import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import {
   Search,
@@ -436,6 +437,7 @@ export default function FarmerSoldPage() {
   }
 
   return (
+    <AppLayout type="farmer">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Huertas Vendidas</h1>
@@ -771,5 +773,6 @@ export default function FarmerSoldPage() {
           </DialogContent>
         </Dialog>
     </div>
+    </AppLayout>
   )
 }

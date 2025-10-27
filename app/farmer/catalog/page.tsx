@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Calendar, Clock, Camera, Share2 } from "lucide-react"
 import Image from "next/image"
+import { AppLayout } from "@/components/layouts/app-layout"
+
 
 const huertas = [
   {
@@ -95,6 +97,7 @@ const huertas = [
 
 export default function FarmerCatalogPage() {
   return (
+     <AppLayout type="farmer">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Catálogo de Huertas</h1>
@@ -189,5 +192,6 @@ export default function FarmerCatalogPage() {
         ))}
       </div>
     </div>
+    </AppLayout>
   )
 }

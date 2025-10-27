@@ -59,6 +59,7 @@ const NAVIGATION: Record<LayoutType, { name: string; href: string; icon: any }[]
     { name: "Historias de Jima", href: "/company/dashboard", icon: LayoutDashboard },
     { name: "Comprar Huertas", href: "/company/catalog", icon: Search },
     { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare },
+    { name: "Jimas Terminada", href: "/company/jimas-terminadas", icon: CheckCircle },
     { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
 
   ],
@@ -68,6 +69,8 @@ const NAVIGATION: Record<LayoutType, { name: string; href: string; icon: any }[]
     { name: "Mis Huertas", href: "/farmer/huertas", icon: Sprout },
     { name: "Ofertas", href: "/farmer/offers", icon: DollarSign },
     { name: "Huertas Vendidas", href: "/farmer/sold", icon: ShoppingCart },
+    { name: "Jimas Terminada", href: "/farmer/jimas-terminadas", icon: CheckCircle },
+
   ],
 }
 
