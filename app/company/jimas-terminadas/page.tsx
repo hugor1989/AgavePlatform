@@ -264,139 +264,141 @@ export default function CompaniJimasTerminadasPage() {
           ) : (
             filteredHuertas.map((huerta) => (
               <div
-                key={huerta.id}
-                className="bg-red-500 border border-red-600 rounded-lg shadow-sm overflow-hidden"
-              >
-                {/* Imagen con badges */}
-                <div className="relative h-48">
-                  <img
-                    src={huerta.photoId || "/placeholder.svg"}
-                    alt={huerta.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                    <Camera className="h-3 w-3" />
-                    {huerta.photos} fotos
-                  </div>
-                  {huerta.featured && (
-                    <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">
-                      Destacada
-                    </div>
-                  )}
-                </div>
-
-                {/* Contenido */}
-                <div className="p-4 space-y-4 bg-red-500">
-                  {/* Título y status */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white">{huerta.name}</h3>
-                      <Badge className="bg-white text-red-600">{huerta.status}</Badge>
-                    </div>
-                    <p className="text-sm text-red-100">{huerta.number}</p>
-                  </div>
-
-                  {/* Tipo de agave */}
-                  <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
-                  <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
-                    <span>{huerta.type}</span>
-                  </div>
-
-                  {/* Cantidad de plantas */}
-                  <div className="text-center bg-red-600 p-3 rounded-lg">
-                    <p className="text-sm text-red-100 mb-1">Cantidad de Plantas</p>
-                    <p className="text-3xl font-bold text-white">{huerta.plants.toLocaleString()}</p>
-                  </div>
-
-                  {/* Información de ubicación */}
-                  <div className="space-y-3">
-                    <div className="bg-red-600 p-2 rounded">
-                      <div className="flex items-center gap-2 text-sm text-red-100 mb-1">
-                        <MapPin className="h-4 w-4" />
-                        <span className="font-medium">Estado</span>
-                      </div>
-                      <p className="text-sm text-white ml-6">{huerta.state}</p>
-                    </div>
-
-                    <div className="bg-red-600 p-2 rounded">
-                      <div className="flex items-center gap-2 text-sm text-red-100 mb-1">
-                        <div className="h-2 w-2 bg-red-300 rounded-full ml-1" />
-                        <span className="font-medium">Municipio</span>
-                      </div>
-                      <p className="text-sm text-white ml-6">{huerta.municipality}</p>
-                    </div>
-                  </div>
-
-                  {/* Año y edad */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
-                      <Calendar className="h-4 w-4" />
-                      <div>
-                        <p className="font-medium">Año</p>
-                        <p className="text-red-100">{huerta.year}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-white bg-red-600 p-2 rounded">
-                      <Clock className="h-4 w-4" />
-                      <div>
-                        <p className="font-medium">Edad</p>
-                        <p className="text-red-100">{huerta.age}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ubicación con coordenadas */}
-                  <div className="bg-red-600 p-3 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-white">Ubicación</p>
-                        <p className="text-sm text-red-100">{huerta.coordinates}</p>
-                      </div>
-                      <Share2 className="h-4 w-4 text-red-200" />
-                    </div>
-                  </div>
-
-                  {/* Botones */}
-                  <div className="space-y-2">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedHuerta(huerta)
-                        setIsScheduleDialogOpen(true)
-                      }}
-                      className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Ver Programa de Jima
-                    </Button>
-                    <Button size="sm" className="w-full bg-green-600 text-white hover:bg-green-700">
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver Huerta
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedHuerta(huerta)
-                        setIsOfferDialogOpen(true)
-                      }}
-                      className="w-full bg-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Building2 className="h-4 w-4 mr-1" />
-                      Ver Detalle Oferta
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        toast.info("Funcionalidad de Ver ID Foto en desarrollo")
-                      }}
-                      className="w-full bg-orange-600 text-white hover:bg-orange-700"
-                    >
-                      <Camera className="h-4 w-4 mr-1" />
-                      Ver Id Foto
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                             key={huerta.id}
+                             className="bg-red-300 border border-red-600 rounded-lg shadow-sm overflow-hidden"
+                           >
+                             {/* Imagen con badges */}
+                             <div className="relative h-48">
+                               <img
+                                 src={huerta.photoId || "/placeholder.svg"}
+                                 alt={huerta.name}
+                                 className="w-full h-full object-cover"
+                               />
+                               <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                                 <Camera className="h-3 w-3" />
+                                 {huerta.photos} fotos
+                               </div>
+                               {huerta.featured && (
+                                 <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">
+                                   Destacada
+                                 </div>
+                               )}
+                             </div>
+             
+                             {/* Contenido */}
+                               <div className="p-4 space-y-4">
+                                               {/* Título y status */}
+                                               <div className="space-y-2">
+                                                 <div className="flex items-center justify-between">
+                                                   <h3 className="text-lg font-semibold text-gray-900">{huerta.name}</h3>
+                                                   <Badge className={getStatusColor(huerta.status)}>{huerta.status}</Badge>
+                                                 </div>
+                                                 <p className="text-sm text-gray-500">{huerta.number}</p>
+                                               </div>
+                             
+                                               {/* Tipo de agave */}
+                                               <div className="flex items-center gap-2 text-sm text-gray-600">
+                                               <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                                                 <span>{huerta.type}</span>
+                                               </div>
+                             
+                                               {/* Cantidad de plantas */}
+                                               <div className="text-center">
+                                                 <p className="text-sm text-gray-600 mb-1">Cantidad de Plantas</p>
+                                                 <p className="text-3xl font-bold text-blue-600">{huerta.plants.toLocaleString()}</p>
+                                               </div>
+                             
+                                               {/* Información de ubicación */}
+                                               <div className="space-y-3">
+                                                 <div>
+                                                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                                     <MapPin className="h-4 w-4" />
+                                                     <span className="font-medium">Estado</span>
+                                                   </div>
+                                                   <p className="text-sm text-gray-900 ml-6">{huerta.state}</p>
+                                                 </div>
+                             
+                                                 <div>
+                                                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                                     <div className="h-2 w-2 bg-gray-400 rounded-full ml-1" />
+                                                     <span className="font-medium">Municipio</span>
+                                                   </div>
+                                                   <p className="text-sm text-gray-900 ml-6">{huerta.municipality}</p>
+                                                 </div>
+                                               </div>
+                             
+                                               {/* Año y edad */}
+                                               <div className="grid grid-cols-2 gap-4">
+                                                 <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                   <Calendar className="h-4 w-4" />
+                                                   <div>
+                                                     <p className="font-medium">Año</p>
+                                                     <p className="text-gray-900">{huerta.year}</p>
+                                                   </div>
+                                                 </div>
+                                                 <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                   <Clock className="h-4 w-4" />
+                                                   <div>
+                                                     <p className="font-medium">Edad</p>
+                                                     <p className="text-gray-900">{huerta.age}</p>
+                                                   </div>
+                                                 </div>
+                                               </div>
+                             
+                                               {/* Ubicación con coordenadas */}
+                                               <div className="bg-green-50 p-3 rounded-lg">
+                                                 <div className="flex items-center justify-between">
+                                                   <div>
+                                                     <p className="text-sm font-medium text-green-800">Ubicación</p>
+                                                     <p className="text-sm text-green-700">{huerta.coordinates}</p>
+                                                   </div>
+                                                   <Share2 className="h-4 w-4 text-green-600" />
+                                                 </div>
+                                               </div>
+                             
+                                               {/* Botones */}
+                                               <div className="space-y-2">
+                                                 <Button
+                                                   size="sm"
+                                                   onClick={() => {
+                                                     setSelectedHuerta(huerta)
+                                                     setIsScheduleDialogOpen(true)
+                                                   }}
+                                                   className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                                                 >
+                                                   <Calendar className="h-4 w-4 mr-1" />
+                                                   Ver Programa de Jima
+                                                 </Button>
+                                                 <Button size="sm" className="w-full bg-green-600 text-white hover:bg-green-700">
+                                                   <Eye className="h-4 w-4 mr-1" />
+                                                   Ver Huerta
+                                                 </Button>
+                                                 <Button
+                                                   size="sm"
+                                                   onClick={() => {
+                                                     setSelectedHuerta(huerta)
+                                                     setIsOfferDialogOpen(true)
+                                                   }}
+                                                   className="w-full bg-gray-600 text-white hover:bg-gray-700"
+                                                 >
+                                                   <Building2 className="h-4 w-4 mr-1" />
+                                                   Ver Detalle Oferta
+                                                 </Button>
+                                                 <Button
+                                                   size="sm"
+                                                   onClick={() => {
+                                                     // Función para ver ID Foto
+                                                     toast.info("Funcionalidad de Ver ID Foto en desarrollo")
+                                                   }}
+                                                   className="w-full bg-orange-600 text-white hover:bg-orange-700"
+                                                 >
+                                                   <Camera className="h-4 w-4 mr-1" />
+                                                   Ver Id Foto
+                                                 </Button>
+                                                
+                                               </div>
+                               </div>
+                           </div>
             ))
           )}
         </div>

@@ -8,6 +8,11 @@ export const farmerService = {
     return Array.isArray(data?.data?.data) ? data.data.data : []
   },
 
+  // 🆕 NUEVO MÉTODO
+  getActive: async () => {
+    const { data } = await api.get("/farmer/active")
+    return Array.isArray(data?.data) ? data.data : []
+  },
   create: async (farmerData: any) => {
     const { data } = await api.post("/farmer/create-farmer", farmerData)
     return data
@@ -36,4 +41,8 @@ export const farmerService = {
     async resetPassword(payload: any) {
     return api.post(`/farmer/reset-password`, payload)
   }
+
+  
+
+  
 }
