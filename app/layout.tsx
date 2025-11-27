@@ -93,43 +93,7 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
-       <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', async function() {
-                try {
-                  // PASO 1: Desregistrar todos los SW viejos
-                  const oldRegistrations = await navigator.serviceWorker.getRegistrations();
-                  console.log('[SW] Limpiando', oldRegistrations.length, 'registros viejos...');
-                  for(let registration of oldRegistrations) {
-                    await registration.unregister();
-                  }
-                  
-                  // PASO 2: Limpiar cachés viejos
-                  const cacheNames = await caches.keys();
-                  console.log('[SW] Limpiando', cacheNames.length, 'cachés viejos...');
-                  for(let cacheName of cacheNames) {
-                    if (cacheName !== 'productores-agave-v2') {
-                      await caches.delete(cacheName);
-                    }
-                  }
-                  
-                  // PASO 3: Registrar nuevo SW (sin caché)
-                  const registration = await navigator.serviceWorker.register('/sw.js', {
-                    updateViaCache: 'none'
-                  });
-                  await registration.update();
-                  console.log('[SW] Nuevo Service Worker registrado correctamente');
-                  
-                } catch (e) {
-                  console.log('[SW] Error:', e);
-                }
-              });
-            }
-          `,
-        }}
-      />
+      
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
