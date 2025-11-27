@@ -93,7 +93,27 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
-      
+       {/* 🧹 SCRIPT TEMPORAL PARA LIMPIAR SW - ELIMINAR DESPUÉS DE 1 SEMANA */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('SW desregistrado');
+                  }
+                });
+                caches.keys().then(function(names) {
+                  for (let name of names) {
+                    caches.delete(name);
+                    console.log('Caché eliminado:', name);
+                  }
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
