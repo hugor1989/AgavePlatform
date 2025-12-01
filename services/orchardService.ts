@@ -1,6 +1,6 @@
-    import api from "@/lib/api"
+import api from "@/lib/api"
 
-// Interfaces
+// Interfaces (sin cambios)
 export interface Orchard {
   id: number
   name: string
@@ -10,44 +10,29 @@ export interface Orchard {
   age: number
   plant_quantity: number
   photo_id: string | null
-  cover_photo: string | null       // ← NUEVO: Foto de portada
+  cover_photo: string | null
   state: string | null
   municipality: string | null
   latitude: number | null
   longitude: number | null
-  status: 'disponible' | 'vendida' | 'reservada'
+  status: string
   is_featured: boolean
   photos_count: number
   description: string | null
   price: number | null
   created_at: string
   updated_at: string
-  // Relaciones
   farmer?: {
     id: number
     full_name: string
     unique_identifier: string
-    email: string
   }
   agave_type?: {
     id: number
     name: string
   }
-  // Accessors
   location?: string
   age_formatted?: string
-}
-
-export interface OrchardFilters {
-  search?: string
-  year?: string | number
-  state?: string
-  status?: 'available' | 'sold' | 'reserved' | 'all'
-  featured?: boolean
-  sort_by?: string
-  sort_order?: 'asc' | 'desc'
-  page?: number
-  per_page?: number
 }
 
 export interface OrchardFormData {
@@ -63,10 +48,22 @@ export interface OrchardFormData {
   municipality?: string
   latitude?: number
   longitude?: number
-  status?: 'disponible' | 'vendida' | 'reservada'
+  status?: string
   is_featured?: boolean
   description?: string
   price?: number
+}
+
+export interface OrchardFilters {
+  search?: string
+  year?: number
+  state?: string
+  status?: string
+  featured?: boolean
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+  page?: number
+  per_page?: number
 }
 
 export interface PaginatedResponse<T> {
@@ -85,20 +82,24 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
-export interface OrchardStats {
-  total: number
-  available: number
-  sold: number
-  reserved: number
-  featured: number
-  total_plants: number
-  by_year: Array<{ year: number; count: number }>
-  by_state: Array<{ state: string; count: number }>
+// 🆕 Función helper para convertir File a Base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Remover el prefijo "data:image/jpeg;base64," para enviar solo el base64
+      const base64 = result.split(',')[1]
+      resolve(base64)
+    }
+    reader.onerror = (error) => reject(error)
+    reader.readAsDataURL(file)
+  })
 }
 
 export const orchardService = {
   /**
-   * Obtener todas las huertas con filtros y paginación
+   * Obtener todas las huertas con filtros
    */
   getAll: async (filters?: OrchardFilters) => {
     const params = new URLSearchParams()
@@ -113,134 +114,168 @@ export const orchardService = {
     if (filters?.page) params.append('page', String(filters.page))
     if (filters?.per_page) params.append('per_page', String(filters.per_page))
 
-    const { data } = await api.get(`/orchards/get-all/?${params.toString()}`)
+    const { data } = await api.get(`/orchards/get-all?${params.toString()}`)
     return data.data as PaginatedResponse<Orchard>
   },
 
   /**
-   * Obtener años únicos de las huertas
-   */
-  getYears: async () => {
-    const { data } = await api.get('/orchards/years')
-    return data.data as number[]
-  },
-  /**
    * Obtener una huerta por ID
    */
   getById: async (id: number | string) => {
-    const { data } = await api.get(`/orchards/get-by-id/${id}`)
+    const { data } = await api.get(`/orchards/${id}`)
     return data.data as Orchard
   },
 
   /**
-   * Crear una nueva huerta
+   * Crear nueva huerta - USANDO BASE64 EN LUGAR DE FORMDATA
    */
   create: async (orchardData: OrchardFormData) => {
-    const formData = new FormData()
+    console.log('🔵 [orchardService.create] Iniciando...')
     
-    // Agregar campos básicos
-    formData.append('name', orchardData.name)
-    formData.append('agave_type_id', String(orchardData.agave_type_id))
-    formData.append('farmer_id', String(orchardData.farmer_id))
-    formData.append('year', String(orchardData.year))
-    formData.append('plant_quantity', String(orchardData.plant_quantity))
-    
-    // Agregar campos opcionales
-    if (orchardData.age !== undefined) formData.append('age', String(orchardData.age))
-    if (orchardData.state) formData.append('state', orchardData.state)
-    if (orchardData.municipality) formData.append('municipality', orchardData.municipality)
-    if (orchardData.latitude !== undefined) formData.append('latitude', String(orchardData.latitude))
-    if (orchardData.longitude !== undefined) formData.append('longitude', String(orchardData.longitude))
-    if (orchardData.status) formData.append('status', orchardData.status)
-    if (orchardData.is_featured !== undefined) formData.append('is_featured', orchardData.is_featured ? '1' : '0')
-    if (orchardData.description) formData.append('description', orchardData.description)
-    if (orchardData.price !== undefined) formData.append('price', String(orchardData.price))
-    
-    // Agregar imagen si existe
-    if (orchardData.photo_id) {
-      formData.append('photo_id', orchardData.photo_id)
-    }
+    try {
+      // Preparar datos base (sin archivos)
+      const payload: any = {
+        name: orchardData.name,
+        agave_type_id: orchardData.agave_type_id,
+        farmer_id: orchardData.farmer_id,
+        year: orchardData.year,
+        plant_quantity: orchardData.plant_quantity,
+        status: orchardData.status || 'disponible',
+        is_featured: 1,
+      }
 
-    if (orchardData.cover_photo) {
-      formData.append('cover_photo', orchardData.cover_photo)
-    }
+      // Agregar campos opcionales
+      if (orchardData.age !== undefined) payload.age = orchardData.age
+      if (orchardData.state) payload.state = orchardData.state
+      if (orchardData.municipality) payload.municipality = orchardData.municipality
+      if (orchardData.latitude) payload.latitude = orchardData.latitude
+      if (orchardData.longitude) payload.longitude = orchardData.longitude
+      if (orchardData.description) payload.description = orchardData.description
+      if (orchardData.price) payload.price = orchardData.price
 
-    const { data } = await api.post('/orchards/create', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return data.data as Orchard
+      // 🆕 Convertir photo_id a Base64
+      if (orchardData.photo_id) {
+        console.log('📸 [orchardService] Convirtiendo photo_id a Base64...')
+        const base64 = await fileToBase64(orchardData.photo_id)
+        payload.photo_id_base64 = base64
+        payload.photo_id_name = orchardData.photo_id.name
+        payload.photo_id_type = orchardData.photo_id.type
+        console.log('✅ [orchardService] photo_id convertido')
+      }
+
+      // 🆕 Convertir cover_photo a Base64
+      if (orchardData.cover_photo) {
+        console.log('📸 [orchardService] Convirtiendo cover_photo a Base64...')
+        const base64 = await fileToBase64(orchardData.cover_photo)
+        payload.cover_photo_base64 = base64
+        payload.cover_photo_name = orchardData.cover_photo.name
+        payload.cover_photo_type = orchardData.cover_photo.type
+        console.log('✅ [orchardService] cover_photo convertido')
+      }
+
+      console.log('📦 [orchardService] Enviando payload como JSON:', {
+        ...payload,
+        photo_id_base64: payload.photo_id_base64 ? `[Base64 string ${payload.photo_id_base64.length} chars]` : undefined,
+        cover_photo_base64: payload.cover_photo_base64 ? `[Base64 string ${payload.cover_photo_base64.length} chars]` : undefined,
+      })
+
+      // 🆕 Enviar como JSON en lugar de FormData
+      const { data } = await api.post('/orchards/create-orchards', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('✅ [orchardService] Respuesta recibida:', data)
+      return data.data as Orchard
+
+    } catch (error: any) {
+      console.error('❌ [orchardService] Error:', error)
+      console.error('❌ [orchardService] Response:', error.response?.data)
+      throw error
+    }
   },
 
   /**
-   * Actualizar una huerta
+   * Actualizar huerta - USANDO BASE64
    */
   update: async (id: number | string, orchardData: Partial<OrchardFormData>) => {
-    const formData = new FormData()
+    console.log('🔵 [orchardService.update] Iniciando...')
     
-    // Laravel method spoofing
-    formData.append('_method', 'PUT')
-    
-    // Agregar solo los campos que se están actualizando
-    if (orchardData.name) formData.append('name', orchardData.name)
-    if (orchardData.agave_type_id) formData.append('agave_type_id', String(orchardData.agave_type_id))
-    if (orchardData.farmer_id) formData.append('farmer_id', String(orchardData.farmer_id))
-    if (orchardData.year) formData.append('year', String(orchardData.year))
-    if (orchardData.plant_quantity) formData.append('plant_quantity', String(orchardData.plant_quantity))
-    if (orchardData.age !== undefined) formData.append('age', String(orchardData.age))
-    if (orchardData.state) formData.append('state', orchardData.state)
-    if (orchardData.municipality) formData.append('municipality', orchardData.municipality)
-    if (orchardData.latitude !== undefined) formData.append('latitude', String(orchardData.latitude))
-    if (orchardData.longitude !== undefined) formData.append('longitude', String(orchardData.longitude))
-    if (orchardData.status) formData.append('status', orchardData.status)
-    if (orchardData.is_featured !== undefined) formData.append('is_featured', orchardData.is_featured ? '1' : '0')
-    if (orchardData.description) formData.append('description', orchardData.description)
-    if (orchardData.price !== undefined) formData.append('price', String(orchardData.price))
-    
-    // Agregar imagen si existe
-    if (orchardData.photo_id) {
-      formData.append('photo_id', orchardData.photo_id)
-    }
+    try {
+      const payload: any = { ...orchardData }
 
-    if (orchardData.cover_photo) {
-      formData.append('cover_photo', orchardData.cover_photo)
-    }
+      // Convertir is_featured a string
+      if (payload.is_featured !== undefined) {
+        payload.is_featured = payload.is_featured ? '1' : '0'
+      }
 
-    const { data } = await api.post(`/orchards/updare-data/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-    return data.data as Orchard
+      // 🆕 Convertir photo_id a Base64 si es un File
+      if (orchardData.photo_id && orchardData.photo_id instanceof File) {
+        console.log('📸 [orchardService] Convirtiendo photo_id a Base64...')
+        const base64 = await fileToBase64(orchardData.photo_id)
+        payload.photo_id_base64 = base64
+        payload.photo_id_name = orchardData.photo_id.name
+        payload.photo_id_type = orchardData.photo_id.type
+        delete payload.photo_id
+        console.log('✅ [orchardService] photo_id convertido')
+      }
+
+      // 🆕 Convertir cover_photo a Base64 si es un File
+      if (orchardData.cover_photo && orchardData.cover_photo instanceof File) {
+        console.log('📸 [orchardService] Convirtiendo cover_photo a Base64...')
+        const base64 = await fileToBase64(orchardData.cover_photo)
+        payload.cover_photo_base64 = base64
+        payload.cover_photo_name = orchardData.cover_photo.name
+        payload.cover_photo_type = orchardData.cover_photo.type
+        delete payload.cover_photo
+        console.log('✅ [orchardService] cover_photo convertido')
+      }
+
+      console.log('📦 [orchardService] Enviando payload de actualización')
+
+      // 🆕 Enviar como JSON
+      const { data } = await api.put(`/orchards/${id}`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('✅ [orchardService] Actualización exitosa')
+      return data.data as Orchard
+
+    } catch (error: any) {
+      console.error('❌ [orchardService] Error en update:', error)
+      throw error
+    }
   },
 
   /**
-   * Eliminar una huerta
+   * Eliminar huerta
    */
   delete: async (id: number | string) => {
-    const { data } = await api.delete(`/orchards/delete/${id}`)
+    const { data } = await api.delete(`/orchards/${id}`)
     return data
   },
 
   /**
-   * Marcar/desmarcar huerta como destacada
+   * Alternar estado destacado
    */
   toggleFeatured: async (id: number | string) => {
-    const { data } = await api.post(`/orchards/status/${id}/toggle-featured`)
+    const { data } = await api.post(`/orchards/${id}/toggle-featured`)
     return data.data as Orchard
   },
 
   /**
-   * Obtener estadísticas de huertas
+   * Obtener estadísticas
    */
   getStatistics: async () => {
     const { data } = await api.get('/orchards/statistics')
-    return data.data as OrchardStats
+    return data.data
   },
 
   /**
-   * Obtener huertas públicas (sin autenticación)
+   * Obtener huertas públicas
    */
   getPublic: async (filters?: OrchardFilters) => {
     const params = new URLSearchParams()
@@ -252,19 +287,16 @@ export const orchardService = {
     if (filters?.page) params.append('page', String(filters.page))
     if (filters?.per_page) params.append('per_page', String(filters.per_page))
 
-    const { data } = await api.get(`/public/orchards/get-all?${params.toString()}`)
+    const { data } = await api.get(`/public/orchards?${params.toString()}`)
     return data.data as PaginatedResponse<Orchard>
   },
 
   /**
-   * Obtener URL completa de la imagen
+   * Obtener URL de foto
    */
   getPhotoUrl: (photoPath: string | null) => {
     if (!photoPath) return null
-    // Si ya es una URL completa, retornarla
-    if (photoPath.startsWith('http')) return photoPath
-    // Construir URL completa
-    const baseUrl = api.defaults.baseURL?.replace('/api', '') || ''
-    return `${baseUrl}/storage/${photoPath}`
+    const baseURL = api.defaults.baseURL?.replace('/api', '') || ''
+    return `${baseURL}/storage/${photoPath}`
   },
 }

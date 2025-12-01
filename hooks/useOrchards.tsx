@@ -1,189 +1,139 @@
-'use client'
-
-import { useState, useEffect, useCallback } from 'react'
-import { orchardService, Orchard, OrchardFilters, OrchardFormData, PaginatedResponse, OrchardStats } from '@/services/orchardService'
+import { useState, useEffect } from 'react'
+import { orchardService, Orchard, OrchardFormData, OrchardFilters } from '@/services/orchardService'
 import { toast } from 'sonner'
 
-export function useOrchards(initialFilters?: OrchardFilters) {
+interface UseOrchardsResult {
+  orchards: Orchard[]
+  years: number[]
+  isLoading: boolean
+  error: string | null
+  createOrchard: (data: OrchardFormData) => Promise<{ success: boolean; error?: string }>
+  updateOrchard: (id: number, data: Partial<OrchardFormData>) => Promise<{ success: boolean; error?: string }>
+  deleteOrchard: (id: number) => Promise<{ success: boolean; error?: string }>
+  updateFilters: (filters: OrchardFilters) => void
+  refresh: () => void
+}
+
+export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult {
   const [orchards, setOrchards] = useState<Orchard[]>([])
-  const [pagination, setPagination] = useState<Omit<PaginatedResponse<Orchard>, 'data'> | null>(null)
+  const [years, setYears] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<OrchardFilters>(initialFilters || {})
-  const [years, setYears] = useState<number[]>([])  // ← NUEVO
 
-
-  // Fetch orchards
-  const fetchOrchards = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+  // Función para cargar huertas
+  const loadOrchards = async () => {
     try {
+      setIsLoading(true)
+      setError(null)
+      
+      console.log('🔄 [useOrchards] Cargando huertas con filtros:', filters)
       const response = await orchardService.getAll(filters)
+      
+      console.log('✅ [useOrchards] Huertas cargadas:', response.data.length)
       setOrchards(response.data)
-      const { data, ...paginationData } = response
-      setPagination(paginationData)
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar las huertas')
-      toast.error('Error al cargar las huertas')
-    } finally {
+      
+      // 🆕 Calcular años únicos localmente desde los datos
+      const uniqueYears = [...new Set(response.data.map(o => o.year))]
+      const sortedYears = uniqueYears.sort((a, b) => b - a) // Más reciente primero
+      console.log('📅 [useOrchards] Años únicos:', sortedYears)
+      setYears(sortedYears)
+      
       setIsLoading(false)
+    } catch (err: any) {
+      console.error('❌ [useOrchards] Error cargando huertas:', err)
+      setError(err.message || 'Error al cargar huertas')
+      setIsLoading(false)
+      toast.error('Error al cargar huertas')
     }
-  }, [filters])
+  }
 
-  // ← NUEVO: Fetch years
-  const fetchYears = useCallback(async () => {
-    try {
-      const yearsData = await orchardService.getYears()
-      setYears(yearsData)
-    } catch (err) {
-      console.error('Error loading years:', err)
-    }
-  }, [])
-  // Fetch on mount and when filters change
+  // Cargar huertas al montar y cuando cambien los filtros
   useEffect(() => {
-    fetchOrchards()
-    fetchYears()  // ← NUEVO
-  }, [fetchOrchards, fetchYears])
+    loadOrchards()
+  }, [JSON.stringify(filters)])
 
-  // Create orchard
-  const createOrchard = async (orchardData: OrchardFormData) => {
+  // Crear huerta
+  const createOrchard = async (data: OrchardFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      const newOrchard = await orchardService.create(orchardData)
+      console.log('🆕 [useOrchards] Creando huerta...')
+      const newOrchard = await orchardService.create(data)
+      console.log('✅ [useOrchards] Huerta creada:', newOrchard.id)
+      
+      // Recargar lista
+      await loadOrchards()
+      
       toast.success('Huerta creada exitosamente')
-      await fetchOrchards() // Reload list
-      return { success: true, data: newOrchard }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al crear la huerta')
-      return { success: false, error: err.message }
-    }
-  }
-
-  // Update orchard
-  const updateOrchard = async (id: number | string, orchardData: Partial<OrchardFormData>) => {
-    try {
-      const updatedOrchard = await orchardService.update(id, orchardData)
-      toast.success('Huerta actualizada exitosamente')
-      await fetchOrchards() // Reload list
-      return { success: true, data: updatedOrchard }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al actualizar la huerta')
-      return { success: false, error: err.message }
-    }
-  }
-
-  // Delete orchard
-  const deleteOrchard = async (id: number | string) => {
-    try {
-      await orchardService.delete(id)
-      toast.success('Huerta eliminada exitosamente')
-      await fetchOrchards() // Reload list
       return { success: true }
     } catch (err: any) {
-      toast.error(err.message || 'Error al eliminar la huerta')
-      return { success: false, error: err.message }
+      console.error('❌ [useOrchards] Error creando huerta:', err)
+      const errorMessage = err.response?.data?.message || err.message || 'Error al crear huerta'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }
 
-  // Toggle featured
-  const toggleFeatured = async (id: number | string) => {
+  // Actualizar huerta
+  const updateOrchard = async (id: number, data: Partial<OrchardFormData>): Promise<{ success: boolean; error?: string }> => {
     try {
-      const updatedOrchard = await orchardService.toggleFeatured(id)
-      toast.success(updatedOrchard.is_featured ? 'Huerta marcada como destacada' : 'Huerta desmarcada como destacada')
-      await fetchOrchards() // Reload list
-      return { success: true, data: updatedOrchard }
+      console.log('✏️ [useOrchards] Actualizando huerta:', id)
+      await orchardService.update(id, data)
+      console.log('✅ [useOrchards] Huerta actualizada')
+      
+      // Recargar lista
+      await loadOrchards()
+      
+      toast.success('Huerta actualizada exitosamente')
+      return { success: true }
     } catch (err: any) {
-      toast.error('Error al actualizar el estado')
-      return { success: false, error: err.message }
+      console.error('❌ [useOrchards] Error actualizando huerta:', err)
+      const errorMessage = err.response?.data?.message || err.message || 'Error al actualizar huerta'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     }
   }
 
-  // Update filters
-  const updateFilters = (newFilters: Partial<OrchardFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }))
+  // Eliminar huerta
+  const deleteOrchard = async (id: number): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('🗑️ [useOrchards] Eliminando huerta:', id)
+      await orchardService.delete(id)
+      console.log('✅ [useOrchards] Huerta eliminada')
+      
+      // Recargar lista
+      await loadOrchards()
+      
+      toast.success('Huerta eliminada exitosamente')
+      return { success: true }
+    } catch (err: any) {
+      console.error('❌ [useOrchards] Error eliminando huerta:', err)
+      const errorMessage = err.response?.data?.message || err.message || 'Error al eliminar huerta'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
+    }
   }
 
-  // Clear filters
-  const clearFilters = () => {
-    setFilters({})
+  // Actualizar filtros
+  const updateFilters = (newFilters: OrchardFilters) => {
+    console.log('🔧 [useOrchards] Actualizando filtros:', newFilters)
+    setFilters({ ...filters, ...newFilters })
   }
 
-  // Go to page
-  const goToPage = (page: number) => {
-    updateFilters({ page })
+  // Refrescar datos
+  const refresh = () => {
+    console.log('🔄 [useOrchards] Refrescando datos...')
+    loadOrchards()
   }
 
   return {
     orchards,
-    pagination,
+    years,
     isLoading,
     error,
-    filters,
-    years,
-    fetchOrchards,
     createOrchard,
     updateOrchard,
     deleteOrchard,
-    toggleFeatured,
     updateFilters,
-    clearFilters,
-    goToPage,
+    refresh,
   }
-}
-
-// Hook para obtener una huerta específica
-export function useOrchard(id: number | string | null) {
-  const [orchard, setOrchard] = useState<Orchard | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!id) {
-      setIsLoading(false)
-      return
-    }
-
-    const fetchOrchard = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const data = await orchardService.getById(id)
-        setOrchard(data)
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar la huerta')
-        toast.error('Error al cargar la huerta')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchOrchard()
-  }, [id])
-
-  return { orchard, isLoading, error }
-}
-
-// Hook para estadísticas
-export function useOrchardStats() {
-  const [stats, setStats] = useState<OrchardStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await orchardService.getStatistics()
-      setStats(data)
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar las estadísticas')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchStats()
-  }, [fetchStats])
-
-  return { stats, isLoading, error, refetch: fetchStats }
 }

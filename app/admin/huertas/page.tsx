@@ -22,7 +22,7 @@ import { Search, Plus, Calendar, Clock, ImageIcon, Eye, Edit, Camera, MapPin, Sh
 import { toast } from "sonner"
 import Image from "next/image"
 
-// 🔌 IMPORTACIONES NUEVAS - Conectar con backend
+// 🔌 IMPORTACIONES - Conectar con backend
 import { useOrchards } from "@/hooks/useOrchards"
 import { orchardService, OrchardFormData } from "@/services/orchardService"
 import { useFarmers } from "@/hooks/useFarmers"
@@ -30,7 +30,7 @@ import { useAgaveTypes } from "@/hooks/useAgaveTypes"
 
 
 export default function AdminHuertasPage() {
-  // 🔌 HOOK NUEVO - Conectar con backend (reemplaza mockHuertas)
+  // 🔌 HOOK - Conectar con backend
   const {
     orchards,
     years,
@@ -40,13 +40,14 @@ export default function AdminHuertasPage() {
     deleteOrchard,
     updateFilters,
   } = useOrchards({
-    per_page: 50, // Mostrar muchas para que se vea completo
+    per_page: 50,
     sort_by: 'created_at',
     sort_order: 'desc',
   })
 
-  // Estados locales (igual que antes)
+  // Estados locales
   const { farmers, isLoading: isLoadingFarmers } = useFarmers()
+  const { agaveTypes, isLoading: isLoadingAgaveTypes, getIdByName } = useAgaveTypes()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [activeTab, setActiveTab] = useState("all")
@@ -56,9 +57,8 @@ export default function AdminHuertasPage() {
   const [selectedHuerta, setSelectedHuerta] = useState<any>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
-  const { agaveTypes, isLoading: isLoadingAgaveTypes, getIdByName } = useAgaveTypes()
 
-  // Formulario para nueva huerta (igual que antes)
+  // Formulario para nueva huerta
   const [newHuerta, setNewHuerta] = useState({
     name: "",
     type: "",
@@ -75,7 +75,7 @@ export default function AdminHuertasPage() {
   })
 
 
-  // 🔄 FILTRADO LOCAL - Mantener la misma lógica visual
+  // 🔄 FILTRADO LOCAL
   const filteredHuertas = orchards.filter((orchard) => {
     const matchesSearch =
       orchard.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,89 +92,147 @@ export default function AdminHuertasPage() {
     return matchesSearch && matchesYear && matchesTab
   })
 
-  // 🆕 CREAR HUERTA - Conectada al backend
+  // 🆕 CREAR HUERTA - Con logs para debug
   const handleAddHuerta = async () => {
+    console.log('🔵 [INICIO] handleAddHuerta llamado')
+    
     // Validar campos requeridos
     if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
-      toast.error("Por favor completa todos los campos requeridos (Nombre, Tipo, Año, Agricultor, Plantas)")
+      console.log('🔴 [ERROR] Campos requeridos faltantes:', {
+        name: !!newHuerta.name,
+        type: !!newHuerta.type,
+        year: !!newHuerta.year,
+        farmerId: !!newHuerta.farmerId,
+        plants: !!newHuerta.plants,
+      })
+      toast.error("Por favor completa todos los campos requeridos")
       return
     }
 
+    console.log('✅ [VALIDACIÓN] Campos requeridos presentes')
+    console.log('📋 [DATOS] newHuerta:', {
+      ...newHuerta,
+      photoId: newHuerta.photoId ? `File: ${newHuerta.photoId.name}` : 'null',
+      coverPhoto: newHuerta.coverPhoto ? `File: ${newHuerta.coverPhoto.name}` : 'null',
+    })
+
     setIsLoading(true)
 
-    // Preparar datos para el backend
-    const orchardData: OrchardFormData = {
-      name: newHuerta.name,
-      agave_type_id: Number(newHuerta.type),
-      farmer_id: Number(newHuerta.farmerId),
-      year: Number(newHuerta.year),
-      age: newHuerta.age ? Number(newHuerta.age.replace(' años', '')) : undefined,
-      plant_quantity: Number(newHuerta.plants),
-      photo_id: newHuerta.photoId, // Foto de portada
-      cover_photo: newHuerta.coverPhoto,     // ← NUEVO: Foto de portada
-      state: newHuerta.state || undefined,
-      municipality: newHuerta.municipality || undefined,
-      latitude: newHuerta.latitude ? Number(newHuerta.latitude) : undefined,
-      longitude: newHuerta.longitude ? Number(newHuerta.longitude) : undefined,
-      status: 'disponible',
-      is_featured: false,
-    }
+    try {
+      // Preparar datos para el backend
+      const orchardData: OrchardFormData = {
+        name: newHuerta.name,
+        agave_type_id: Number(newHuerta.type),
+        farmer_id: Number(newHuerta.farmerId),
+        year: Number(newHuerta.year),
+        age: newHuerta.age ? Number(newHuerta.age.replace(' años', '')) : undefined,
+        plant_quantity: Number(newHuerta.plants),
+        photo_id: newHuerta.photoId,
+        cover_photo: newHuerta.coverPhoto,
+        state: newHuerta.state || undefined,
+        municipality: newHuerta.municipality || undefined,
+        latitude: newHuerta.latitude ? Number(newHuerta.latitude) : undefined,
+        longitude: newHuerta.longitude ? Number(newHuerta.longitude) : undefined,
+        status: 'disponible',
+        is_featured: false,
+      }
 
-    // Llamar al servicio
-    const result = await createOrchard(orchardData)
-
-    setIsLoading(false)
-
-    if (result.success) {
-      setIsAddDialogOpen(false)
-      // Resetear formulario
-      setNewHuerta({
-        name: "",
-        type: "",
-        year: "",
-        age: "",
-        plants: "",
-        farmerId: "",
-        state: "",
-        municipality: "",
-        latitude: "",
-        longitude: "",
-        photoId: null,
-        coverPhoto: null,
+      console.log('📦 [DATOS PREPARADOS] orchardData:', {
+        ...orchardData,
+        photo_id: orchardData.photo_id ? `File: ${orchardData.photo_id.name}` : 'undefined',
+        cover_photo: orchardData.cover_photo ? `File: ${orchardData.cover_photo.name}` : 'undefined',
       })
+
+      // Llamar al servicio (ahora con Base64)
+      console.log('🚀 [API CALL] Llamando a createOrchard...')
+      const result = await createOrchard(orchardData)
+      
+      console.log('📥 [RESPUESTA] Resultado de createOrchard:', result)
+
+      setIsLoading(false)
+
+      if (result.success) {
+        console.log('✅ [ÉXITO] Huerta creada exitosamente')
+        toast.success('Huerta registrada exitosamente')
+        setIsAddDialogOpen(false)
+        
+        // Resetear formulario
+        setNewHuerta({
+          name: "",
+          type: "",
+          year: "",
+          age: "",
+          plants: "",
+          farmerId: "",
+          state: "",
+          municipality: "",
+          latitude: "",
+          longitude: "",
+          photoId: null,
+          coverPhoto: null,
+        })
+        console.log('🔄 [RESET] Formulario reseteado')
+      } else {
+        console.log('⚠️ [WARNING] createOrchard retornó success: false')
+        toast.error(result.error || 'Error al crear la huerta')
+      }
+    } catch (error: any) {
+      console.error('❌ [CATCH ERROR] Error en handleAddHuerta:', error)
+      console.error('❌ [ERROR DETAILS]:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+      setIsLoading(false)
+      toast.error(error.message || 'Error al crear la huerta')
     }
   }
 
-  // ✏️ EDITAR HUERTA - Conectada al backend  
+  // ✏️ EDITAR HUERTA - Con Base64
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
+    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.id)
     setIsLoading(true)
 
-    const orchardData: Partial<OrchardFormData> = {
-      name: selectedHuerta.name,
-      agave_type_id: selectedHuerta.agave_type_id,
-      farmer_id: selectedHuerta.farmer_id,
-      year: selectedHuerta.year,
-      age: selectedHuerta.age,
-      plant_quantity: selectedHuerta.plant_quantity,
-      state: selectedHuerta.state || undefined,
-      municipality: selectedHuerta.municipality || undefined,
-      latitude: selectedHuerta.latitude || undefined,
-      longitude: selectedHuerta.longitude || undefined,
-    }
+    try {
+      const orchardData: Partial<OrchardFormData> = {
+        name: selectedHuerta.name,
+        agave_type_id: selectedHuerta.agave_type_id,
+        farmer_id: selectedHuerta.farmer_id,
+        year: selectedHuerta.year,
+        age: selectedHuerta.age,
+        plant_quantity: selectedHuerta.plant_quantity,
+        state: selectedHuerta.state || undefined,
+        municipality: selectedHuerta.municipality || undefined,
+        latitude: selectedHuerta.latitude || undefined,
+        longitude: selectedHuerta.longitude || undefined,
+      }
 
-    // Si hay una nueva foto, agregarla
-    if (selectedHuerta.photo_id instanceof File) {
-      orchardData.photo_id = selectedHuerta.photo_id
-    }
+      // Si hay una nueva foto, agregarla
+      if (selectedHuerta.photo_id instanceof File) {
+        console.log('📸 [EDIT] Nueva foto detectada')
+        orchardData.photo_id = selectedHuerta.photo_id
+      }
 
-    const result = await updateOrchard(selectedHuerta.id, orchardData)
+      console.log('🚀 [EDIT] Enviando actualización...')
+      const result = await updateOrchard(selectedHuerta.id, orchardData)
+      console.log('📥 [EDIT] Resultado:', result)
 
-    setIsLoading(false)
+      setIsLoading(false)
 
-    if (result.success) {
-      setIsEditDialogOpen(false)
+      if (result.success) {
+        console.log('✅ [EDIT] Actualización exitosa')
+        toast.success('Huerta actualizada exitosamente')
+        setIsEditDialogOpen(false)
+      } else {
+        console.log('⚠️ [EDIT] Error en actualización')
+        toast.error(result.error || 'Error al actualizar')
+      }
+    } catch (error: any) {
+      console.error('❌ [EDIT ERROR]:', error)
+      setIsLoading(false)
+      toast.error(error.message || 'Error al actualizar la huerta')
     }
   }
 
@@ -197,7 +255,6 @@ export default function AdminHuertasPage() {
     }
   }
 
-  // Mapear status del backend al formato del frontend
   const formatStatus = (status: string) => {
     const statusMap: Record<string, string> = {
       'disponible': 'Disponible',
@@ -210,7 +267,7 @@ export default function AdminHuertasPage() {
   return (
     <AppLayout type="admin">
       <div className="space-y-6">
-        {/* Header - MANTENER IGUAL */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Gestión de Huertas</h1>
@@ -375,13 +432,23 @@ export default function AdminHuertasPage() {
                         id="photo-id"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setNewHuerta({ ...newHuerta, photoId: e.target.files?.[0] || null })}
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
+                          setNewHuerta({ ...newHuerta, photoId: file })
+                        }}
                         className="hidden"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => document.getElementById("photo-id")?.click()}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          console.log('📱 [iOS] Botón photo_id presionado')
+                          document.getElementById("photo-id")?.click()
+                        }}
                         className="w-full"
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
@@ -395,7 +462,7 @@ export default function AdminHuertasPage() {
                     )}
                   </div>
 
-                  {/* 🆕 FOTO DE PORTADA */}
+                  {/* FOTO DE PORTADA */}
                   <div className="space-y-2">
                     <Label htmlFor="cover-photo">Foto de Portada</Label>
                     <div className="flex items-center gap-2">
@@ -403,13 +470,23 @@ export default function AdminHuertasPage() {
                         id="cover-photo"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setNewHuerta({ ...newHuerta, coverPhoto: e.target.files?.[0] || null })}
+                        capture="environment"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
+                          setNewHuerta({ ...newHuerta, coverPhoto: file })
+                        }}
                         className="hidden"
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => document.getElementById("cover-photo")?.click()}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          console.log('📱 [iOS] Botón cover_photo presionado')
+                          document.getElementById("cover-photo")?.click()
+                        }}
                         className="w-full"
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
@@ -424,10 +501,10 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} type="button">
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+                  <Button onClick={handleAddHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700" type="button">
                     {isLoading ? "Guardando..." : "Agregar Huerta"}
                   </Button>
                 </DialogFooter>
@@ -435,7 +512,7 @@ export default function AdminHuertasPage() {
           </Dialog>
         </div>
 
-        {/* Filtro por año - MANTENER IGUAL */}
+        {/* Filtro por año */}
         <div className="bg-white p-6 rounded-lg border-2 border-orange-200">
           <h3 className="text-center text-lg font-medium text-gray-900 mb-4">Buscar por año</h3>
           <div className="flex flex-wrap justify-center gap-3">
@@ -459,7 +536,7 @@ export default function AdminHuertasPage() {
           </div>
         </div>
 
-        {/* Búsqueda - MANTENER IGUAL */}
+        {/* Búsqueda */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -472,7 +549,7 @@ export default function AdminHuertasPage() {
           </div>
         </div>
 
-        {/* Tabs - MANTENER IGUAL */}
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">Todas ({orchards.length})</TabsTrigger>
@@ -525,7 +602,7 @@ export default function AdminHuertasPage() {
 
                       <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
                         <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
-                          <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-gray-900">
                           {orchard.agave_type?.name || 'Azul Tequilana Weber'}
                         </span>
                       </div>
@@ -625,7 +702,7 @@ export default function AdminHuertasPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Modal para ver foto - MANTENER IGUAL */}
+        {/* Modal para ver foto */}
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -641,7 +718,7 @@ export default function AdminHuertasPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal para editar huerta - MANTENER IGUAL (solo cambiar lógica interna) */}
+        {/* Modal para editar huerta */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -650,7 +727,6 @@ export default function AdminHuertasPage() {
             </DialogHeader>
             {selectedHuerta && (
               <div className="grid gap-4 py-4">
-                {/* Nombre y Tipo */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-name">Nombre</Label>
@@ -681,7 +757,6 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                {/* Año, Edad, Plantas */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-year">Año</Label>
@@ -712,7 +787,6 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                {/* Agricultor */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-farmer">Agricultor</Label>
                   <Select
@@ -733,7 +807,6 @@ export default function AdminHuertasPage() {
                   </Select>
                 </div>
 
-                {/* Estado y Municipio */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-state">Estado</Label>
@@ -755,7 +828,6 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                {/* Coordenadas */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-latitude">Latitud</Label>
@@ -781,7 +853,6 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                {/* Cambiar Foto */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-photo">Cambiar Foto de Portada</Label>
                   {selectedHuerta.photo_id && (
@@ -798,13 +869,22 @@ export default function AdminHuertasPage() {
                     id="edit-photo"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setSelectedHuerta({ ...selectedHuerta, photo_id: e.target.files?.[0] })}
+                    capture="environment"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      console.log('📸 [EDIT] Nueva foto seleccionada:', file?.name)
+                      setSelectedHuerta({ ...selectedHuerta, photo_id: file })
+                    }}
                     className="hidden"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => document.getElementById("edit-photo")?.click()}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      document.getElementById("edit-photo")?.click()
+                    }}
                     className="w-full"
                   >
                     <ImageIcon className="h-4 w-4 mr-2" />
@@ -814,10 +894,10 @@ export default function AdminHuertasPage() {
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} type="button">
                 Cancelar
               </Button>
-              <Button onClick={handleEditHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleEditHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700" type="button">
                 {isLoading ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </DialogFooter>
