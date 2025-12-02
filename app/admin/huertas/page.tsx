@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,6 +44,11 @@ export default function AdminHuertasPage() {
     sort_by: 'created_at',
     sort_order: 'desc',
   })
+
+  // Refs para inputs de archivo (MEJORA PARA iOS)
+  const photoIdInputRef = useRef<HTMLInputElement>(null)
+  const coverPhotoInputRef = useRef<HTMLInputElement>(null)
+  const editPhotoInputRef = useRef<HTMLInputElement>(null)
 
   // Estados locales
   const { farmers, isLoading: isLoadingFarmers } = useFarmers()
@@ -92,29 +97,15 @@ export default function AdminHuertasPage() {
     return matchesSearch && matchesYear && matchesTab
   })
 
-  // 🆕 CREAR HUERTA - Con logs para debug
+  // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
     console.log('🔵 [INICIO] handleAddHuerta llamado')
     
     // Validar campos requeridos
     if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
-      console.log('🔴 [ERROR] Campos requeridos faltantes:', {
-        name: !!newHuerta.name,
-        type: !!newHuerta.type,
-        year: !!newHuerta.year,
-        farmerId: !!newHuerta.farmerId,
-        plants: !!newHuerta.plants,
-      })
       toast.error("Por favor completa todos los campos requeridos")
       return
     }
-
-    console.log('✅ [VALIDACIÓN] Campos requeridos presentes')
-    console.log('📋 [DATOS] newHuerta:', {
-      ...newHuerta,
-      photoId: newHuerta.photoId ? `File: ${newHuerta.photoId.name}` : 'null',
-      coverPhoto: newHuerta.coverPhoto ? `File: ${newHuerta.coverPhoto.name}` : 'null',
-    })
 
     setIsLoading(true)
 
@@ -137,22 +128,12 @@ export default function AdminHuertasPage() {
         is_featured: false,
       }
 
-      console.log('📦 [DATOS PREPARADOS] orchardData:', {
-        ...orchardData,
-        photo_id: orchardData.photo_id ? `File: ${orchardData.photo_id.name}` : 'undefined',
-        cover_photo: orchardData.cover_photo ? `File: ${orchardData.cover_photo.name}` : 'undefined',
-      })
-
-      // Llamar al servicio (ahora con Base64)
       console.log('🚀 [API CALL] Llamando a createOrchard...')
       const result = await createOrchard(orchardData)
       
-      console.log('📥 [RESPUESTA] Resultado de createOrchard:', result)
-
       setIsLoading(false)
 
       if (result.success) {
-        console.log('✅ [ÉXITO] Huerta creada exitosamente')
         toast.success('Huerta registrada exitosamente')
         setIsAddDialogOpen(false)
         
@@ -171,24 +152,17 @@ export default function AdminHuertasPage() {
           photoId: null,
           coverPhoto: null,
         })
-        console.log('🔄 [RESET] Formulario reseteado')
       } else {
-        console.log('⚠️ [WARNING] createOrchard retornó success: false')
         toast.error(result.error || 'Error al crear la huerta')
       }
     } catch (error: any) {
       console.error('❌ [CATCH ERROR] Error en handleAddHuerta:', error)
-      console.error('❌ [ERROR DETAILS]:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
       setIsLoading(false)
       toast.error(error.message || 'Error al crear la huerta')
     }
   }
 
-  // ✏️ EDITAR HUERTA - Con Base64
+  // ✏️ EDITAR HUERTA
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
@@ -424,15 +398,15 @@ export default function AdminHuertasPage() {
                     </div>
                   </div>
 
-                  {/* FOTO DE IDENTIFICACIÓN */}
+                  {/* FOTO DE IDENTIFICACIÓN - ACTUALIZADO CON REF */}
                   <div className="space-y-2">
                     <Label htmlFor="photo-id">Foto de Identificación</Label>
                     <div className="flex items-center gap-2">
                       <Input
+                        ref={photoIdInputRef}
                         id="photo-id"
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
                           console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
@@ -443,12 +417,7 @@ export default function AdminHuertasPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          console.log('📱 [iOS] Botón photo_id presionado')
-                          document.getElementById("photo-id")?.click()
-                        }}
+                        onClick={() => photoIdInputRef.current?.click()}
                         className="w-full"
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
@@ -462,15 +431,15 @@ export default function AdminHuertasPage() {
                     )}
                   </div>
 
-                  {/* FOTO DE PORTADA */}
+                  {/* FOTO DE PORTADA - ACTUALIZADO CON REF */}
                   <div className="space-y-2">
                     <Label htmlFor="cover-photo">Foto de Portada</Label>
                     <div className="flex items-center gap-2">
                       <Input
+                        ref={coverPhotoInputRef}
                         id="cover-photo"
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
                           console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
@@ -481,12 +450,7 @@ export default function AdminHuertasPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          console.log('📱 [iOS] Botón cover_photo presionado')
-                          document.getElementById("cover-photo")?.click()
-                        }}
+                        onClick={() => coverPhotoInputRef.current?.click()}
                         className="w-full"
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
@@ -853,6 +817,7 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
+                {/* EDITAR FOTO DE PORTADA - ACTUALIZADO CON REF */}
                 <div className="space-y-2">
                   <Label htmlFor="edit-photo">Cambiar Foto de Portada</Label>
                   {selectedHuerta.photo_id && (
@@ -866,10 +831,10 @@ export default function AdminHuertasPage() {
                     </div>
                   )}
                   <Input
+                    ref={editPhotoInputRef}
                     id="edit-photo"
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       console.log('📸 [EDIT] Nueva foto seleccionada:', file?.name)
@@ -880,11 +845,7 @@ export default function AdminHuertasPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      document.getElementById("edit-photo")?.click()
-                    }}
+                    onClick={() => editPhotoInputRef.current?.click()}
                     className="w-full"
                   >
                     <ImageIcon className="h-4 w-4 mr-2" />
