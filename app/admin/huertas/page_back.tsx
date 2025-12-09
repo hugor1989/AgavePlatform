@@ -50,9 +50,6 @@ export default function AdminHuertasPage() {
   const coverPhotoInputRef = useRef<HTMLInputElement>(null)
   const editPhotoInputRef = useRef<HTMLInputElement>(null)
 
-  const editPhotoIdRef = useRef<HTMLInputElement>(null);
-  const editCoverPhotoRef = useRef<HTMLInputElement>(null);
-
   // Estados locales
   const { farmers, isLoading: isLoadingFarmers } = useFarmers()
   const { agaveTypes, isLoading: isLoadingAgaveTypes, getIdByName } = useAgaveTypes()
@@ -100,6 +97,7 @@ export default function AdminHuertasPage() {
     return matchesSearch && matchesYear && matchesTab
   })
 
+  
   // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
     console.log('🔵 [INICIO] handleAddHuerta llamado')
@@ -128,9 +126,9 @@ export default function AdminHuertasPage() {
         latitude: newHuerta.latitude ? Number(newHuerta.latitude) : undefined,
         longitude: newHuerta.longitude ? Number(newHuerta.longitude) : undefined,
         status: 'disponible',
-        is_featured: false,
       }
 
+      console.log(orchardData)
       console.log('🚀 [API CALL] Llamando a createOrchard...')
       const result = await createOrchard(orchardData)
       
@@ -186,12 +184,10 @@ export default function AdminHuertasPage() {
         longitude: selectedHuerta.longitude || undefined,
       }
 
+      // Si hay una nueva foto, agregarla
       if (selectedHuerta.photo_id instanceof File) {
-        orchardData.photo_id = selectedHuerta.photo_id;
-      }
-
-      if (selectedHuerta.cover_photo instanceof File) {
-        orchardData.cover_photo = selectedHuerta.cover_photo;
+        console.log('📸 [EDIT] Nueva foto detectada')
+        orchardData.photo_id = selectedHuerta.photo_id
       }
 
       console.log('🚀 [EDIT] Enviando actualización...')
@@ -406,29 +402,32 @@ export default function AdminHuertasPage() {
                   {/* FOTO DE IDENTIFICACIÓN - ACTUALIZADO CON REF */}
                   <div className="space-y-2">
                     <Label htmlFor="photo-id">Foto de Identificación</Label>
+
                     <div className="flex items-center gap-2">
                       <Input
-                        ref={photoIdInputRef}
                         id="photo-id"
                         type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null
-                          console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
-                          setNewHuerta({ ...newHuerta, photoId: file })
-                        }}
+                        accept="image/*"           // NO capture=""
+                        ref={photoIdInputRef}
                         className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          console.log("📸 [PHOTO_ID] Seleccionado:", file?.name);
+                          setNewHuerta((prev) => ({ ...prev, photoId: file }));
+                        }}
                       />
+
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => photoIdInputRef.current?.click()}
                         className="w-full"
+                        onClick={() => photoIdInputRef.current?.click()}
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
-                        {newHuerta.photoId ? newHuerta.photoId.name : "Seleccionar foto de identificación"}
+                        {newHuerta.photoId ? newHuerta.photoId.name : "Seleccionar foto"}
                       </Button>
                     </div>
+
                     {newHuerta.photoId && (
                       <p className="text-sm text-gray-500">
                         Archivo seleccionado: {newHuerta.photoId.name}
@@ -439,29 +438,32 @@ export default function AdminHuertasPage() {
                   {/* FOTO DE PORTADA - ACTUALIZADO CON REF */}
                   <div className="space-y-2">
                     <Label htmlFor="cover-photo">Foto de Portada</Label>
+
                     <div className="flex items-center gap-2">
                       <Input
-                        ref={coverPhotoInputRef}
                         id="cover-photo"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null
-                          console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
-                          setNewHuerta({ ...newHuerta, coverPhoto: file })
-                        }}
+                        ref={coverPhotoInputRef}
                         className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          console.log("📸 [COVER_PHOTO] Seleccionado:", file?.name);
+                          setNewHuerta((prev) => ({ ...prev, coverPhoto: file }));
+                        }}
                       />
+
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => coverPhotoInputRef.current?.click()}
                         className="w-full"
+                        onClick={() => coverPhotoInputRef.current?.click()}
                       >
                         <ImageIcon className="h-4 w-4 mr-2" />
                         {newHuerta.coverPhoto ? newHuerta.coverPhoto.name : "Seleccionar foto de portada"}
                       </Button>
                     </div>
+
                     {newHuerta.coverPhoto && (
                       <p className="text-sm text-gray-500">
                         Archivo seleccionado: {newHuerta.coverPhoto.name}
@@ -542,18 +544,13 @@ export default function AdminHuertasPage() {
                 {filteredHuertas.map((orchard) => (
                   <Card key={orchard.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="relative">
-                      <button
-                        onClick={() => handleViewPhoto(orchard.cover_photo)}
-                        className="block w-full h-48"
-                      >
-                        <Image
-                          src={orchardService.getPhotoUrl(orchard.cover_photo) || "/placeholder.svg"}
-                          alt={orchard.name}
-                          width={400}
-                          height={200}
-                          className="w-full h-48 object-cover rounded-lg cursor-zoom-in"
-                        />
-                      </button>
+                      <Image
+                        src={orchardService.getPhotoUrl(orchard.cover_photo) || "/placeholder.svg"}
+                        alt={orchard.name}
+                        width={400}
+                        height={200}
+                        className="w-full h-48 object-cover"
+                      />
                       <div className="absolute top-3 left-3">
                         <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
                           <Camera className="w-3 h-3 mr-1" />
@@ -683,24 +680,11 @@ export default function AdminHuertasPage() {
               <DialogTitle>Foto ID de la Huerta</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
-              <div className="overflow-auto max-h-[70vh] p-2">
-                  <img
-                    src={selectedPhoto || "/placeholder.svg"}
-                    alt="Foto ID"
-                    className="max-w-none object-contain rounded-lg cursor-zoom-in"
-                    style={{ width: "100%", height: "auto" }}
-                    onClick={(e) => {
-                      const img = e.currentTarget;
-                      if (img.style.width === "100%") {
-                        img.style.width = "200%"; // zoom 2x
-                        img.style.cursor = "zoom-out";
-                      } else {
-                        img.style.width = "100%"; // volver a normal
-                        img.style.cursor = "zoom-in";
-                      }
-                    }}
-                  />
-                </div>
+              <img
+                src={selectedPhoto || "/placeholder.svg"}
+                alt="Foto ID"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+              />
             </div>
           </DialogContent>
         </Dialog>
@@ -840,9 +824,9 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                {/* EDITAR FOTO DE Identificación - ACTUALIZADO CON REF */}
+                {/* EDITAR FOTO DE PORTADA - ACTUALIZADO CON REF */}
                 <div className="space-y-2">
-                  <Label htmlFor="edit-photo">Cambiar Foto de Identificación</Label>
+                  <Label htmlFor="edit-photo">Cambiar Foto de Portada</Label>
                   {selectedHuerta.photo_id && (
                     <div className="mb-2">
                       <img
@@ -850,69 +834,30 @@ export default function AdminHuertasPage() {
                         alt="Foto actual"
                         className="w-full h-32 object-cover rounded-lg"
                       />
-                      <p className="text-sm text-gray-500 mt-1">Foto actual de identificación</p>
+                      <p className="text-sm text-gray-500 mt-1">Foto actual de portada</p>
                     </div>
                   )}
                   <Input
-                    ref={editPhotoIdRef}
-                    id="edit-photo-id"
+                    ref={editPhotoInputRef}
+                    id="edit-photo"
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      console.log("Nueva foto ID:", file?.name);
-                      setSelectedHuerta({ ...selectedHuerta, photo_id: file });
+                      const file = e.target.files?.[0]
+                      console.log('📸 [EDIT] Nueva foto seleccionada:', file?.name)
+                      setSelectedHuerta({ ...selectedHuerta, photo_id: file })
                     }}
                     className="hidden"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => editPhotoIdRef.current?.click()}
-                    className="w-full"
-                  >
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Seleccionar nueva foto de identificación
-                  </Button>
-                  
-                </div>
-
-                {/* EDITAR FOTO DE PORTADA - ACTUALIZADO CON REF */}
-                <div className="space-y-2">
-                  <Label htmlFor="edit-photo">Cambiar Foto de Portada</Label>
-                  {selectedHuerta.cover_photo && (
-                    <div className="mb-2">
-                      <img
-                        src={orchardService.getPhotoUrl(selectedHuerta.cover_photo) || "/placeholder.svg"}
-                        alt="Foto actual"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">Foto actual de identificación</p>
-                    </div>
-                  )}
-                  
-                  <Input
-                    ref={editCoverPhotoRef}
-                    id="edit-cover-photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      console.log("Nueva foto portada:", file?.name);
-                      setSelectedHuerta({ ...selectedHuerta, cover_photo: file });
-                    }}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => editCoverPhotoRef.current?.click()}
+                    onClick={() => editPhotoInputRef.current?.click()}
                     className="w-full"
                   >
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Seleccionar nueva foto de portada
                   </Button>
-                  
                 </div>
               </div>
             )}
