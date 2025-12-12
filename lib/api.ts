@@ -4,8 +4,7 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: "https://backend.productoresageve.com.mx/api",
   headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
+    'Accept': 'application/json',
   },
 })
 
@@ -43,18 +42,61 @@ api.interceptors.request.use(
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`
     }
+
+    // -------------------------------
+    // 🚀 DETECCIÓN REAL DE FORMDATA (iOS SAFE)
+    // -------------------------------
+    const isFormData =
+      typeof FormData !== 'undefined' &&
+      config.data &&
+      (config.data instanceof FormData ||
+        Object.prototype.toString.call(config.data) === '[object FormData]')
+
+    if (isFormData) {
+      // ❌ NO establecer content-type, Safari iOS lo revienta
+      if (config.headers && config.headers['Content-Type']) {
+        delete config.headers['Content-Type']
+      }
+    } else {
+      // JSON normal
+      if (config.data && typeof config.data === 'object') {
+        config.headers['Content-Type'] = 'application/json'
+      }
+    }
+
+    console.log('🚀 Axios Request Config:', {
+      url: config.url,
+      method: config.method,
+      isFormData,
+      headers: config.headers
+    })
+
     return config
   },
   (error) => Promise.reject(error)
 )
 
+// ----------------------------
+// RESPUESTA
+// ----------------------------
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ Axios Response:', {
+      status: response.status,
+      url: response.config.url
+    })
+    return response
+  },
   (error) => {
+    console.error('❌ Axios Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      data: error.response?.data
+    })
+
     if (error.response) {
       const { status, data, config } = error.response
 
-      // ⚡ Evitar redirección si es el login
       if (status === 401 && !config.url.includes('/login')) {
         clearAuthToken()
         if (typeof window !== 'undefined') {

@@ -84,6 +84,10 @@ export const orchardService = {
     return data.data
   },
 
+  catalog: async () => {
+    const { data } = await api.get('/orchards/catalog')
+    return data.data
+  },
   getById: async (id: number | string) => {
     const { data } = await api.get(`/orchards/${id}`)
     return data.data
