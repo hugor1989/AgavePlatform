@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Calendar, Clock, Camera, Share2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { orchardService } from "@/services/orchardService"
@@ -13,7 +14,9 @@ export default function FarmerCatalogPage() {
   const [huertas, setHuertas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState("all")
-
+  const [activeImageIndex, setActiveImageIndex] = useState<{[key: number]: number}>({})
+  const [selectedPhoto, setSelectedPhoto] = useState<string>("")
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false)
   // -----------------------------------------
   // 🔵 Usar nuevo endpoint: catálogo completo
   // -----------------------------------------
@@ -51,6 +54,11 @@ export default function FarmerCatalogPage() {
     return huertas.filter((h) => h.year == selectedYear)
   }, [huertas, selectedYear])
 
+  const handleViewPhoto = (photoPath: string | null) => {
+      const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
+      setSelectedPhoto(photoUrl)
+      setIsPhotoDialogOpen(true)
+  }
 
   return (
     <AppLayout type="farmer">
@@ -93,21 +101,132 @@ export default function FarmerCatalogPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredHuertas.map((huerta) => (
             <Card key={huerta.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative">
-                <Image
-                  src={orchardService.getPhotoUrl(huerta.photo_id) || "/agave-field-plantation.png"}
-                  alt={huerta.name}
-                  width={400}
-                  height={200}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-3 left-3">
-                  <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
-                    <Camera className="w-3 h-3 mr-1" />
-                    {huerta.photos_count ?? 0} fotos
-                  </Badge>
-                </div>
+             <div className="relative group">
+              {/* Flechas de navegación (solo si hay foto extra) */}
+              {huerta.extra_photo && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const current = activeImageIndex[huerta.id] || 0;
+                      setActiveImageIndex((prev) => ({
+                        ...prev,
+                        [huerta.id]: current === 0 ? 1 : 0,
+                      }));
+                    }}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const current = activeImageIndex[huerta.id] || 0;
+                      setActiveImageIndex((prev) => ({
+                        ...prev,
+                        [huerta.id]: current === 0 ? 1 : 0,
+                      }));
+                    }}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              {/* Foto activa */}
+              <div className="relative w-full h-48 overflow-hidden rounded-lg">
+                <button
+                  onClick={() => {
+                    const currentPhoto =
+                      (activeImageIndex[huerta.id] || 0) === 0
+                        ? huerta.cover_photo
+                        : huerta.extra_photo;
+                    handleViewPhoto(currentPhoto);
+                  }}
+                  className="block w-full h-full"
+                >
+                  {(activeImageIndex[huerta.id] || 0) === 0 ? (
+                    <Image
+                      src={
+                        orchardService.getPhotoUrl(huerta.cover_photo) ||
+                        '/placeholder.svg'
+                      }
+                      alt={huerta.name}
+                      width={400}
+                      height={200}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={
+                        orchardService.getPhotoUrl(huerta.extra_photo) ||
+                        '/placeholder.svg'
+                      }
+                      alt={`${huerta.name} - Foto extra`}
+                      width={400}
+                      height={200}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
+                </button>
               </div>
+
+              {/* Indicador de posición */}
+              {huerta.extra_photo && (
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      (activeImageIndex[huerta.id] || 0) === 0 ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  ></div>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      (activeImageIndex[huerta.id] || 0) === 1 ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  ></div>
+                </div>
+              )}
+
+              {/* Contador de fotos */}
+              <div className="absolute top-3 left-3">
+                <Badge variant="secondary" className="bg-black/70 text-white">
+                  <Camera className="w-3 h-3 mr-1" />
+                  {huerta.extra_photo ? '2' : '1'} foto{huerta.extra_photo ? 's' : ''}
+                </Badge>
+              </div>
+
+              {huerta.is_featured && (
+                <Badge className="absolute top-3 right-3 bg-yellow-500 text-white">
+                  Destacada
+                </Badge>
+              )}
+            </div>
 
               <CardContent className="p-4 space-y-3">
                 <div>
@@ -187,6 +306,35 @@ export default function FarmerCatalogPage() {
             </Card>
           ))}
         </div>
+
+        {/* Modal para ver foto */}
+        <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Foto de la Huerta</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <div className="overflow-auto max-h-[70vh] p-2">
+                  <img
+                    src={selectedPhoto || "/placeholder.svg"}
+                    alt="Foto"
+                    className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                    style={{ width: "100%", height: "auto" }}
+                    onClick={(e) => {
+                      const img = e.currentTarget;
+                      if (img.style.width === "100%") {
+                        img.style.width = "200%";
+                        img.style.cursor = "zoom-out";
+                      } else {
+                        img.style.width = "100%";
+                        img.style.cursor = "zoom-in";
+                      }
+                    }}
+                  />
+                </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   )

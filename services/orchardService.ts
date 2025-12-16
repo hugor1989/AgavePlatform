@@ -10,6 +10,7 @@ export interface Orchard {
   plant_quantity: number
   photo_id: string | null
   cover_photo: string | null
+  extra_photo: string | null
   state: string | null
   municipality: string | null
   latitude: number | null
@@ -43,6 +44,7 @@ export interface OrchardFormData {
   plant_quantity: number
   photo_id?: File | null
   cover_photo?: File | null
+  extra_photo?: File | null
   state?: string
   municipality?: string
   latitude?: number
@@ -123,6 +125,9 @@ export const orchardService = {
     if (orchardData.cover_photo instanceof File)
       formData.append('cover_photo', orchardData.cover_photo)
 
+    if (orchardData.extra_photo instanceof File)
+      formData.append('extra_photo', orchardData.extra_photo)
+
     const { data } = await api.post('/orchards/create-orchards', formData)
     return data.data
   },
@@ -173,6 +178,9 @@ export const orchardService = {
 
     if (orchardData.cover_photo instanceof File)
       formData.append('cover_photo', orchardData.cover_photo)
+
+    if (orchardData.extra_photo instanceof File)
+      formData.append('extra_photo', orchardData.extra_photo)
 
     // ❌ NO headers → iOS-friendly
     const { data } = await api.post(`/orchards/updare-data/${id}`, formData)
