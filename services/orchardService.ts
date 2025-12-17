@@ -20,6 +20,7 @@ export interface Orchard {
   photos_count: number
   description: string | null
   price: number | null
+  location_url: string | null
   created_at: string
   updated_at: string
   farmer?: {
@@ -52,7 +53,8 @@ export interface OrchardFormData {
   status?: string
   is_featured?: boolean
   description?: string
-  price?: number
+  price?: number,
+  location_url?: string
 }
 
 export interface OrchardFilters {
@@ -83,6 +85,8 @@ export const orchardService = {
     if (filters?.per_page) params.append('per_page', String(filters.per_page))
 
     const { data } = await api.get(`/orchards/get-all?${params.toString()}`)
+
+    console.log('📦 [orchardService] getAll response data:', data)
     return data.data
   },
 
@@ -118,6 +122,7 @@ export const orchardService = {
     if (orchardData.longitude != null) formData.append('longitude', String(orchardData.longitude))
     if (orchardData.description) formData.append('description', orchardData.description)
     if (orchardData.price != null) formData.append('price', String(orchardData.price))
+    if (orchardData.location_url) formData.append('location_url', orchardData.location_url)
 
     if (orchardData.photo_id instanceof File)
       formData.append('photo_id', orchardData.photo_id)
@@ -172,6 +177,10 @@ export const orchardService = {
 
     if (orchardData.longitude != null)
       formData.append('longitude', String(orchardData.longitude))
+
+    if (orchardData.location_url != null)
+      formData.append('location_url', String(orchardData.location_url))
+
 
     if (orchardData.photo_id instanceof File)
       formData.append('photo_id', orchardData.photo_id)

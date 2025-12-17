@@ -90,6 +90,22 @@ useEffect(() => {
     setSelectedHuerta(huerta)
     setShowHuertaDialog(true)
   }
+    const handleShareLocation = async (url: string) => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Ubicación de la huerta",
+        text: "Mira la ubicación de esta huerta",
+        url,
+      })
+    } else {
+      await navigator.clipboard.writeText(url)
+      alert("Enlace copiado al portapapeles")
+    }
+  } catch (error) {
+    console.error("Error al compartir:", error)
+  }
+}
 
   const handleViewPhoto = (photoPath: string | null) => {
       const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
@@ -299,9 +315,12 @@ useEffect(() => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                        <p className="text-sm font-mono text-green-800">{huerta.location}</p>
+                        <p className="text-sm font-mono text-green-800">{huerta.location_url}</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+                      <Button  variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-green-100"
+                              onClick={() => handleShareLocation(huerta.location_url!)}>
                         <Share2 className="w-4 h-4 text-green-700" />
                       </Button>
                     </div>

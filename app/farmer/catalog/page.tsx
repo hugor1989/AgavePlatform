@@ -290,7 +290,7 @@ export default function FarmerCatalogPage() {
                     <div>
                       <p className="text-sm text-green-700 font-medium">Ubicación</p>
                       <p className="text-sm font-mono text-green-800">
-                        {huerta.latitude}, {huerta.longitude}
+                        {huerta.location_url}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">

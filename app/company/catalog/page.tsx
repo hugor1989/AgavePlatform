@@ -183,13 +183,8 @@ export default function CompanyCatalogPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredHuertas.map((huerta) => (
-              <Card
-                key={huerta.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <CardContent className="p-0">
-                  {/* IMAGEN */}
-                  <div className="relative group">
+      <Card key={huerta.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                   <div className="relative group">
                     {/* Flechas de navegación (solo si hay foto extra) */}
                     {huerta.extra_photo && (
                       <>
@@ -218,7 +213,7 @@ export default function CompanyCatalogPage() {
                             />
                           </svg>
                         </button>
-
+      
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -246,7 +241,7 @@ export default function CompanyCatalogPage() {
                         </button>
                       </>
                     )}
-
+      
                     {/* Foto activa */}
                     <div className="relative w-full h-48 overflow-hidden rounded-lg">
                       <button
@@ -284,7 +279,7 @@ export default function CompanyCatalogPage() {
                         )}
                       </button>
                     </div>
-
+      
                     {/* Indicador de posición */}
                     {huerta.extra_photo && (
                       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
@@ -300,7 +295,7 @@ export default function CompanyCatalogPage() {
                         ></div>
                       </div>
                     )}
-
+      
                     {/* Contador de fotos */}
                     <div className="absolute top-3 left-3">
                       <Badge variant="secondary" className="bg-black/70 text-white">
@@ -308,83 +303,89 @@ export default function CompanyCatalogPage() {
                         {huerta.extra_photo ? '2' : '1'} foto{huerta.extra_photo ? 's' : ''}
                       </Badge>
                     </div>
-
+      
                     {huerta.is_featured && (
                       <Badge className="absolute top-3 right-3 bg-yellow-500 text-white">
                         Destacada
                       </Badge>
                     )}
                   </div>
-
-                  {/* CONTENIDO */}
-                  <div className="p-4 space-y-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">{huerta.name}</h3>
-                      <p className="text-sm text-gray-500">#{huerta.id}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src="/agave-icon.svg"
-                        alt="Agave"
-                        width={16}
-                        height={16}
-                      />
-                      <span className="text-sm">
-                        {huerta.agave_type?.name ?? "—"}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">
-                        Cantidad de Plantas
-                      </span>
-                      <span className="text-lg font-semibold text-blue-600">
-                        {(huerta.plant_quantity || 0).toLocaleString()}
-                      </span>
-                    </div>
-
-                    {/* UBICACIÓN */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">{huerta.state}</span>
+      
+                    <CardContent className="p-4 space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-900">{huerta.name}</h3>
+                        <p className="text-sm text-gray-500">#{huerta.id}</p>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">{huerta.year}</span>
+      
+                      <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+                        <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {huerta?.agave_type?.name}
+                        </span>
+                      </div>
+      
+                      <div className="text-center py-2">
+                        <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
+                        <span className="text-2xl font-bold text-blue-600">
+                          {huerta.plant_quantity?.toLocaleString()}
+                        </span>
+                      </div>
+      
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-gray-500">Estado</p>
+                            <p className="text-sm font-medium text-gray-900">{huerta.state}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">{huerta.age ?? "-"}</span>
+      
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full mt-2" />
+                          <div>
+                            <p className="text-sm text-gray-500">Municipio</p>
+                            <p className="text-sm font-medium text-gray-900">{huerta.municipality}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm font-mono text-green-800">
-                          {huerta.location}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleShareLocation(huerta.location)}
-                        >
-                          <Share2 className="h-4 w-4 text-green-700" />
-                        </Button>
+      
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Año</p>
+                            <p className="text-sm font-medium text-gray-900">{huerta.year}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Edad</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {huerta.age ?? "-"} años
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* BOTONES */}
-                    <div className="space-y-2">
+      
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-green-700 font-medium">Ubicación</p>
+                            <p className="text-sm font-mono text-green-800">
+                              {huerta.location_url}
+                            </p>
+                          </div>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+                            <Share2 className="w-4 h-4 text-green-700" />
+                          </Button>
+                        </div>
+                      </div>
+      
                       <Button className="w-full bg-teal-600 hover:bg-teal-700">
                         Ver Huerta
                       </Button>
-
-                      <Dialog>
+            <Dialog>
                         <DialogTrigger asChild>
                           <Button
                             className="w-full bg-green-600 hover:bg-green-700"
@@ -404,40 +405,104 @@ export default function CompanyCatalogPage() {
                           </DialogHeader>
 
                           <div className="space-y-4">
-                            <Input
-                              type="number"
-                              placeholder="Precio $"
-                              value={offerAmount}
-                              onChange={(e) =>
-                                setOfferAmount(e.target.value)
-                              }
-                            />
+                            {/* Precio */}
+                            <div className="space-y-2">
+                              <Label>Precio $ *</Label>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={offerAmount}
+                                onChange={(e) => setOfferAmount(e.target.value)}
+                              />
+                            </div>
 
-                            <div className="flex gap-2">
+                            {/* Cm de Jima */}
+                            <div className="space-y-2">
+                              <Label>Cm de Jima *</Label>
+                              <Input
+                                type="number"
+                                placeholder="Centímetros"
+                              />
+                            </div>
+
+                            {/* Meses financiado */}
+                            <div className="space-y-2">
+                              <Label>Meses financiado *</Label>
+                              <Input
+                                type="number"
+                                placeholder="Número de meses"
+                              />
+                            </div>
+
+                            {/* Fecha de jima */}
+                            <div className="space-y-2">
+                              <Label>Fecha de mes de jima *</Label>
+                              <Input type="date" />
+                            </div>
+
+                            {/* Kilos mínimos */}
+                            <div className="space-y-2">
+                              <Label>
+                                Se jimará a partir de * kilos para arriba *
+                              </Label>
+                              <Input
+                                type="number"
+                                placeholder="Kilos mínimos"
+                              />
+                            </div>
+
+                            {/* Pagos */}
+                            <div className="space-y-2">
+                              <Label>
+                                Cómo serían los pagos de viajes jimados *
+                              </Label>
+                              <textarea
+                                placeholder="Describe cómo serían los pagos..."
+                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                                rows={2}
+                              />
+                            </div>
+
+                            {/* Logística */}
+                            <div className="space-y-2">
+                              <Label>
+                                El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
+                              </Label>
+                              <textarea
+                                placeholder="Especifica la logística..."
+                                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                                rows={2}
+                              />
+                            </div>
+
+                            {/* Botones */}
+                            <div className="flex gap-2 pt-4">
                               <Button
                                 variant="outline"
-                                onClick={() => setSelectedHuerta(null)}
                                 className="flex-1"
+                                onClick={() => {
+                                  setSelectedHuerta(null)
+                                  setOfferAmount("")
+                                  setOfferComments("")
+                                }}
                               >
                                 Cancelar
                               </Button>
+
                               <Button
                                 onClick={handleMakeOffer}
                                 disabled={!offerAmount || isSubmittingOffer}
                                 className="flex-1 bg-teal-600 hover:bg-teal-700"
                               >
-                                {isSubmittingOffer
-                                  ? "Enviando..."
-                                  : "Enviar Oferta"}
+                                {isSubmittingOffer ? "Enviando..." : "Enviar Oferta"}
                               </Button>
                             </div>
                           </div>
                         </DialogContent>
+
                       </Dialog>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>        
             ))}
           </div>
         )}

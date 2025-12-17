@@ -81,6 +81,7 @@ export default function AdminHuertasPage() {
     municipality: "",
     latitude: "",
     longitude: "",
+    location_url: "",
     photoId: null as File | null,
     coverPhoto: null as File | null,
     extraPhoto: null as File | null, 
@@ -132,6 +133,7 @@ export default function AdminHuertasPage() {
         municipality: newHuerta.municipality || undefined,
         latitude: newHuerta.latitude ? Number(newHuerta.latitude) : undefined,
         longitude: newHuerta.longitude ? Number(newHuerta.longitude) : undefined,
+        location_url: newHuerta.location_url || undefined,
         status: 'disponible',
         is_featured: false,
       }
@@ -159,7 +161,8 @@ export default function AdminHuertasPage() {
           longitude: "",
           photoId: null,
           coverPhoto: null,
-          extraPhoto: null, 
+          extraPhoto: null,
+          location_url: "",
         })
       } else {
         toast.error(result.error || 'Error al crear la huerta')
@@ -175,9 +178,10 @@ export default function AdminHuertasPage() {
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
-    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.id)
+    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.location_url)
     setIsLoading(true)
 
+    
     try {
       const orchardData: Partial<OrchardFormData> = {
         name: selectedHuerta.name,
@@ -190,6 +194,7 @@ export default function AdminHuertasPage() {
         municipality: selectedHuerta.municipality || undefined,
         latitude: selectedHuerta.latitude || undefined,
         longitude: selectedHuerta.longitude || undefined,
+        location_url: selectedHuerta.location_url || undefined,
       }
 
       // Agregar fotos si se seleccionaron nuevas
@@ -225,6 +230,23 @@ export default function AdminHuertasPage() {
       toast.error(error.message || 'Error al actualizar la huerta')
     }
   }
+
+  const handleShareLocation = async (url: string) => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Ubicación de la huerta",
+        text: "Mira la ubicación de esta huerta",
+        url,
+      })
+    } else {
+      await navigator.clipboard.writeText(url)
+      alert("Enlace copiado al portapapeles")
+    }
+  } catch (error) {
+    console.error("Error al compartir:", error)
+  }
+}
 
   const handleViewPhoto = (photoPath: string | null) => {
     const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
@@ -389,19 +411,17 @@ export default function AdminHuertasPage() {
                   </div>
 
                   {/* Coordenadas GPS */}
-                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="latitude">Latitud</Label>
+                      <Label htmlFor="locationurl">Ubicación (URL)</Label>
                       <Input
-                        id="latitude"
-                        type="number"
-                        step="0.000001"
-                        value={newHuerta.latitude}
-                        onChange={(e) => setNewHuerta({ ...newHuerta, latitude: e.target.value })}
-                        placeholder="Ej: 20.8818"
+                        id="locationurl"
+                        type="text"
+                        value={newHuerta.location_url}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, location_url: e.target.value })}
+                        placeholder="Ej: https://maps.google.com/?q=20.12345,-103.12345"
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="longitude">Longitud</Label>
                       <Input
                         id="longitude"
@@ -411,8 +431,8 @@ export default function AdminHuertasPage() {
                         onChange={(e) => setNewHuerta({ ...newHuerta, longitude: e.target.value })}
                         placeholder="Ej: -103.8370"
                       />
-                    </div>
-                  </div>
+                    </div> */}
+                  
 
                   {/* FOTO DE IDENTIFICACIÓN */}
                   <div className="space-y-2">
@@ -482,7 +502,7 @@ export default function AdminHuertasPage() {
 
                   {/* 🔴 FOTO EXTRA - NUEVO CAMPO */}
                   <div className="space-y-2">
-                    <Label htmlFor="extra-photo">Foto Extra (Portada)</Label>
+                    <Label htmlFor="extra-photo">Foto Area Huerta</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         ref={extraPhotoInputRef}
@@ -728,14 +748,19 @@ export default function AdminHuertasPage() {
                         </div>
                       </div>
 
-                      {orchard.location && (
+                      {orchard.location_url && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                              <p className="text-sm font-mono text-green-800">{orchard.location}</p>
+                              <p className="text-sm font-mono text-green-800">{orchard.location_url}</p>
                             </div>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+                             <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-green-100"
+                              onClick={() => handleShareLocation(orchard.location_url!)}
+                            >
                               <Share2 className="w-4 h-4 text-green-700" />
                             </Button>
                           </div>
@@ -921,7 +946,30 @@ export default function AdminHuertasPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Coordenadas GPS */}
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-locationurl">Ubicación (URL)</Label>
+                      <Input
+                        id="edit-locationurl"
+                        type="text"
+                        value={selectedHuerta.location_url || ''}
+                        onChange={(e) => setSelectedHuerta({ ...selectedHuerta, location_url: e.target.value })}
+                        placeholder="Ej: https://maps.google.com/?q=20.12345,-103.12345"
+                      />
+                    </div>
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="longitude">Longitud</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="0.000001"
+                        value={newHuerta.longitude}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, longitude: e.target.value })}
+                        placeholder="Ej: -103.8370"
+                      />
+                    </div> */}
+                  
+                {/* <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-latitude">Latitud</Label>
                     <Input
@@ -944,147 +992,147 @@ export default function AdminHuertasPage() {
                       placeholder="Ej: -103.8370"
                     />
                   </div>
-                </div>
+                </div> */}
 
                 {/* EDITAR FOTO DE IDENTIFICACIÓN */}
-<div className="space-y-2">
-  <Label htmlFor="edit-photo-id">Cambiar Foto de Identificación</Label>
-  {(selectedHuerta.photo_id || selectedHuerta.photo_id_path) && (
-    <div className="mb-2">
-      <img
-        src={
-          selectedHuerta.photo_id instanceof File
-            ? URL.createObjectURL(selectedHuerta.photo_id)
-            : orchardService.getPhotoUrl(selectedHuerta.photo_id || selectedHuerta.photo_id_path) || "/placeholder.svg"
-        }
-        alt="Foto actual"
-        className="w-full h-32 object-cover rounded-lg"
-      />
-      <p className="text-sm text-gray-500 mt-1">
-        {selectedHuerta.photo_id instanceof File
-          ? "Nueva foto seleccionada"
-          : "Foto actual de identificación"}
-      </p>
-    </div>
-  )}
-  <Input
-    ref={editPhotoIdRef}
-    id="edit-photo-id"
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      console.log("Nueva foto ID:", file?.name);
-      setSelectedHuerta({ ...selectedHuerta, photo_id: file });
-    }}
-    className="hidden"
-  />
-  <Button
-    type="button"
-    variant="outline"
-    onClick={() => editPhotoIdRef.current?.click()}
-    className="w-full"
-  >
-    <ImageIcon className="h-4 w-4 mr-2" />
-    {selectedHuerta.photo_id ? 
-      "Reemplazar foto de identificación" : 
-      "Seleccionar foto de identificación"}
-  </Button>
-</div>
+        <div className="space-y-2">
+          <Label htmlFor="edit-photo-id">Cambiar Foto de Identificación</Label>
+          {(selectedHuerta.photo_id || selectedHuerta.photo_id_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.photo_id instanceof File
+                    ? URL.createObjectURL(selectedHuerta.photo_id)
+                    : orchardService.getPhotoUrl(selectedHuerta.photo_id || selectedHuerta.photo_id_path) || "/placeholder.svg"
+                }
+                alt="Foto actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.photo_id instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto actual de identificación"}
+              </p>
+            </div>
+          )}
+          <Input
+            ref={editPhotoIdRef}
+            id="edit-photo-id"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              console.log("Nueva foto ID:", file?.name);
+              setSelectedHuerta({ ...selectedHuerta, photo_id: file });
+            }}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => editPhotoIdRef.current?.click()}
+            className="w-full"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            {selectedHuerta.photo_id ? 
+              "Reemplazar foto de identificación" : 
+              "Seleccionar foto de identificación"}
+          </Button>
+        </div>
 
-{/* EDITAR FOTO DE PORTADA */}
-<div className="space-y-2">
-  <Label htmlFor="edit-cover-photo">Cambiar Foto de Portada</Label>
-  {(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) && (
-    <div className="mb-2">
-      <img
-        src={
-          selectedHuerta.cover_photo instanceof File
-            ? URL.createObjectURL(selectedHuerta.cover_photo)
-            : orchardService.getPhotoUrl(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) || "/placeholder.svg"
-        }
-        alt="Foto actual"
-        className="w-full h-32 object-cover rounded-lg"
-      />
-      <p className="text-sm text-gray-500 mt-1">
-        {selectedHuerta.cover_photo instanceof File
-          ? "Nueva foto seleccionada"
-          : "Foto actual de portada"}
-      </p>
-    </div>
-  )}
-  
-  <Input
-    ref={editCoverPhotoRef}
-    id="edit-cover-photo"
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      console.log("Nueva foto portada:", file?.name);
-      setSelectedHuerta({ ...selectedHuerta, cover_photo: file });
-    }}
-    className="hidden"
-  />
-  <Button
-    type="button"
-    variant="outline"
-    onClick={() => editCoverPhotoRef.current?.click()}
-    className="w-full"
-  >
-    <ImageIcon className="h-4 w-4 mr-2" />
-    {selectedHuerta.cover_photo ? 
-      "Reemplazar foto de portada" : 
-      "Seleccionar foto de portada"}
-  </Button>
-</div>
+        {/* EDITAR FOTO DE PORTADA */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-cover-photo">Cambiar Foto de Portada</Label>
+          {(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.cover_photo instanceof File
+                    ? URL.createObjectURL(selectedHuerta.cover_photo)
+                    : orchardService.getPhotoUrl(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) || "/placeholder.svg"
+                }
+                alt="Foto actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.cover_photo instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto actual de portada"}
+              </p>
+            </div>
+          )}
+          
+          <Input
+            ref={editCoverPhotoRef}
+            id="edit-cover-photo"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              console.log("Nueva foto portada:", file?.name);
+              setSelectedHuerta({ ...selectedHuerta, cover_photo: file });
+            }}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => editCoverPhotoRef.current?.click()}
+            className="w-full"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            {selectedHuerta.cover_photo ? 
+              "Reemplazar foto de portada" : 
+              "Seleccionar foto de portada"}
+          </Button>
+        </div>
 
-{/* EDITAR FOTO EXTRA */}
-<div className="space-y-2">
-  <Label htmlFor="edit-extra-photo">Cambiar Foto Extra Portada</Label>
-  {(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) && (
-    <div className="mb-2">
-      <img
-        src={
-          selectedHuerta.extra_photo instanceof File
-            ? URL.createObjectURL(selectedHuerta.extra_photo)
-            : orchardService.getPhotoUrl(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) || "/placeholder.svg"
-        }
-        alt="Foto extra actual"
-        className="w-full h-32 object-cover rounded-lg"
-      />
-      <p className="text-sm text-gray-500 mt-1">
-        {selectedHuerta.extra_photo instanceof File
-          ? "Nueva foto seleccionada"
-          : "Foto extra actual"}
-      </p>
-    </div>
-  )}
+        {/* EDITAR FOTO EXTRA */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-extra-photo">Cambiar Foto Area Huerta</Label>
+          {(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.extra_photo instanceof File
+                    ? URL.createObjectURL(selectedHuerta.extra_photo)
+                    : orchardService.getPhotoUrl(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) || "/placeholder.svg"
+                }
+                alt="Foto extra actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.extra_photo instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto extra actual"}
+              </p>
+            </div>
+        )}
   
-  <Input
-    ref={editExtraPhotoRef}
-    id="edit-extra-photo"
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      console.log("Nueva foto extra:", file?.name);
-      setSelectedHuerta({ ...selectedHuerta, extra_photo: file });
-    }}
-    className="hidden"
-  />
-  <Button
-    type="button"
-    variant="outline"
-    onClick={() => editExtraPhotoRef.current?.click()}
-    className="w-full"
-  >
-    <ImageIcon className="h-4 w-4 mr-2" />
-    {selectedHuerta.extra_photo ? 
-      "Reemplazar foto extra" : 
-      "Seleccionar foto extra"}
-  </Button>
-</div>
+        <Input
+          ref={editExtraPhotoRef}
+          id="edit-extra-photo"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            console.log("Nueva foto extra:", file?.name);
+            setSelectedHuerta({ ...selectedHuerta, extra_photo: file });
+          }}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => editExtraPhotoRef.current?.click()}
+          className="w-full"
+        >
+          <ImageIcon className="h-4 w-4 mr-2" />
+          {selectedHuerta.extra_photo ? 
+            "Reemplazar foto area huerta" : 
+            "Seleccionar foto area huerta"}
+        </Button>
+      </div>
               </div>
             )}
             <DialogFooter>
