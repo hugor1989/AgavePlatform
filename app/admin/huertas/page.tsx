@@ -231,6 +231,25 @@ export default function AdminHuertasPage() {
     }
   }
 
+  const handleOpenLocation = (url: string) => {
+    if (!url) return
+
+    try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+      let finalUrl = url
+
+      // Si es iOS y viene un link de Google Maps → convertir a Apple Maps
+      if (isIOS && url.includes("google.com/maps")) {
+        finalUrl = url.replace("https://www.google.com/maps", "https://maps.apple.com")
+      }
+
+      window.open(finalUrl, "_blank", "noopener,noreferrer")
+    } catch (error) {
+      console.error("Error al abrir ubicación:", error)
+    }
+  }
+
   const handleShareLocation = async (url: string) => {
   try {
     if (navigator.share) {
@@ -241,10 +260,10 @@ export default function AdminHuertasPage() {
       })
     } else {
       await navigator.clipboard.writeText(url)
-      alert("Enlace copiado al portapapeles")
+      toast.success("Enlace copiado al portapapeles")
     }
   } catch (error) {
-    console.error("Error al compartir:", error)
+    console.error("Error al compartir ubicación:", error)
   }
 }
 
@@ -749,25 +768,38 @@ export default function AdminHuertasPage() {
                       </div>
 
                       {orchard.location_url && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="min-w-0">
-                              <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                              <p className="text-sm font-mono text-green-800 break-all">
-                                {orchard.location_url}
-                              </p>
+                       <div
+                          onClick={() => handleOpenLocation(orchard.location_url!)}
+                          className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm
+                                    flex items-center justify-between gap-3 cursor-pointer
+                                    hover:bg-green-100 active:scale-[0.98] transition"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-200 shrink-0">
+                              <MapPin className="h-5 w-5 text-green-700" />
                             </div>
 
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-green-100 shrink-0 self-end sm:self-auto"
-                              onClick={() => handleShareLocation(orchard.location_url!)}
-                            >
-                              <Share2 className="w-4 h-4 text-green-700" />
-                            </Button>
+                            <div>
+                              <p className="text-sm font-medium text-green-800">
+                                Ver ubicación
+                              </p>
+                              
+                            </div>
                           </div>
-                        </div>
+
+                          {/* BOTÓN SOLO PARA COMPARTIR */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation() // 👈 IMPORTANTE
+                              handleShareLocation(orchard.location_url!)
+                            }}
+                            className="h-9 w-9 rounded-full flex items-center justify-center
+                                      hover:bg-green-200 transition"
+                            aria-label="Compartir ubicación"
+                          >
+                            <Share2 className="h-4 w-4 text-green-700" />
+                          </button>
+                       </div>
                       )}
 
                       <div className="space-y-2">
