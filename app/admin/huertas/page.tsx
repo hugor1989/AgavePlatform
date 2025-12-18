@@ -750,15 +750,18 @@ export default function AdminHuertasPage() {
 
                       {orchard.location_url && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="min-w-0">
                               <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                              <p className="text-sm font-mono text-green-800">{orchard.location_url}</p>
+                              <p className="text-sm font-mono text-green-800 break-all">
+                                {orchard.location_url}
+                              </p>
                             </div>
-                             <Button
+
+                            <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 hover:bg-green-100"
+                              className="h-8 w-8 p-0 hover:bg-green-100 shrink-0 self-end sm:self-auto"
                               onClick={() => handleShareLocation(orchard.location_url!)}
                             >
                               <Share2 className="w-4 h-4 text-green-700" />

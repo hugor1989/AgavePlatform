@@ -60,6 +60,23 @@ export default function FarmerCatalogPage() {
       setIsPhotoDialogOpen(true)
   }
 
+  const handleShareLocation = async (url: string) => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Ubicación de la huerta",
+        text: "Mira la ubicación de esta huerta",
+        url,
+      })
+    } else {
+      await navigator.clipboard.writeText(url)
+      alert("Enlace copiado al portapapeles")
+    }
+  } catch (error) {
+    console.error("Error al compartir:", error)
+  }
+}
+
   return (
     <AppLayout type="farmer">
       <div className="space-y-6">
@@ -285,19 +302,25 @@ export default function FarmerCatalogPage() {
                   </div>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                      <p className="text-sm font-mono text-green-800">
-                        {huerta.location_url}
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
-                      <Share2 className="w-4 h-4 text-green-700" />
-                    </Button>
-                  </div>
-                </div>
+                       <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm text-green-700 font-medium">Ubicación</p>
+                              <p className="text-sm font-mono text-green-800 break-all">
+                                {huerta.location_url}
+                              </p>
+                            </div>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-green-100 shrink-0 self-end sm:self-auto"
+                              onClick={() => handleShareLocation(huerta.location_url!)}
+                            >
+                              <Share2 className="w-4 h-4 text-green-700" />
+                            </Button>
+                          </div>
+                        </div>
 
                 <Button className="w-full bg-teal-600 hover:bg-teal-700">
                   Ver Huerta
