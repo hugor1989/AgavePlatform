@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo,useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,9 @@ export default function FarmerCatalogPage() {
   const [activeImageIndex, setActiveImageIndex] = useState<{[key: number]: number}>({})
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false)
+
+  const touchStartX = useRef<number | null>(null)
+  
   // -----------------------------------------
   // 🔵 Usar nuevo endpoint: catálogo completo
   // -----------------------------------------
@@ -59,6 +62,28 @@ export default function FarmerCatalogPage() {
       setSelectedPhoto(photoUrl)
       setIsPhotoDialogOpen(true)
   }
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartX.current = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
+  if (touchStartX.current === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchStartX.current - touchEndX
+
+  // Umbral mínimo para considerar swipe
+  if (Math.abs(diffX) > 50) {
+    setActiveImageIndex(prev => {
+      const current = prev[huertaId] || 0
+      return { ...prev, [huertaId]: current === 0 ? 1 : 0 }
+    })
+  }
+
+  touchStartX.current = null
+}
+
 
   const handleOpenLocation = (url: string) => {
     if (!url) return
@@ -195,43 +220,42 @@ export default function FarmerCatalogPage() {
                 </>
               )}
 
-              {/* Foto activa */}
-              <div className="relative w-full h-48 overflow-hidden rounded-lg">
-                <button
-                  onClick={() => {
-                    const currentPhoto =
-                      (activeImageIndex[huerta.id] || 0) === 0
-                        ? huerta.cover_photo
-                        : huerta.extra_photo;
-                    handleViewPhoto(currentPhoto);
-                  }}
-                  className="block w-full h-full"
-                >
-                  {(activeImageIndex[huerta.id] || 0) === 0 ? (
-                    <Image
-                      src={
-                        orchardService.getPhotoUrl(huerta.cover_photo) ||
-                        '/placeholder.svg'
-                      }
-                      alt={huerta.name}
-                      width={400}
-                      height={200}
-                      className="w-full h-48 object-cover"
-                    />
-                  ) : (
-                    <Image
-                      src={
-                        orchardService.getPhotoUrl(huerta.extra_photo) ||
-                        '/placeholder.svg'
-                      }
-                      alt={`${huerta.name} - Foto extra`}
-                      width={400}
-                      height={200}
-                      className="w-full h-48 object-cover"
-                    />
-                  )}
-                </button>
-              </div>
+              {/* FOTO ACTIVA — AQUÍ VA EL SWIPE */}
+            <div
+              className="relative w-full h-48 overflow-hidden rounded-lg"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={(e) => handleTouchEnd(e, huerta.id)}
+            >
+              <button
+                onClick={() => {
+                  const currentPhoto =
+                    (activeImageIndex[huerta.id] || 0) === 0
+                      ? huerta.cover_photo
+                      : huerta.extra_photo
+
+                  handleViewPhoto(currentPhoto)
+                }}
+                className="block w-full h-full"
+              >
+                {(activeImageIndex[huerta.id] || 0) === 0 ? (
+                  <Image
+                    src={orchardService.getPhotoUrl(huerta.cover_photo) || "/placeholder.svg"}
+                    alt={huerta.name}
+                    width={400}
+                    height={200}
+                    className="w-full h-48 object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={orchardService.getPhotoUrl(huerta.extra_photo) || "/placeholder.svg"}
+                    alt={`${huerta.name} - Foto extra`}
+                    width={400}
+                    height={200}
+                    className="w-full h-48 object-cover"
+                  />
+                )}
+              </button>
+            </div>
 
               {/* Indicador de posición */}
               {huerta.extra_photo && (

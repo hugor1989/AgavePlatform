@@ -54,6 +54,7 @@ export default function AdminHuertasPage() {
   const editCoverPhotoRef = useRef<HTMLInputElement>(null)
   const editExtraPhotoRef = useRef<HTMLInputElement>(null) 
   const [activeImageIndex, setActiveImageIndex] = useState<{[key: number]: number}>({})
+  const touchStartX = useRef<number | null>(null)
 
 
   // Estados locales
@@ -265,6 +266,27 @@ export default function AdminHuertasPage() {
   } catch (error) {
     console.error("Error al compartir ubicación:", error)
   }
+}
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartX.current = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
+  if (touchStartX.current === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchStartX.current - touchEndX
+
+  // Umbral mínimo para considerar swipe
+  if (Math.abs(diffX) > 50) {
+    setActiveImageIndex(prev => {
+      const current = prev[huertaId] || 0
+      return { ...prev, [huertaId]: current === 0 ? 1 : 0 }
+    })
+  }
+
+  touchStartX.current = null
 }
 
   const handleViewPhoto = (photoPath: string | null) => {
@@ -657,36 +679,42 @@ export default function AdminHuertasPage() {
                         </>
                       )}
                       
-                      {/* Foto activa */}
-                      <div className="relative w-full h-48 overflow-hidden rounded-lg">
-                        <button
-                          onClick={() => {
-                            const currentPhoto = (activeImageIndex[orchard.id] || 0) === 0 
-                              ? orchard.cover_photo 
-                              : orchard.extra_photo
-                            handleViewPhoto(currentPhoto)
-                          }}
-                          className="block w-full h-full"
-                        >
-                          {(activeImageIndex[orchard.id] || 0) === 0 ? (
-                            <Image
-                              src={orchardService.getPhotoUrl(orchard.cover_photo) || "/placeholder.svg"}
-                              alt={orchard.name}
-                              width={400}
-                              height={200}
-                              className="w-full h-48 object-cover"
-                            />
-                          ) : (
-                            <Image
-                              src={orchardService.getPhotoUrl(orchard.extra_photo) || "/placeholder.svg"}
-                              alt={`${orchard.name} - Foto extra`}
-                              width={400}
-                              height={200}
-                              className="w-full h-48 object-cover"
-                            />
-                          )}
-                        </button>
-                      </div>
+                     {/* FOTO ACTIVA — AQUÍ VA EL SWIPE */}
+                                         <div
+                                           className="relative w-full h-48 overflow-hidden rounded-lg"
+                                           onTouchStart={handleTouchStart}
+                                           onTouchEnd={(e) => handleTouchEnd(e, orchard.id)}
+                                         >
+                                           <button
+                                             onClick={() => {
+                                               const currentPhoto =
+                                                 (activeImageIndex[orchard.id] || 0) === 0
+                                                   ? orchard.cover_photo
+                                                   : orchard.extra_photo
+                     
+                                               handleViewPhoto(currentPhoto)
+                                             }}
+                                             className="block w-full h-full"
+                                           >
+                                             {(activeImageIndex[orchard.id] || 0) === 0 ? (
+                                               <Image
+                                                 src={orchardService.getPhotoUrl(orchard.cover_photo) || "/placeholder.svg"}
+                                                 alt={orchard.name}
+                                                 width={400}
+                                                 height={200}
+                                                 className="w-full h-48 object-cover"
+                                               />
+                                             ) : (
+                                               <Image
+                                                 src={orchardService.getPhotoUrl(orchard.extra_photo) || "/placeholder.svg"}
+                                                 alt={`${orchard.name} - Foto extra`}
+                                                 width={400}
+                                                 height={200}
+                                                 className="w-full h-48 object-cover"
+                                               />
+                                             )}
+                                           </button>
+                                         </div>
                       
                       {/* Indicador de posición */}
                       {orchard.extra_photo && (

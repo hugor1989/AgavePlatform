@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef} from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +25,8 @@ export default function FarmerHuertasPage() {
 
   const [idPhotoUrl, setIdPhotoUrl] = useState<string | null>(null)
   const [showIdDialog, setShowIdDialog] = useState(false)
+
+  const touchStartX = useRef<number | null>(null)
 
   
 
@@ -69,6 +71,27 @@ useEffect(() => {
 
     return matchSearch && matchYear
   })
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartX.current = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
+  if (touchStartX.current === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchStartX.current - touchEndX
+
+  // Umbral mínimo para considerar swipe
+  if (Math.abs(diffX) > 50) {
+    setActiveImageIndex(prev => {
+      const current = prev[huertaId] || 0
+      return { ...prev, [huertaId]: current === 0 ? 1 : 0 }
+    })
+  }
+
+  touchStartX.current = null
+}
 
   // -----------------------------------------
   // 🔵 BOTÓN: Id Foto (abre modal con imagen real)
@@ -220,35 +243,41 @@ useEffect(() => {
                                      )}
                                      
                                      {/* Foto activa */}
-                                     <div className="relative w-full h-48 overflow-hidden rounded-lg">
-                                       <button
-                                         onClick={() => {
-                                           const currentPhoto = (activeImageIndex[huerta.id] || 0) === 0 
-                                             ? huerta.cover_photo 
-                                             : huerta.extra_photo
-                                           handleViewPhoto(currentPhoto)
-                                         }}
-                                         className="block w-full h-full"
-                                       >
-                                         {(activeImageIndex[huerta.id] || 0) === 0 ? (
-                                           <Image
-                                             src={orchardService.getPhotoUrl(huerta.cover_photo) || "/placeholder.svg"}
-                                             alt={huerta.name}
-                                             width={400}
-                                             height={200}
-                                             className="w-full h-48 object-cover"
-                                           />
-                                         ) : (
-                                           <Image
-                                             src={orchardService.getPhotoUrl(huerta.extra_photo) || "/placeholder.svg"}
-                                             alt={`${huerta.name} - Foto extra`}
-                                             width={400}
-                                             height={200}
-                                             className="w-full h-48 object-cover"
-                                           />
-                                         )}
-                                       </button>
-                                     </div>
+                                     <div
+                                    className="relative w-full h-48 overflow-hidden rounded-lg"
+                                    onTouchStart={handleTouchStart}
+                                    onTouchEnd={(e) => handleTouchEnd(e, huerta.id)}
+                                  >
+                                    <button
+                                      onClick={() => {
+                                        const currentPhoto =
+                                          (activeImageIndex[huerta.id] || 0) === 0
+                                            ? huerta.cover_photo
+                                            : huerta.extra_photo
+
+                                        handleViewPhoto(currentPhoto)
+                                      }}
+                                      className="block w-full h-full"
+                                    >
+                                      {(activeImageIndex[huerta.id] || 0) === 0 ? (
+                                        <Image
+                                          src={orchardService.getPhotoUrl(huerta.cover_photo) || "/placeholder.svg"}
+                                          alt={huerta.name}
+                                          width={400}
+                                          height={200}
+                                          className="w-full h-48 object-cover"
+                                        />
+                                      ) : (
+                                        <Image
+                                          src={orchardService.getPhotoUrl(huerta.extra_photo) || "/placeholder.svg"}
+                                          alt={`${huerta.name} - Foto extra`}
+                                          width={400}
+                                          height={200}
+                                          className="w-full h-48 object-cover"
+                                        />
+                                      )}
+                                    </button>
+                                  </div>
                                      
                                      {/* Indicador de posición */}
                                      {huerta.extra_photo && (
@@ -269,7 +298,7 @@ useEffect(() => {
                                      {huerta.is_featured && (
                                        <Badge className="absolute top-3 right-3 bg-yellow-500 text-white">Destacada</Badge>
                                      )}
-                                   </div>
+                </div>
 
 
                 <CardContent className="p-4 space-y-3">

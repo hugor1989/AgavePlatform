@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +41,9 @@ export default function CompanyCatalogPage() {
   const [offerAmount, setOfferAmount] = useState("")
   const [offerComments, setOfferComments] = useState("")
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false)
+
+  const touchStartX = useRef<number | null>(null)
+  
 
   // ------------------------------------------------
   // 🔵 CONSUMIR API (MISMA FUNCIÓN QUE FARMER)
@@ -103,6 +106,27 @@ export default function CompanyCatalogPage() {
 
     alert("Oferta enviada exitosamente. El administrador la revisará.")
   }
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartX.current = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
+  if (touchStartX.current === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchStartX.current - touchEndX
+
+  // Umbral mínimo para considerar swipe
+  if (Math.abs(diffX) > 50) {
+    setActiveImageIndex(prev => {
+      const current = prev[huertaId] || 0
+      return { ...prev, [huertaId]: current === 0 ? 1 : 0 }
+    })
+  }
+
+  touchStartX.current = null
+}
 
 const handleOpenLocation = (url: string) => {
     if (!url) return
@@ -270,24 +294,26 @@ const handleOpenLocation = (url: string) => {
                       </>
                     )}
       
-                    {/* Foto activa */}
-                    <div className="relative w-full h-48 overflow-hidden rounded-lg">
+                    {/* FOTO ACTIVA — AQUÍ VA EL SWIPE */}
+                    <div
+                      className="relative w-full h-48 overflow-hidden rounded-lg"
+                      onTouchStart={handleTouchStart}
+                      onTouchEnd={(e) => handleTouchEnd(e, huerta.id)}
+                    >
                       <button
                         onClick={() => {
                           const currentPhoto =
                             (activeImageIndex[huerta.id] || 0) === 0
                               ? huerta.cover_photo
-                              : huerta.extra_photo;
-                          handleViewPhoto(currentPhoto);
+                              : huerta.extra_photo
+
+                          handleViewPhoto(currentPhoto)
                         }}
                         className="block w-full h-full"
                       >
                         {(activeImageIndex[huerta.id] || 0) === 0 ? (
                           <Image
-                            src={
-                              orchardService.getPhotoUrl(huerta.cover_photo) ||
-                              '/placeholder.svg'
-                            }
+                            src={orchardService.getPhotoUrl(huerta.cover_photo) || "/placeholder.svg"}
                             alt={huerta.name}
                             width={400}
                             height={200}
@@ -295,10 +321,7 @@ const handleOpenLocation = (url: string) => {
                           />
                         ) : (
                           <Image
-                            src={
-                              orchardService.getPhotoUrl(huerta.extra_photo) ||
-                              '/placeholder.svg'
-                            }
+                            src={orchardService.getPhotoUrl(huerta.extra_photo) || "/placeholder.svg"}
                             alt={`${huerta.name} - Foto extra`}
                             width={400}
                             height={200}
@@ -307,7 +330,6 @@ const handleOpenLocation = (url: string) => {
                         )}
                       </button>
                     </div>
-      
                     {/* Indicador de posición */}
                     {huerta.extra_photo && (
                       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
