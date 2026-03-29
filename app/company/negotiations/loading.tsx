@@ -1,10 +1,11 @@
 import { CompanyLayout } from "@/components/company-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AppLayout } from "@/components/layouts/app-layout"
 
 export default function CompanyNegotiationsLoading() {
   return (
-    <CompanyLayout>
+    <AppLayout type="company">
       <div className="space-y-6">
         {/* Header Skeleton */}
         <div>
@@ -61,6 +62,6 @@ export default function CompanyNegotiationsLoading() {
           ))}
         </div>
       </div>
-    </CompanyLayout>
+    </AppLayout>
   )
 }

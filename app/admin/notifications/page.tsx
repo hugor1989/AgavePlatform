@@ -13,6 +13,9 @@ import { Separator } from "@/components/ui/separator"
 import { Bell, Mail, Settings, Check, AlertCircle, DollarSign, Building2, Leaf, Send, TestTube } from "lucide-react"
 import { AdminLayout } from "@/components/admin-layout"
 
+import { AppLayout } from "@/components/layouts/app-layout"
+
+
 // Datos simulados de notificaciones
 const notifications = [
   {
@@ -100,7 +103,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
@@ -419,6 +422,6 @@ export default function NotificationsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

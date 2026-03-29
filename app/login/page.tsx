@@ -1,48 +1,66 @@
-"use client"
+'use client'
 
-import type React from "react"
+import type React from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Logo } from '@/components/logo'
+import { useAuth } from '@/hooks/useAuth'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, AlertCircle } from "lucide-react"
-import { Logo } from "@/components/logo"
+import { alert } from "@/lib/alert"
+
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login, isLoading: isAuthLoading } = useAuth()
+
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+  e.preventDefault()
+  setError('')
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  try {
+    const response = await login(formData)
+    console.log("Respuesta del login:", response)
 
-    // Mock authentication logic
-    if (formData.email === "admin@productoresagave.com" && formData.password === "admin123") {
-      router.push("/admin/dashboard")
-    } else if (formData.email === "agricultor@productoresagave.com" && formData.password === "farmer123") {
-      router.push("/farmer/dashboard")
-    } else if (formData.email === "empresa@productoresagave.com" && formData.password === "company123") {
-      router.push("/company/dashboard")
+    if (response.success) {
+      const role = response.data?.role ?? 'admin'
+
+      switch (role) {
+        case 'admin':
+          router.push('/admin/dashboard')
+          break
+        case 'farmer':
+          router.push('/farmer/dashboard')
+          break
+        case 'compani':
+          router.push('/company/dashboard')
+          break
+        default:
+          router.push('/')
+          break
+      }
     } else {
-      setError("Credenciales incorrectas. Intenta de nuevo.")
+      // Muestra el mensaje de error sin recargar
+      setError(response.message || 'Credenciales incorrectas. Intenta de nuevo.')
     }
-
-    setIsLoading(false)
+  } catch (err: any) {
+    console.error("Error al intentar login:", err)
+    setError(err.message || 'Error inesperado al intentar iniciar sesión.')
   }
+}
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -84,7 +102,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   name="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -110,25 +128,14 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            <Button type="submit" className="w-full h-11 bg-teal-600 hover:bg-teal-700" disabled={isLoading}>
-              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+            <Button
+              type="submit"
+              className="w-full h-11 bg-teal-600 hover:bg-teal-700"
+              disabled={isAuthLoading}
+            >
+              {isAuthLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 mb-4">Cuentas de prueba:</p>
-            <div className="space-y-2 text-xs text-gray-500">
-              <p>
-                <strong>Admin:</strong> admin@productoresagave.com / admin123
-              </p>
-              <p>
-                <strong>Agricultor:</strong> agricultor@productoresagave.com / farmer123
-              </p>
-              <p>
-                <strong>Empresa:</strong> empresa@productoresagave.com / company123
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

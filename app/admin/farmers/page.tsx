@@ -1,21 +1,12 @@
 "use client"
 
-import { CardContent } from "@/components/ui/card"
-
-import { CardDescription } from "@/components/ui/card"
-
-import { CardTitle } from "@/components/ui/card"
-
-import { CardHeader } from "@/components/ui/card"
-
-import { Card } from "@/components/ui/card"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { farmerService } from "@/services/farmerService"
+import { AppLayout } from "@/components/layouts/app-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -23,138 +14,181 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CheckCircle, Eye, Search, UserPlus, Copy, Info, XCircle } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import {
+  Building2,
+  Plus,
+  Search,
+  Eye,
+  EyeOff,
+  Edit,
+  MoreHorizontal,
+  CheckCircle,
+  UserPlus,
+  XCircle,
+} from "lucide-react"
+import { alert } from "@/lib/alert"
+
 
 export default function AdminFarmersPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [farmers, setFarmers] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [newFarmerCredentials, setNewFarmerCredentials] = useState<{ username: string; password: string } | null>(null)
-  const [showCredentialsAlert, setShowCredentialsAlert] = useState(false)
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
+  const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
 
-  const [farmers, setFarmers] = useState([
-    {
-      id: 1,
-      uniqueId: "1704931200",
-      name: "Ana Martínez Silva",
-      email: "ana@email.com",
-      phone: "+52 333 987 6543",
-      address: "Av. Patria 1234, Col. Jardines del Bosque, Zapopan, Jalisco",
-      gender: "femenino",
-      huertas: 4,
-      status: "active",
-      registeredAt: "2024-01-10",
-      lastActivity: "2024-01-19",
-      username: "523339876543",
-    },
-    {
-      id: 2,
-      uniqueId: "1704844800",
-      name: "Roberto Hernández",
-      email: "roberto@email.com",
-      phone: "+52 444 555 6666",
-      address: "Calle Morelos 567, Centro, Arandas, Jalisco",
-      gender: "masculino",
-      huertas: 2,
-      status: "active",
-      registeredAt: "2024-01-08",
-      lastActivity: "2024-01-18",
-      username: "524445556666",
-    },
-    {
-      id: 3,
-      uniqueId: "1705017600",
-      name: "Juan Pérez García",
-      email: "juan@email.com",
-      phone: "+52 123 456 7890",
-      address: "Calle Hidalgo 123, Centro, Tequila, Jalisco",
-      gender: "masculino",
-      huertas: 3,
-      status: "inactive",
-      registeredAt: "2024-01-15",
-      lastActivity: "2024-01-17",
-      username: "521234567890",
-    },
-  ])
+  // 🔹 Estado nuevo
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState("")
+  const [verifying, setVerifying] = useState(false)
 
+
+  const [selectedFarmer, setSelectedFarmer] = useState<any | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  // Estado y funciones para cambiar contraseña
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+    const [selectedFarmerPassword, setSelectedFarmerPassword] = useState<any | null>(null)
+    const [newPassword, setNewPassword] = useState("")
+    const [changingPassword, setChangingPassword] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+
+  interface FarmerCredentials {
+    email: string
+    password: string
+    unique_identifier: string | number
+    id: string | number
+
+  }
   const [newFarmerForm, setNewFarmerForm] = useState({
     name: "",
-    email: "",
+    email: "",  
     phone: "",
     address: "",
     gender: "",
   })
+  const [showCredentialsAlert, setShowCredentialsAlert] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
 
-  const generateCredentials = (phone: string) => {
-    // Remove any non-numeric characters from phone and use as username
-    const username = phone.replace(/[^\d]/g, "")
+  // 🔹 Cargar agricultores al iniciar
+  useEffect(() => {
+    fetchFarmers()
+  }, [])
 
-    const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase()
+  const fetchFarmers = async () => {
+  try {
+    setIsLoading(true)
+    const farmersList = await farmerService.getAll()
+    setFarmers(farmersList)
+  } catch (err) {
+    console.error("Error al cargar agricultores:", err)
+    setFarmers([])
+  } finally {
+    setIsLoading(false)
+  }
+}
 
-    return { username, password }
+  const handleAddFarmer = async () => {
+    const { name, email, phone, address, gender } = newFarmerForm
+    if (!name || !email || !phone || !address || !gender) return
+
+    try {
+      const payload = {
+      full_name: name,
+      email,
+      phone,
+      address,
+      gender: gender === "masculino" ? "M" : "F",
+      status: 0
+    }
+      const response = await farmerService.create(payload)
+      const credentials = response?.data?.credentials
+
+      await fetchFarmers()
+
+      // 🔹 Cierra el diálogo de registro y abre el de credenciales
+      setIsAddDialogOpen(false)
+
+      //Despues se muestra el mensa
+      //await alert.success("Agricultor agregado correctamente", "Favor de validar OTP.")
+
+      setNewFarmerCredentials(credentials)
+      setIsCredentialsDialogOpen(true)
+
+       setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "" })
+
+    } catch (err) {
+      console.error("Error al crear agricultor:", err)
+      
+      await alert.error("No se pudo crear el agricultor.", "")
+
+    }
   }
 
-  const handleAddFarmer = () => {
-    if (
-      !newFarmerForm.name ||
-      !newFarmerForm.email ||
-      !newFarmerForm.phone ||
-      !newFarmerForm.address ||
-      !newFarmerForm.gender
-    ) {
-      return
+  //Cammbiar contraseña
+const handleOpenPasswordDialog = (farmer: any) => {
+  setSelectedFarmerPassword(farmer)
+  setNewPassword("")
+  setIsPasswordDialogOpen(true)
+}
+
+const handleChangePassword = async () => {
+  if (!selectedFarmerPassword) return
+
+  try {
+    setChangingPassword(true)
+    const payload = {
+      id: selectedFarmerPassword.id,
+      new_password: newPassword,
     }
 
-    const credentials = generateCredentials(newFarmerForm.phone)
+    console.log(payload);
+    const res = await farmerService.resetPassword(payload)
 
-    // Generate numeric unique identifier
-    const uniqueId = Date.now().toString()
+    console.log(res);
+    await alert.success("Contraseña actualizada correctamente", "El usuario podrá iniciar sesión con la nueva contraseña.")
 
-    const newFarmer = {
-      id: farmers.length + 1,
-      uniqueId: uniqueId,
-      ...newFarmerForm,
-      huertas: 0,
-      status: "active",
-      registeredAt: new Date().toISOString().split("T")[0],
-      lastActivity: new Date().toISOString().split("T")[0],
-      username: credentials.username,
-    }
-
-    setFarmers([...farmers, newFarmer])
-    setNewFarmerCredentials(credentials)
-    setShowCredentialsAlert(true)
-    setIsAddDialogOpen(false)
-    setNewFarmerForm({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-      gender: "",
-    })
+    setIsPasswordDialogOpen(false)
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error)
+    await alert.error("No se pudo actualizar la contraseña", "Verifica la conexión o intenta más tarde.")
+  } finally {
+    setChangingPassword(false)
   }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
+}
 
   const filteredFarmers = farmers.filter((farmer) => {
-    const matchesSearch =
-      farmer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      farmer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      farmer.address.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || farmer.status === statusFilter
+  const name = farmer.full_name ?? ""
+  const email = farmer.email ?? ""
+  const address = farmer.address ?? ""
 
-    return matchesSearch && matchesStatus
-  })
+  const matchesSearch =
+    name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    address.toLowerCase().includes(searchTerm.toLowerCase())
+
+  return matchesSearch
+})
+
+  if (isLoading) return <p className="p-4">Cargando agricultores...</p>
+  if (error) return <p className="p-4 text-red-600">{error}</p>
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Gestión de Agricultores</h1>
@@ -167,155 +201,297 @@ export default function AdminFarmersPage() {
                 Agregar Agricultor
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Registrar Nuevo Agricultor</DialogTitle>
                 <DialogDescription>
-                  Completa la información del agricultor para generar sus credenciales de acceso
+                  Completa la información del agricultor para generarlo en el sistema
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="name">Nombre Completo *</label>
-                    <Input
-                      id="name"
-                      value={newFarmerForm.name}
-                      onChange={(e) => setNewFarmerForm({ ...newFarmerForm, name: e.target.value })}
-                      placeholder="Ej: Juan Pérez García"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="email">Email *</label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newFarmerForm.email}
-                      onChange={(e) => setNewFarmerForm({ ...newFarmerForm, email: e.target.value })}
-                      placeholder="juan@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="phone">Teléfono *</label>
-                    <Input
-                      id="phone"
-                      value={newFarmerForm.phone}
-                      onChange={(e) => setNewFarmerForm({ ...newFarmerForm, phone: e.target.value })}
-                      placeholder="+52 123 456 7890"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="address">Dirección *</label>
-                    <Input
-                      id="address"
-                      value={newFarmerForm.address}
-                      onChange={(e) => setNewFarmerForm({ ...newFarmerForm, address: e.target.value })}
-                      placeholder="Calle, Número, Colonia, Ciudad"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="gender">Sexo *</label>
-                    <select
-                      id="gender"
-                      value={newFarmerForm.gender}
-                      onChange={(e) => setNewFarmerForm({ ...newFarmerForm, gender: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Seleccionar...</option>
-                      <option value="masculino">Masculino</option>
-                      <option value="femenino">Femenino</option>
-                    </select>
-                  </div>
-                </div>
+                <Input
+                  placeholder="Nombre completo"
+                  value={newFarmerForm.name}
+                  onChange={(e) => setNewFarmerForm({ ...newFarmerForm, name: e.target.value })}
+                />
+                <Input
+                  placeholder="Correo"
+                  type="email"
+                  value={newFarmerForm.email}
+                  onChange={(e) => setNewFarmerForm({ ...newFarmerForm, email: e.target.value })}
+                />
+                <Input
+                  placeholder="Teléfono"
+                  value={newFarmerForm.phone}
+                  onChange={(e) => setNewFarmerForm({ ...newFarmerForm, phone: e.target.value })}
+                />
+                <Input
+                  placeholder="Dirección"
+                  value={newFarmerForm.address}
+                  onChange={(e) => setNewFarmerForm({ ...newFarmerForm, address: e.target.value })}
+                />
+                <select
+                  value={newFarmerForm.gender}
+                  onChange={(e) => setNewFarmerForm({ ...newFarmerForm, gender: e.target.value })}
+                  className="border rounded-md px-3 py-2 w-full"
+                >
+                  <option value="">Seleccionar género...</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                </select>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancelar
                   </Button>
                   <Button onClick={handleAddFarmer} className="bg-green-600 hover:bg-green-700">
-                    <UserPlus className="h-4 w-4 mr-2" />
                     Registrar Agricultor
                   </Button>
                 </div>
               </div>
             </DialogContent>
           </Dialog>
-        </div>
 
-        {/* Credentials Alert */}
-        {showCredentialsAlert && newFarmerCredentials && (
-          <Alert className="border-green-200 bg-green-50">
-            <Info className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">¡Agricultor registrado exitosamente!</AlertTitle>
-            <AlertDescription className="text-green-700">
-              <div className="mt-2 space-y-2">
-                <p className="font-medium">Credenciales generadas para el agricultor:</p>
-                <div className="bg-white p-3 rounded border space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span>
-                      <strong>Usuario:</strong> {newFarmerCredentials.username}
-                    </span>
-                    <Button size="sm" variant="outline" onClick={() => copyToClipboard(newFarmerCredentials.username)}>
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>
-                      <strong>Contraseña:</strong> {newFarmerCredentials.password}
-                    </span>
-                    <Button size="sm" variant="outline" onClick={() => copyToClipboard(newFarmerCredentials.password)}>
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm">
-                  <strong>Importante:</strong> Comparte estas credenciales con el agricultor para que pueda acceder a la
-                  plataforma.
-                </p>
-                <Button size="sm" variant="outline" onClick={() => setShowCredentialsAlert(false)} className="mt-2">
-                  Entendido
+          {/* 🔹 Segundo diálogo: Mostrar credenciales */}
+          <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>✅ Agricultor creado correctamente</DialogTitle>
+                <DialogDescription>
+                  Aquí están las credenciales del nuevo agricultor:
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
+                <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
+                <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
+                <p><strong>Identificador:</strong> {newFarmerCredentials?.unique_identifier}</p>
+              </div>
+
+              <DialogFooter className="mt-6">
+                <Button onClick={() => setIsCredentialsDialogOpen(false)}>
+                  Cerrar
                 </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
+                <Button
+                    onClick={() => {
+                      setIsCredentialsDialogOpen(false)
+                      setIsOtpDialogOpen(true)
+                    }}
+                    className="bg-green-600 hover:bg-green-700">
+                  Verificar Código OTP
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-        {/* Main Content */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <CardTitle>Listado de Agricultores</CardTitle>
-                <CardDescription>Lista de todos los agricultores registrados en la plataforma</CardDescription>
+          {/* 🔹 Diálogo para ingresar OTP */}
+          <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Verificar Código de Activación</DialogTitle>
+                <DialogDescription>
+                  Ingresa el código OTP que el agricultor te haya proporcionado.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <Input
+                  placeholder="Código OTP"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="text-center text-lg font-mono tracking-widest"
+                />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar agricultores..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full sm:w-64"
-                  />
+
+              <DialogFooter className="mt-6 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOtpDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={verifying || otpCode.trim().length === 0}
+                  onClick={async () => {
+                    try {
+                      setVerifying(true)
+                      const confirmotp = {
+                        user_type: "farmer",
+                        user_id: newFarmerCredentials?.id,
+                        code: otpCode.trim()
+                        
+                      }
+                      console.log(confirmotp);
+                      const res = await farmerService.verifyCode(confirmotp)
+                      console.log(res);
+                      await alert.success("Código verificado correctamente", "El agricultor ha sido validado con éxito.")
+                      setIsOtpDialogOpen(false)
+                      await fetchFarmers()
+                    } catch (err) {
+                      console.error(err)
+                      await alert.error("Código inválido o expirado", "Por favor verifica e intenta de nuevo.")
+                    } finally {
+                      setVerifying(false)
+                    }
+                  }}
+                >
+                  {verifying ? "Verificando..." : "Verificar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Cambiar contraseña</DialogTitle>
+                      <DialogDescription>
+                        Ingresa una nueva contraseña para la empresa{" "}
+                        <strong>{selectedFarmerPassword?.full_name}</strong>
+                      </DialogDescription>
+                    </DialogHeader>
+          
+                    <div className="space-y-4 py-4">
+                      <div className="grid gap-2">
+                        <label className="text-sm font-medium">Nueva contraseña</label>
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="********"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+          
+                        {/*Mensaje de ayuda */}
+                        <p className="text-xs text-gray-500">
+                          La contraseña debe tener al menos <strong>6 caracteres</strong>.
+                        </p>
+          
+                        {/*Mensaje de error opcional */}
+                        {newPassword && newPassword.length < 6 && (
+                          <p className="text-xs text-red-500">
+                            La contraseña es demasiado corta.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+          
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                        Cancelar
+                      </Button>
+                      <Button
+                        disabled={newPassword.length < 6 || changingPassword}
+                        onClick={handleChangePassword}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {changingPassword ? "Guardando..." : "Guardar"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+          </Dialog>
+
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalles del Agricultor</DialogTitle>
+            <DialogDescription>Información completa del agricultor</DialogDescription>
+          </DialogHeader>
+
+          {selectedFarmer ? (
+            <div className="space-y-6">
+              {/* Datos principales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-gray-500">Identificador Único</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.unique_identifier}</p>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="active">Activos</SelectItem>
-                    <SelectItem value="inactive">Inactivos</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm text-gray-500">Nombre Completo</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.full_name}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Usuario</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Email</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Teléfono</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.phone}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Dirección</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.address}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Sexo</label>
+                  <p className="font-semibold text-gray-800 capitalize">{selectedFarmer.gender}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Fecha de Registro</label>
+                  <p className="font-semibold text-gray-800">{selectedFarmer.created_at}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Última Actividad</label>
+                  <p className="font-semibold text-gray-800">NA</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Estado</label>
+                  <p className="font-semibold text-gray-800 capitalize">
+                    {selectedFarmer.status === 1 ? "Activo" : "Inactivo"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Huertas registradas */}
+              <div className="border-t pt-4">
+                <div>
+                  <label className="text-sm text-gray-500">Huertas Registradas</label>
+                  <p className="font-semibold text-gray-800">0</p>
+                </div>
               </div>
             </div>
+          ) : (
+            <p className="text-center text-gray-500 py-6">Cargando datos...</p>
+          )}
+        </DialogContent>
+      </Dialog>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Listado de Agricultores</CardTitle>
+            <CardDescription>Datos obtenidos desde la API</CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="flex justify-between mb-4">
+              <Input
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Agricultor</TableHead>
+                     <TableHead>Agricultor</TableHead>
                     <TableHead className="hidden md:table-cell">Contacto</TableHead>
                     <TableHead>Dirección</TableHead>
                     <TableHead>Huertas</TableHead>
@@ -324,12 +500,13 @@ export default function AdminFarmersPage() {
                     <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
+                
                 <TableBody>
                   {filteredFarmers.map((farmer) => (
                     <TableRow key={farmer.id}>
-                      <TableCell className="font-medium">
+                     <TableCell className="font-medium">
                         <div>
-                          <div className="font-medium">{farmer.name}</div>
+                          <div className="font-medium">{farmer.full_name}</div>
                           <div className="text-sm text-gray-500 md:hidden">{farmer.email}</div>
                         </div>
                       </TableCell>
@@ -340,14 +517,15 @@ export default function AdminFarmersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{farmer.address}</TableCell>
-                      <TableCell>
+                       <TableCell>
                         <div className="text-sm">
-                          <div className="font-medium">{farmer.huertas}</div>
+                          <div className="font-medium">0</div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell">{farmer.lastActivity}</TableCell>
-                      <TableCell>
-                        {farmer.status === "active" ? (
+                      <TableCell className="hidden xl:table-cell">NA</TableCell>
+
+                       <TableCell>
+                        {farmer.status === 1 ? (
                           <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Activo
@@ -360,72 +538,52 @@ export default function AdminFarmersPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-4 w-4 mr-1" />
-                              Ver
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Detalles del Agricultor</DialogTitle>
-                              <DialogDescription>Información completa del agricultor</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <label>Identificador Único</label>
-                                  <p className="font-medium">{farmer.uniqueId}</p>
-                                </div>
-                                <div>
-                                  <label>Nombre Completo</label>
-                                  <p className="font-medium">{farmer.name}</p>
-                                </div>
-                                <div>
-                                  <label>Usuario</label>
-                                  <p className="font-medium">{farmer.username}</p>
-                                </div>
-                                <div>
-                                  <label>Email</label>
-                                  <p className="font-medium">{farmer.email}</p>
-                                </div>
-                                <div>
-                                  <label>Teléfono</label>
-                                  <p className="font-medium">{farmer.phone}</p>
-                                </div>
-                                <div>
-                                  <label>Dirección</label>
-                                  <p className="font-medium">{farmer.address}</p>
-                                </div>
-                                <div>
-                                  <label>Sexo</label>
-                                  <p className="font-medium capitalize">{farmer.gender}</p>
-                                </div>
-                                <div>
-                                  <label>Fecha de Registro</label>
-                                  <p className="font-medium">{farmer.registeredAt}</p>
-                                </div>
-                                <div>
-                                  <label>Última Actividad</label>
-                                  <p className="font-medium">{farmer.lastActivity}</p>
-                                </div>
-                                <div>
-                                  <label>Estado</label>
-                                  <p className="font-medium capitalize">
-                                    {farmer.status === "active" ? "Activo" : "Inactivo"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 gap-4">
-                                <div>
-                                  <label>Huertas Registradas</label>
-                                  <p className="font-medium">{farmer.huertas}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedFarmer(farmer)
+                                  setIsViewDialogOpen(true)
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ver detalles
+                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem onClick={() => handleEditClick(farmer)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem> */}
+                            <DropdownMenuItem onClick={() => handleOpenPasswordDialog(farmer)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Cambiar contraseña
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {farmer.status === "active" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusChange(farmer.id, "inactive")
+                                }
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Desactivar
+                              </DropdownMenuItem>
+                            )}
+                            {farmer.status === "inactive" && (
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChange(farmer.id, "active")}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Activar
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -435,6 +593,6 @@ export default function AdminFarmersPage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

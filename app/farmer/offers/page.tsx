@@ -5,64 +5,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Search, Calendar, MapPin, Camera, Eye, Clock, Building2, Check, X } from "lucide-react"
 import Image from "next/image"
+import { AppLayout } from "@/components/layouts/app-layout"
 
-// Icono de Agave con el SVG proporcionado
-const AgaveIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 512 512" fill="currentColor">
-    <path
-      fill="#91CC04"
-      d="M217.081,418.866c23.418,7.837,48.756-4.794,56.594-28.213c7.837-23.419-4.794-48.756-28.213-56.594
-      c-23.419-7.837-229.718-55.766-237.555-32.348C0.07,325.129,193.662,411.029,217.081,418.866z"
-    />
-    <path
-      fill="#85BB04"
-      d="M245.462,334.059c-14.861-4.973-103.365-26.091-168.066-34.876
-      c6.584,7.874,72.569,80.301,91.733,99.441c23.381,10.518,41.712,18.152,47.953,20.24c23.418,7.837,48.756-4.794,56.594-28.213
-      C281.512,367.235,268.881,341.897,245.462,334.059z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M294.891,418.866c-23.418,7.837-48.756-4.794-56.594-28.213
-      c-7.837-23.418,4.794-48.756,28.213-56.594c23.419-7.837,229.718-55.767,237.556-32.349
-      C511.903,325.129,318.309,411.029,294.891,418.866z"
-    />
-    <path
-      fill="#91CC04"
-      d="M434.577,299.183c-64.702,8.786-153.206,29.903-168.066,34.876
-      c-23.418,7.837-36.049,33.175-28.213,56.593c7.837,23.418,33.175,36.049,56.594,28.213c6.241-2.089,24.571-9.723,47.953-20.24
-      C362.008,379.484,427.993,307.058,434.577,299.183z"
-    />
-    <path
-      fill="#85BB04"
-      d="M198.507,350.579c10.667,22.273,37.369,31.681,59.642,21.015
-      c22.273-10.667,31.681-37.369,21.015-59.642c-10.667-22.273-119.792-203.79,142.064-193.124S187.84,328.306,198.507,350.579z"
-    />
-    <path
-      fill="#85BB04"
-      d="M319.087,350.579c-10.667,22.273-37.369,31.681-59.642,21.015
-      c-22.273-10.667-31.681-37.369-21.015-59.642c10.667-22.273,119.792-203.79,142.064-193.124
-      C402.767,129.495,329.752,328.306,319.087,350.579z"
-    />
-    <path
-      fill="#91CC04"
-      d="M214.084,326.516c-0.201,24.694,19.654,44.876,44.348,45.077
-      c24.694,0.201,44.876-19.654,45.077-44.348S285.411,91.549,260.718,91.348S214.285,301.821,214.084,326.516z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M210.663,395.976c18.87,15.93,47.081,13.547,63.011-5.323c15.93-18.87,13.547-47.081-5.323-63.011
-      c-18.87-15.93-192.895-136.646-208.825-117.776S191.793,380.046,210.663,395.976z"
-    />
-    <path
-      fill="#C2FB3B"
-      d="M301.309,395.976c-18.87,15.93-47.081,13.547-63.011-5.323c-15.93-18.87-13.547-47.081,5.323-63.011
-      c18.87-15.93,192.895-136.646,208.825-117.776C468.375,228.736,320.179,380.046,301.309,395.976z"
-    />
-  </svg>
-)
+
 
 export default function FarmerOffersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -236,6 +185,7 @@ export default function FarmerOffersPage() {
   }
 
   return (
+   <AppLayout type="farmer">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Mis Ofertas</h1>
@@ -285,7 +235,7 @@ export default function FarmerOffersPage() {
               </div>
 
               <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                <AgaveIcon className="w-4 h-4 text-green-600" />
+                 <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
                 <span className="text-sm font-medium text-gray-900">{huerta.type}</span>
               </div>
 
@@ -385,42 +335,64 @@ export default function FarmerOffersPage() {
                     </Badge>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 min-w-[140px]">Precio $:</span>
-                      <span className="font-semibold text-gray-900">{offer.precio}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 min-w-[140px]">Cm de Jima:</span>
-                      <span className="font-semibold text-gray-900">{offer.cmJima}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 min-w-[140px]">Meses Financiado:</span>
-                      <span className="font-semibold text-gray-900">{offer.mesesFinanciado}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 min-w-[140px]">Fecha de Mes de Jima:</span>
-                      <span className="font-semibold text-gray-900">{offer.fechaMesJima}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 min-w-[140px]">Se Jimará a Partir de:</span>
-                      <span className="font-semibold text-gray-900">{offer.kilosMinimos} para arriba</span>
-                    </div>
-                    <div className="pt-2 border-t border-gray-100">
-                      <div className="mb-2">
-                        <span className="text-sm text-gray-600">Cómo Serían los Pagos de Viajes Jimados:</span>
-                      </div>
-                      <p className="text-sm text-gray-900 leading-relaxed">{offer.pagosViajes}</p>
-                    </div>
-                    <div className="pt-2 border-t border-gray-100">
-                      <div className="mb-2">
-                        <span className="text-sm text-gray-600">
-                          El Agave Sería Puesto en Fábrica o la Fábrica se Encargaría de Toda la Logística:
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-900 leading-relaxed">{offer.logistica}</p>
-                    </div>
-                  </div>
+                   <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="precio">Precio $ *</Label>
+                            <Input
+                              id="precio"
+                              type="number"
+                              readOnly
+                              placeholder="0"
+                              value="500"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="cm-jima">Cm de Jima *</Label>
+                            <Input id="cm-jima" type="number" placeholder="Centímetros" readOnly value={5} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="meses-financiado">Meses financiado *</Label>
+                            <Input id="meses-financiado" type="number" placeholder="Número de meses" readOnly value={5} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
+                            <Input id="fecha-jima" type="date" readOnly value={"Marzo 2025"} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
+                            <Input id="kilos-minimo" type="number" placeholder="Kilos mínimos" readOnly value={15} />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
+                            <textarea
+                              id="pagos-viajes"
+                              placeholder="Describe cómo serían los pagos..."
+                              readOnly
+                              value={"Pago contra entrega por viaje completado"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="logistica">
+                              El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
+                            </Label>
+                            <textarea
+                              id="logistica"
+                              placeholder="Especifica la logística..."
+                              readOnly
+                              value={"La fábrica se encarga de toda la logística de transporte"}
+                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                              rows={2}
+                            />
+                          </div>
+           </div>
 
                   {offer.status === "Pendiente" && (
                     <div className="flex gap-3 mt-6 pt-4 border-t border-gray-200">
@@ -432,8 +404,7 @@ export default function FarmerOffersPage() {
                         Aceptar Oferta
                       </Button>
                       <Button
-                        variant="outline"
-                        className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 bg-transparent"
+                        className="flex-1 bg-red-600 hover:bg-red-700"
                         onClick={() => handleRejectOffer(offer.id)}
                       >
                         <X className="w-4 h-4 mr-2" />
@@ -448,5 +419,6 @@ export default function FarmerOffersPage() {
         </DialogContent>
       </Dialog>
     </div>
+     </AppLayout>
   )
 }

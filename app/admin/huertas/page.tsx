@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { AdminLayout } from "@/components/admin-layout"
+import { useState, useEffect, useRef } from "react"
+import { AppLayout } from "@/components/layouts/app-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -22,126 +22,44 @@ import { Search, Plus, Calendar, Clock, ImageIcon, Eye, Edit, Camera, MapPin, Sh
 import { toast } from "sonner"
 import Image from "next/image"
 
-// Icono de Agave con el SVG proporcionado
-const AgaveIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 512 512" fill="currentColor">
-    <path
-      fill="#91CC04"
-      d="M217.081,418.866c23.418,7.837,48.756-4.794,56.594-28.213c7.837-23.419-4.794-48.756-28.213-56.594
-      c-23.419-7.837-229.718-55.766-237.555-32.348C0.07,325.129,193.662,411.029,217.081,418.866z"
-    />
-    <path
-      fill="#85BB04"
-      d="M245.462,334.059c-14.861-4.973-103.365-26.091-168.066-34.876
-      c6.584,7.874,72.569,80.301,91.733,99.441c23.381,10.518,41.712,18.152,47.953,20.24c23.418,7.837,48.756-4.794,56.594-28.213
-      C281.512,367.235,268.881,341.897,245.462,334.059z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M294.891,418.866c-23.418,7.837-48.756-4.794-56.594-28.213
-      c-7.837-23.418,4.794-48.756,28.213-56.594c23.419-7.837,229.718-55.767,237.556-32.349
-      C511.903,325.129,318.309,411.029,294.891,418.866z"
-    />
-    <path
-      fill="#91CC04"
-      d="M434.577,299.183c-64.702,8.786-153.206,29.903-168.066,34.876
-      c-23.418,7.837-36.049,33.175-28.213,56.593c7.837,23.418,33.175,36.049,56.594,28.213c6.241-2.089,24.571-9.723,47.953-20.24
-      C362.008,379.484,427.993,307.058,434.577,299.183z"
-    />
-    <path
-      fill="#85BB04"
-      d="M198.507,350.579c10.667,22.273,37.369,31.681,59.642,21.015
-      c22.273-10.667,31.681-37.369,21.015-59.642c-10.667-22.273-119.792-203.79,142.064-193.124S187.84,328.306,198.507,350.579z"
-    />
-    <path
-      fill="#85BB04"
-      d="M319.087,350.579c-10.667,22.273-37.369,31.681-59.642,21.015
-      c-22.273-10.667-31.681-37.369-21.015-59.642c10.667-22.273,119.792-203.79,142.064-193.124
-      C402.767,129.495,329.752,328.306,319.087,350.579z"
-    />
-    <path
-      fill="#91CC04"
-      d="M214.084,326.516c-0.201,24.694,19.654,44.876,44.348,45.077
-      c24.694,0.201,44.876-19.654,45.077-44.348S285.411,91.549,260.718,91.348S214.285,301.821,214.084,326.516z"
-    />
-    <path
-      fill="#9CDD05"
-      d="M210.663,395.976c18.87,15.93,47.081,13.547,63.011-5.323c15.93-18.87,13.547-47.081-5.323-63.011
-      c-18.87-15.93-192.895-136.646-208.825-117.776S191.793,380.046,210.663,395.976z"
-    />
-    <path
-      fill="#C2FB3B"
-      d="M301.309,395.976c-18.87,15.93-47.081,13.547-63.011-5.323c-15.93-18.87-13.547-47.081,5.323-63.011
-      c18.87-15.93,192.895-136.646,208.825-117.776C468.375,228.736,320.179,380.046,301.309,395.976z"
-    />
-  </svg>
-)
+// 🔌 IMPORTACIONES - Conectar con backend
+import { useOrchards } from "@/hooks/useOrchards"
+import { orchardService, OrchardFormData } from "@/services/orchardService"
+import { useFarmers } from "@/hooks/useFarmers"
+import { useAgaveTypes } from "@/hooks/useAgaveTypes"
 
-// Datos simulados de huertas
-const mockHuertas = [
-  {
-    id: 1,
-    name: "Huerta Los Altos Premium",
-    type: "Azul Tequilana Weber",
-    year: 2020,
-    age: "4 años",
-    plants: 27627,
-    status: "Disponible",
-    featured: true,
-    photos: 8,
-    farmerName: "Juan Pérez García",
-    farmerUniqueId: "1705123456",
-    photoId: "/agave-field-plantation.png",
-    state: "Jalisco",
-    municipality: "Tequila",
-    location: "20.8818, -103.8370",
-  },
-  {
-    id: 2,
-    name: "Plantación El Mirador",
-    type: "Azul Tequilana Weber",
-    year: 2019,
-    age: "5 años",
-    plants: 22450,
-    status: "Disponible",
-    featured: false,
-    photos: 12,
-    farmerName: "María González López",
-    farmerUniqueId: "1706234567",
-    photoId: "/placeholder-n4bzz.png",
-    state: "Jalisco",
-    municipality: "Arandas",
-    location: "20.7167, -102.3500",
-  },
-  {
-    id: 3,
-    name: "Agavera San Miguel",
-    type: "Azul Tequilana Weber",
-    year: 2021,
-    age: "3 años",
-    plants: 18900,
-    status: "Vendida",
-    featured: false,
-    photos: 6,
-    farmerName: "Carlos Rodríguez Mendoza",
-    farmerUniqueId: "1707345678",
-    photoId: "/agave-field-plantation.png",
-    state: "Nayarit",
-    municipality: "Tepic",
-    location: "21.5041, -104.8942",
-  },
-]
-
-// Datos simulados de agricultores
-const mockFarmers = [
-  { id: 1, name: "Juan Pérez García", uniqueId: "1705123456" },
-  { id: 2, name: "María González López", uniqueId: "1706234567" },
-  { id: 3, name: "Carlos Rodríguez Mendoza", uniqueId: "1707345678" },
-  { id: 4, name: "Ana Martínez Silva", uniqueId: "1708456789" },
-  { id: 5, name: "Roberto Hernández Cruz", uniqueId: "1709567890" },
-]
 
 export default function AdminHuertasPage() {
+  // 🔌 HOOK - Conectar con backend
+  const {
+    orchards,
+    years,
+    isLoading: isLoadingOrchards,
+    createOrchard,
+    updateOrchard,
+    deleteOrchard,
+    updateFilters,
+  } = useOrchards({
+    per_page: 50,
+    sort_by: 'created_at',
+    sort_order: 'desc',
+  })
+
+  // Refs para inputs de archivo
+  const photoIdInputRef = useRef<HTMLInputElement>(null)
+  const coverPhotoInputRef = useRef<HTMLInputElement>(null)
+  const extraPhotoInputRef = useRef<HTMLInputElement>(null) 
+
+  const editPhotoIdRef = useRef<HTMLInputElement>(null)
+  const editCoverPhotoRef = useRef<HTMLInputElement>(null)
+  const editExtraPhotoRef = useRef<HTMLInputElement>(null) 
+  const [activeImageIndex, setActiveImageIndex] = useState<{[key: number]: number}>({})
+  const touchStartX = useRef<number | null>(null)
+
+
+  // Estados locales
+  const { farmers, isLoading: isLoadingFarmers } = useFarmers()
+  const { agaveTypes, isLoading: isLoadingAgaveTypes, getIdByName } = useAgaveTypes()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [activeTab, setActiveTab] = useState("all")
@@ -151,7 +69,6 @@ export default function AdminHuertasPage() {
   const [selectedHuerta, setSelectedHuerta] = useState<any>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
-  const [huertas, setHuertas] = useState(mockHuertas)
 
   // Formulario para nueva huerta
   const [newHuerta, setNewHuerta] = useState({
@@ -161,95 +78,229 @@ export default function AdminHuertasPage() {
     age: "",
     plants: "",
     farmerId: "",
+    state: "",
+    municipality: "",
+    latitude: "",
+    longitude: "",
+    location_url: "",
     photoId: null as File | null,
+    coverPhoto: null as File | null,
+    extraPhoto: null as File | null, 
   })
 
-  const years = [2025, 2024, 2023, 2022, 2021, 2020]
-  const agaveTypes = ["Azul Tequilana Weber", "Americana", "Angustifolia", "Cupreata", "Duranguensis", "Potatorum"]
 
-  const filteredHuertas = huertas.filter((huerta) => {
+  // 🔄 FILTRADO LOCAL
+  const filteredHuertas = orchards.filter((orchard) => {
     const matchesSearch =
-      huerta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.farmerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.farmerUniqueId.includes(searchTerm)
-    const matchesYear = selectedYear === "all" || huerta.year.toString() === selectedYear
+      orchard.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (orchard.farmer?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (orchard.farmer?.unique_identifier || '').includes(searchTerm)
+    
+    const matchesYear = selectedYear === "all" || orchard.year.toString() === selectedYear
+    
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "active" && huerta.status === "Disponible") ||
-      (activeTab === "sold" && huerta.status === "Vendida")
+      (activeTab === "active" && orchard.status === "disponible") ||
+      (activeTab === "sold" && orchard.status === "vendida")
+    
     return matchesSearch && matchesYear && matchesTab
   })
 
+  // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
-    if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId) {
+    console.log('🔵 [INICIO] handleAddHuerta llamado')
+    
+    // Validar campos requeridos
+    if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
       toast.error("Por favor completa todos los campos requeridos")
       return
     }
 
     setIsLoading(true)
 
-    // Simular guardado
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      // Preparar datos para el backend
+      const orchardData: OrchardFormData = {
+        name: newHuerta.name,
+        agave_type_id: Number(newHuerta.type),
+        farmer_id: Number(newHuerta.farmerId),
+        year: Number(newHuerta.year),
+        age: newHuerta.age ? Number(newHuerta.age.replace(' años', '')) : undefined,
+        plant_quantity: Number(newHuerta.plants),
+        photo_id: newHuerta.photoId,
+        cover_photo: newHuerta.coverPhoto,
+        extra_photo: newHuerta.extraPhoto, 
+        state: newHuerta.state || undefined,
+        municipality: newHuerta.municipality || undefined,
+        latitude: newHuerta.latitude ? Number(newHuerta.latitude) : undefined,
+        longitude: newHuerta.longitude ? Number(newHuerta.longitude) : undefined,
+        location_url: newHuerta.location_url || undefined,
+        status: 'disponible',
+        is_featured: false,
+      }
 
-    const farmer = mockFarmers.find((f) => f.id.toString() === newHuerta.farmerId)
-    const newId = Math.max(...huertas.map((h) => h.id)) + 1
+      console.log('🚀 [API CALL] Llamando a createOrchard...')
+      const result = await createOrchard(orchardData)
+      
+      setIsLoading(false)
 
-    const huertaToAdd = {
-      id: newId,
-      name: newHuerta.name,
-      type: newHuerta.type,
-      year: Number.parseInt(newHuerta.year),
-      age: newHuerta.age,
-      plants: Number.parseInt(newHuerta.plants) || 0,
-      status: "Disponible",
-      featured: false,
-      photos: 1,
-      farmerName: farmer?.name || "",
-      farmerUniqueId: farmer?.uniqueId || "",
-      photoId: "/agave-field-plantation.png",
-      state: "Jalisco",
-      municipality: "Tequila",
-      location: "20.8818, -103.8370",
+      if (result.success) {
+        toast.success('Huerta registrada exitosamente')
+        setIsAddDialogOpen(false)
+        
+        // Resetear formulario
+        setNewHuerta({
+          name: "",
+          type: "",
+          year: "",
+          age: "",
+          plants: "",
+          farmerId: "",
+          state: "",
+          municipality: "",
+          latitude: "",
+          longitude: "",
+          photoId: null,
+          coverPhoto: null,
+          extraPhoto: null,
+          location_url: "",
+        })
+      } else {
+        toast.error(result.error || 'Error al crear la huerta')
+      }
+    } catch (error: any) {
+      console.error('❌ [CATCH ERROR] Error en handleAddHuerta:', error)
+      setIsLoading(false)
+      toast.error(error.message || 'Error al crear la huerta')
     }
-
-    setHuertas([...huertas, huertaToAdd])
-    setIsLoading(false)
-    setIsAddDialogOpen(false)
-    setNewHuerta({
-      name: "",
-      type: "",
-      year: "",
-      age: "",
-      plants: "",
-      farmerId: "",
-      photoId: null,
-    })
-
-    toast.success("Huerta agregada exitosamente")
   }
 
+  // ✏️ EDITAR HUERTA
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
+    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.location_url)
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    const updatedHuertas = huertas.map((h) => (h.id === selectedHuerta.id ? selectedHuerta : h))
-    setHuertas(updatedHuertas)
-    setIsLoading(false)
-    setIsEditDialogOpen(false)
-    toast.success("Huerta actualizada exitosamente")
+    
+    try {
+      const orchardData: Partial<OrchardFormData> = {
+        name: selectedHuerta.name,
+        agave_type_id: selectedHuerta.agave_type_id,
+        farmer_id: selectedHuerta.farmer_id,
+        year: selectedHuerta.year,
+        age: selectedHuerta.age,
+        plant_quantity: selectedHuerta.plant_quantity,
+        state: selectedHuerta.state || undefined,
+        municipality: selectedHuerta.municipality || undefined,
+        latitude: selectedHuerta.latitude || undefined,
+        longitude: selectedHuerta.longitude || undefined,
+        location_url: selectedHuerta.location_url || undefined,
+      }
+
+      // Agregar fotos si se seleccionaron nuevas
+      if (selectedHuerta.photo_id instanceof File) {
+        orchardData.photo_id = selectedHuerta.photo_id;
+      }
+
+      if (selectedHuerta.cover_photo instanceof File) {
+        orchardData.cover_photo = selectedHuerta.cover_photo;
+      }
+
+      if (selectedHuerta.extra_photo instanceof File) {
+        orchardData.extra_photo = selectedHuerta.extra_photo; 
+      }
+
+      console.log('🚀 [EDIT] Enviando actualización...')
+      const result = await updateOrchard(selectedHuerta.id, orchardData)
+      console.log('📥 [EDIT] Resultado:', result)
+
+      setIsLoading(false)
+
+      if (result.success) {
+        console.log('✅ [EDIT] Actualización exitosa')
+        toast.success('Huerta actualizada exitosamente')
+        setIsEditDialogOpen(false)
+      } else {
+        console.log('⚠️ [EDIT] Error en actualización')
+        toast.error(result.error || 'Error al actualizar')
+      }
+    } catch (error: any) {
+      console.error('❌ [EDIT ERROR]:', error)
+      setIsLoading(false)
+      toast.error(error.message || 'Error al actualizar la huerta')
+    }
   }
 
-  const handleViewPhoto = (photoId: string) => {
-    setSelectedPhoto(photoId)
+  const handleOpenLocation = (url: string) => {
+    if (!url) return
+
+    try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+      let finalUrl = url
+
+      // Si es iOS y viene un link de Google Maps → convertir a Apple Maps
+      if (isIOS && url.includes("google.com/maps")) {
+        finalUrl = url.replace("https://www.google.com/maps", "https://maps.apple.com")
+      }
+
+      window.open(finalUrl, "_blank", "noopener,noreferrer")
+    } catch (error) {
+      console.error("Error al abrir ubicación:", error)
+    }
+  }
+
+  const handleShareLocation = async (url: string) => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Ubicación de la huerta",
+        text: "Mira la ubicación de esta huerta",
+        url,
+      })
+    } else {
+      await navigator.clipboard.writeText(url)
+      toast.success("Enlace copiado al portapapeles")
+    }
+  } catch (error) {
+    console.error("Error al compartir ubicación:", error)
+  }
+}
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  touchStartX.current = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
+  if (touchStartX.current === null) return
+
+  const touchEndX = e.changedTouches[0].clientX
+  const diffX = touchStartX.current - touchEndX
+
+  // Umbral mínimo para considerar swipe
+  if (Math.abs(diffX) > 50) {
+    setActiveImageIndex(prev => {
+      const current = prev[huertaId] || 0
+      return { ...prev, [huertaId]: current === 0 ? 1 : 0 }
+    })
+  }
+
+  touchStartX.current = null
+}
+
+  const handleViewPhoto = (photoPath: string | null) => {
+    const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
+    setSelectedPhoto(photoUrl)
     setIsPhotoDialogOpen(true)
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "disponible":
       case "Disponible":
         return "bg-green-100 text-green-800"
+      case "vendida":
       case "Vendida":
         return "bg-gray-100 text-gray-800"
       default:
@@ -257,8 +308,17 @@ export default function AdminHuertasPage() {
     }
   }
 
+  const formatStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'disponible': 'Disponible',
+      'vendida': 'Vendida',
+      'reservada': 'Reservada'
+    }
+    return statusMap[status] || status
+  }
+
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -266,6 +326,7 @@ export default function AdminHuertasPage() {
             <h1 className="text-2xl font-bold text-gray-900">Gestión de Huertas</h1>
             <p className="text-gray-600">Administra todas las huertas registradas en la plataforma</p>
           </div>
+          
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
@@ -274,119 +335,254 @@ export default function AdminHuertasPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Agregar Nueva Huerta</DialogTitle>
-                <DialogDescription>Completa la información para registrar una nueva huerta</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nombre *</Label>
-                    <Input
-                      id="name"
-                      value={newHuerta.name}
-                      onChange={(e) => setNewHuerta({ ...newHuerta, name: e.target.value })}
-                      placeholder="Ej: Huerta Los Altos"
-                    />
+                <DialogHeader>
+                  <DialogTitle>Agregar Nueva Huerta</DialogTitle>
+                  <DialogDescription>Completa la información para registrar una nueva huerta</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  {/* Nombre y Tipo de Agave */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nombre *</Label>
+                      <Input
+                        id="name"
+                        value={newHuerta.name}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, name: e.target.value })}
+                        placeholder="Ej: Huerta Los Altos"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Tipo de Agave *</Label>
+                      <Select
+                        value={newHuerta.type}
+                        onValueChange={(value) => setNewHuerta({ ...newHuerta, type: value })}
+                        disabled={isLoadingAgaveTypes}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={isLoadingAgaveTypes ? "Cargando..." : "Seleccionar tipo"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {agaveTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id.toString()}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  {/* Año, Edad y Cantidad de Plantas */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="year">Año *</Label>
+                      <Input
+                        id="year"
+                        type="number"
+                        value={newHuerta.year}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, year: e.target.value })}
+                        placeholder="2020"
+                        min="1900"
+                        max={new Date().getFullYear() + 1}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Edad</Label>
+                      <Input
+                        id="age"
+                        value={newHuerta.age}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, age: e.target.value })}
+                        placeholder="Ej: 4 años"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="plants">Cantidad de Plantas *</Label>
+                      <Input
+                        id="plants"
+                        type="number"
+                        value={newHuerta.plants}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, plants: e.target.value })}
+                        placeholder="27627"
+                        min="1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Agricultor */}
                   <div className="space-y-2">
-                    <Label htmlFor="type">Tipo de Agave *</Label>
+                    <Label htmlFor="farmer">Agricultor *</Label>
                     <Select
-                      value={newHuerta.type}
-                      onValueChange={(value) => setNewHuerta({ ...newHuerta, type: value })}
+                      value={newHuerta.farmerId}
+                      onValueChange={(value) => setNewHuerta({ ...newHuerta, farmerId: value })}
+                      disabled={isLoadingFarmers}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar tipo" />
+                        <SelectValue placeholder={isLoadingFarmers ? "Cargando..." : "Seleccionar agricultor"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {agaveTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
+                        {farmers.map((farmer) => (
+                          <SelectItem key={farmer.id} value={farmer.id.toString()}>
+                            {farmer.full_name} - Identificador: {farmer.unique_identifier}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
+
+                  {/* Estado y Municipio */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="state">Estado</Label>
+                      <Input
+                        id="state"
+                        value={newHuerta.state}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, state: e.target.value })}
+                        placeholder="Ej: Jalisco"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="municipality">Municipio</Label>
+                      <Input
+                        id="municipality"
+                        value={newHuerta.municipality}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, municipality: e.target.value })}
+                        placeholder="Ej: Tequila"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Coordenadas GPS */}
+                    <div className="space-y-2">
+                      <Label htmlFor="locationurl">Ubicación (URL)</Label>
+                      <Input
+                        id="locationurl"
+                        type="text"
+                        value={newHuerta.location_url}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, location_url: e.target.value })}
+                        placeholder="Ej: https://maps.google.com/?q=20.12345,-103.12345"
+                      />
+                    </div>
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="longitude">Longitud</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="0.000001"
+                        value={newHuerta.longitude}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, longitude: e.target.value })}
+                        placeholder="Ej: -103.8370"
+                      />
+                    </div> */}
+                  
+
+                  {/* FOTO DE IDENTIFICACIÓN */}
                   <div className="space-y-2">
-                    <Label htmlFor="year">Año *</Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      value={newHuerta.year}
-                      onChange={(e) => setNewHuerta({ ...newHuerta, year: e.target.value })}
-                      placeholder="2020"
-                    />
+                    <Label htmlFor="photo-id">Foto de Identificación</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={photoIdInputRef}
+                        id="photo-id"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
+                          setNewHuerta({ ...newHuerta, photoId: file })
+                        }}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => photoIdInputRef.current?.click()}
+                        className="w-full"
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        {newHuerta.photoId ? newHuerta.photoId.name : "Seleccionar foto de identificación"}
+                      </Button>
+                    </div>
+                    {newHuerta.photoId && (
+                      <p className="text-sm text-gray-500">
+                        Archivo seleccionado: {newHuerta.photoId.name}
+                      </p>
+                    )}
                   </div>
+
+                  {/* FOTO DE PORTADA */}
                   <div className="space-y-2">
-                    <Label htmlFor="age">Edad</Label>
-                    <Input
-                      id="age"
-                      value={newHuerta.age}
-                      onChange={(e) => setNewHuerta({ ...newHuerta, age: e.target.value })}
-                      placeholder="Ej: 4 años"
-                    />
+                    <Label htmlFor="cover-photo">Foto de Portada</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={coverPhotoInputRef}
+                        id="cover-photo"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
+                          setNewHuerta({ ...newHuerta, coverPhoto: file })
+                        }}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => coverPhotoInputRef.current?.click()}
+                        className="w-full"
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        {newHuerta.coverPhoto ? newHuerta.coverPhoto.name : "Seleccionar foto de portada"}
+                      </Button>
+                    </div>
+                    {newHuerta.coverPhoto && (
+                      <p className="text-sm text-gray-500">
+                        Archivo seleccionado: {newHuerta.coverPhoto.name}
+                      </p>
+                    )}
                   </div>
+
+                  {/* 🔴 FOTO EXTRA - NUEVO CAMPO */}
                   <div className="space-y-2">
-                    <Label htmlFor="plants">Cantidad de Plantas</Label>
-                    <Input
-                      id="plants"
-                      type="number"
-                      value={newHuerta.plants}
-                      onChange={(e) => setNewHuerta({ ...newHuerta, plants: e.target.value })}
-                      placeholder="27627"
-                    />
+                    <Label htmlFor="extra-photo">Foto Area Huerta</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        ref={extraPhotoInputRef}
+                        id="extra-photo"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null
+                          console.log('📸 [EXTRA_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
+                          setNewHuerta({ ...newHuerta, extraPhoto: file })
+                        }}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => extraPhotoInputRef.current?.click()}
+                        className="w-full"
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        {newHuerta.extraPhoto ? newHuerta.extraPhoto.name : "Seleccionar foto extra"}
+                      </Button>
+                    </div>
+                    {newHuerta.extraPhoto && (
+                      <p className="text-sm text-gray-500">
+                        Archivo seleccionado: {newHuerta.extraPhoto.name}
+                      </p>
+                    )}
                   </div>
+
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="farmer">Agricultor *</Label>
-                  <Select
-                    value={newHuerta.farmerId}
-                    onValueChange={(value) => setNewHuerta({ ...newHuerta, farmerId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar agricultor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockFarmers.map((farmer) => (
-                        <SelectItem key={farmer.id} value={farmer.id.toString()}>
-                          {farmer.name} - Identificador: {farmer.uniqueId}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="photo">Foto ID</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="photo"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setNewHuerta({ ...newHuerta, photoId: e.target.files?.[0] || null })}
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById("photo")?.click()}
-                      className="w-full"
-                    >
-                      <ImageIcon className="h-4 w-4 mr-2" />
-                      {newHuerta.photoId ? newHuerta.photoId.name : "Seleccionar imagen"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleAddHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
-                  {isLoading ? "Guardando..." : "Agregar Huerta"}
-                </Button>
-              </DialogFooter>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} type="button">
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700" type="button">
+                    {isLoading ? "Guardando..." : "Agregar Huerta"}
+                  </Button>
+                </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -415,7 +611,7 @@ export default function AdminHuertasPage() {
           </div>
         </div>
 
-        {/* Búsqueda y filtros */}
+        {/* Búsqueda */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -431,37 +627,112 @@ export default function AdminHuertasPage() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Todas ({huertas.length})</TabsTrigger>
+            <TabsTrigger value="all">Todas ({orchards.length})</TabsTrigger>
             <TabsTrigger value="active">
-              Disponibles ({huertas.filter((h) => h.status === "Disponible").length})
+              Disponibles ({orchards.filter((h) => h.status === "disponible").length})
             </TabsTrigger>
-            <TabsTrigger value="sold">Vendidas ({huertas.filter((h) => h.status === "Vendida").length})</TabsTrigger>
+            <TabsTrigger value="sold">Vendidas ({orchards.filter((h) => h.status === "vendida").length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
-            {filteredHuertas.length === 0 ? (
+            {isLoadingOrchards ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Cargando huertas...</p>
+              </div>
+            ) : filteredHuertas.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">No se encontraron huertas</p>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredHuertas.map((huerta) => (
-                  <Card key={huerta.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="relative">
-                      <Image
-                        src={huerta.photoId || "/placeholder.svg"}
-                        alt={huerta.name}
-                        width={400}
-                        height={200}
-                        className="w-full h-48 object-cover"
-                      />
+                {filteredHuertas.map((orchard) => (
+                  <Card key={orchard.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="relative group">
+                      {/* Flechas de navegación (solo si hay foto extra) */}
+                      {orchard.extra_photo && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const current = activeImageIndex[orchard.id] || 0
+                              setActiveImageIndex(prev => ({ ...prev, [orchard.id]: current === 0 ? 1 : 0 }))
+                            }}
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              const current = activeImageIndex[orchard.id] || 0
+                              setActiveImageIndex(prev => ({ ...prev, [orchard.id]: current === 0 ? 1 : 0 }))
+                            }}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                      
+                     {/* FOTO ACTIVA — AQUÍ VA EL SWIPE */}
+                                         <div
+                                           className="relative w-full h-48 overflow-hidden rounded-lg"
+                                           onTouchStart={handleTouchStart}
+                                           onTouchEnd={(e) => handleTouchEnd(e, orchard.id)}
+                                         >
+                                           <button
+                                             onClick={() => {
+                                               const currentPhoto =
+                                                 (activeImageIndex[orchard.id] || 0) === 0
+                                                   ? orchard.cover_photo
+                                                   : orchard.extra_photo
+                     
+                                               handleViewPhoto(currentPhoto)
+                                             }}
+                                             className="block w-full h-full"
+                                           >
+                                             {(activeImageIndex[orchard.id] || 0) === 0 ? (
+                                               <Image
+                                                 src={orchardService.getPhotoUrl(orchard.cover_photo) || "/placeholder.svg"}
+                                                 alt={orchard.name}
+                                                 width={400}
+                                                 height={200}
+                                                 className="w-full h-48 object-cover"
+                                               />
+                                             ) : (
+                                               <Image
+                                                 src={orchardService.getPhotoUrl(orchard.extra_photo) || "/placeholder.svg"}
+                                                 alt={`${orchard.name} - Foto extra`}
+                                                 width={400}
+                                                 height={200}
+                                                 className="w-full h-48 object-cover"
+                                               />
+                                             )}
+                                           </button>
+                                         </div>
+                      
+                      {/* Indicador de posición */}
+                      {orchard.extra_photo && (
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                          <div className={`w-2 h-2 rounded-full ${(activeImageIndex[orchard.id] || 0) === 0 ? 'bg-white' : 'bg-white/50'}`}></div>
+                          <div className={`w-2 h-2 rounded-full ${(activeImageIndex[orchard.id] || 0) === 1 ? 'bg-white' : 'bg-white/50'}`}></div>
+                        </div>
+                      )}
+                      
+                      {/* Contador de fotos */}
                       <div className="absolute top-3 left-3">
-                        <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
+                        <Badge variant="secondary" className="bg-black/70 text-white">
                           <Camera className="w-3 h-3 mr-1" />
-                          {huerta.photos} fotos
+                          {orchard.extra_photo ? '2' : '1'} foto{orchard.extra_photo ? 's' : ''}
                         </Badge>
                       </div>
-                      {huerta.featured && (
+                      
+                      {orchard.is_featured && (
                         <Badge className="absolute top-3 right-3 bg-yellow-500 text-white">Destacada</Badge>
                       )}
                     </div>
@@ -469,20 +740,22 @@ export default function AdminHuertasPage() {
                     <CardContent className="p-4 space-y-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-lg text-gray-900">{huerta.name}</h3>
-                          <p className="text-sm text-gray-500">#{huerta.id}</p>
+                          <h3 className="font-semibold text-lg text-gray-900">{orchard.name}</h3>
+                          <p className="text-sm text-gray-500">#{orchard.id}</p>
                         </div>
-                        <Badge className={getStatusColor(huerta.status)}>{huerta.status}</Badge>
+                        <Badge className={getStatusColor(orchard.status)}>{formatStatus(orchard.status)}</Badge>
                       </div>
 
                       <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-                        <AgaveIcon className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-gray-900">{huerta.type}</span>
+                        <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {orchard.agave_type?.name || 'Azul Tequilana Weber'}
+                        </span>
                       </div>
 
                       <div className="text-center py-2">
                         <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
-                        <span className="text-2xl font-bold text-blue-600">{huerta.plants.toLocaleString()}</span>
+                        <span className="text-2xl font-bold text-blue-600">{orchard.plant_quantity.toLocaleString()}</span>
                       </div>
 
                       <div className="space-y-3">
@@ -491,7 +764,7 @@ export default function AdminHuertasPage() {
                             <MapPin className="w-4 h-4 text-gray-500" />
                             <span className="text-sm text-gray-500">Estado</span>
                           </div>
-                          <span className="text-sm font-medium text-gray-900 ml-6">{huerta.state}</span>
+                          <span className="text-sm font-medium text-gray-900 ml-6">{orchard.state || 'N/A'}</span>
                         </div>
 
                         <div>
@@ -501,7 +774,7 @@ export default function AdminHuertasPage() {
                             </div>
                             <span className="text-sm text-gray-500">Municipio</span>
                           </div>
-                          <span className="text-sm font-medium text-gray-900 ml-6">{huerta.municipality}</span>
+                          <span className="text-sm font-medium text-gray-900 ml-6">{orchard.municipality || 'N/A'}</span>
                         </div>
                       </div>
 
@@ -510,40 +783,64 @@ export default function AdminHuertasPage() {
                           <Calendar className="w-4 h-4 text-gray-500" />
                           <div>
                             <p className="text-sm text-gray-500">Año</p>
-                            <p className="text-sm font-medium text-gray-900">{huerta.year}</p>
+                            <p className="text-sm font-medium text-gray-900">{orchard.year}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-gray-500" />
                           <div>
                             <p className="text-sm text-gray-500">Edad</p>
-                            <p className="text-sm font-medium text-gray-900">{huerta.age}</p>
+                            <p className="text-sm font-medium text-gray-900">{orchard.age_formatted || `${orchard.age} años`}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-green-700 font-medium">Ubicación</p>
-                            <p className="text-sm font-mono text-green-800">{huerta.location}</p>
+                      {orchard.location_url && (
+                       <div
+                          onClick={() => handleOpenLocation(orchard.location_url!)}
+                          className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm
+                                    flex items-center justify-between gap-3 cursor-pointer
+                                    hover:bg-green-100 active:scale-[0.98] transition"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-200 shrink-0">
+                              <MapPin className="h-5 w-5 text-green-700" />
+                            </div>
+
+                            <div>
+                              <p className="text-sm font-medium text-green-800">
+                                Ver ubicación
+                              </p>
+                              
+                            </div>
                           </div>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
-                            <Share2 className="w-4 h-4 text-green-700" />
-                          </Button>
-                        </div>
-                      </div>
+
+                          {/* BOTÓN SOLO PARA COMPARTIR */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation() // 👈 IMPORTANTE
+                              handleShareLocation(orchard.location_url!)
+                            }}
+                            className="h-9 w-9 rounded-full flex items-center justify-center
+                                      hover:bg-green-200 transition"
+                            aria-label="Compartir ubicación"
+                          >
+                            <Share2 className="h-4 w-4 text-green-700" />
+                          </button>
+                       </div>
+                      )}
 
                       <div className="space-y-2">
                         <Button
                           variant="default"
                           size="sm"
-                          onClick={() => handleViewPhoto(huerta.photoId)}
+                          onClick={() => handleViewPhoto(orchard.photo_id)}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <ImageIcon className="h-4 w-4 mr-1" />
                           Ver Foto ID
                         </Button>
+                      
                         <Button
                           variant="default"
                           size="sm"
@@ -556,7 +853,7 @@ export default function AdminHuertasPage() {
                           variant="default"
                           size="sm"
                           onClick={() => {
-                            setSelectedHuerta(huerta)
+                            setSelectedHuerta(orchard)
                             setIsEditDialogOpen(true)
                           }}
                           className="w-full bg-orange-600 hover:bg-orange-700 text-white"
@@ -577,14 +874,27 @@ export default function AdminHuertasPage() {
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Foto ID de la Huerta</DialogTitle>
+              <DialogTitle>Foto de la Huerta</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center">
-              <img
-                src={selectedPhoto || "/placeholder.svg"}
-                alt="Foto ID"
-                className="max-w-full max-h-[70vh] object-contain rounded-lg"
-              />
+              <div className="overflow-auto max-h-[70vh] p-2">
+                  <img
+                    src={selectedPhoto || "/placeholder.svg"}
+                    alt="Foto"
+                    className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                    style={{ width: "100%", height: "auto" }}
+                    onClick={(e) => {
+                      const img = e.currentTarget;
+                      if (img.style.width === "100%") {
+                        img.style.width = "200%";
+                        img.style.cursor = "zoom-out";
+                      } else {
+                        img.style.width = "100%";
+                        img.style.cursor = "zoom-in";
+                      }
+                    }}
+                  />
+                </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -610,22 +920,24 @@ export default function AdminHuertasPage() {
                   <div className="space-y-2">
                     <Label htmlFor="edit-type">Tipo de Agave</Label>
                     <Select
-                      value={selectedHuerta.type}
-                      onValueChange={(value) => setSelectedHuerta({ ...selectedHuerta, type: value })}
+                      value={selectedHuerta.agave_type_id?.toString() || ''}
+                      onValueChange={(value) => setSelectedHuerta({ ...selectedHuerta, agave_type_id: Number(value) })}
+                      disabled={isLoadingAgaveTypes}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder={isLoadingAgaveTypes ? "Cargando..." : "Seleccionar tipo"} />
                       </SelectTrigger>
                       <SelectContent>
                         {agaveTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
+                          <SelectItem key={type.id} value={type.id.toString()}>
+                            {type.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-year">Año</Label>
@@ -633,15 +945,16 @@ export default function AdminHuertasPage() {
                       id="edit-year"
                       type="number"
                       value={selectedHuerta.year}
-                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, year: Number.parseInt(e.target.value) })}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, year: Number(e.target.value) })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-age">Edad</Label>
                     <Input
                       id="edit-age"
+                      type="number"
                       value={selectedHuerta.age}
-                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, age: e.target.value })}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, age: Number(e.target.value) })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -649,64 +962,253 @@ export default function AdminHuertasPage() {
                     <Input
                       id="edit-plants"
                       type="number"
-                      value={selectedHuerta.plants}
-                      onChange={(e) =>
-                        setSelectedHuerta({ ...selectedHuerta, plants: Number.parseInt(e.target.value) })
-                      }
+                      value={selectedHuerta.plant_quantity}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, plant_quantity: Number(e.target.value) })}
                     />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="edit-farmer">Agricultor</Label>
                   <Select
-                    value={selectedHuerta.farmerUniqueId}
-                    onValueChange={(value) => {
-                      const farmer = mockFarmers.find((f) => f.uniqueId === value)
-                      setSelectedHuerta({
-                        ...selectedHuerta,
-                        farmerUniqueId: value,
-                        farmerName: farmer?.name || "",
-                      })
-                    }}
+                    value={selectedHuerta.farmer_id?.toString() || ''}
+                    onValueChange={(value) => setSelectedHuerta({ ...selectedHuerta, farmer_id: Number(value) })}
+                    disabled={isLoadingFarmers}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder={isLoadingFarmers ? "Cargando..." : "Seleccionar agricultor"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockFarmers.map((farmer) => (
-                        <SelectItem key={farmer.id} value={farmer.uniqueId}>
-                          {farmer.name} - Identificador: {farmer.uniqueId}
+                      {farmers.map((farmer) => (
+                        <SelectItem key={farmer.id} value={farmer.id.toString()}>
+                          {farmer.full_name} - Identificador: {farmer.unique_identifier}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-photo">Cambiar Foto ID</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById("edit-photo")?.click()}
-                    className="w-full"
-                  >
-                    <ImageIcon className="h-4 w-4 mr-1" />
-                    Seleccionar nueva imagen
-                  </Button>
-                  <Input id="edit-photo" type="file" accept="image/*" className="hidden" />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-state">Estado</Label>
+                    <Input
+                      id="edit-state"
+                      value={selectedHuerta.state || ''}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, state: e.target.value })}
+                      placeholder="Ej: Jalisco"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-municipality">Municipio</Label>
+                    <Input
+                      id="edit-municipality"
+                      value={selectedHuerta.municipality || ''}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, municipality: e.target.value })}
+                      placeholder="Ej: Tequila"
+                    />
+                  </div>
                 </div>
+
+                {/* Coordenadas GPS */}
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-locationurl">Ubicación (URL)</Label>
+                      <Input
+                        id="edit-locationurl"
+                        type="text"
+                        value={selectedHuerta.location_url || ''}
+                        onChange={(e) => setSelectedHuerta({ ...selectedHuerta, location_url: e.target.value })}
+                        placeholder="Ej: https://maps.google.com/?q=20.12345,-103.12345"
+                      />
+                    </div>
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="longitude">Longitud</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="0.000001"
+                        value={newHuerta.longitude}
+                        onChange={(e) => setNewHuerta({ ...newHuerta, longitude: e.target.value })}
+                        placeholder="Ej: -103.8370"
+                      />
+                    </div> */}
+                  
+                {/* <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-latitude">Latitud</Label>
+                    <Input
+                      id="edit-latitude"
+                      type="number"
+                      step="0.000001"
+                      value={selectedHuerta.latitude || ''}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, latitude: Number(e.target.value) })}
+                      placeholder="Ej: 20.8818"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-longitude">Longitud</Label>
+                    <Input
+                      id="edit-longitude"
+                      type="number"
+                      step="0.000001"
+                      value={selectedHuerta.longitude || ''}
+                      onChange={(e) => setSelectedHuerta({ ...selectedHuerta, longitude: Number(e.target.value) })}
+                      placeholder="Ej: -103.8370"
+                    />
+                  </div>
+                </div> */}
+
+                {/* EDITAR FOTO DE IDENTIFICACIÓN */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-photo-id">Cambiar Foto de Identificación</Label>
+          {(selectedHuerta.photo_id || selectedHuerta.photo_id_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.photo_id instanceof File
+                    ? URL.createObjectURL(selectedHuerta.photo_id)
+                    : orchardService.getPhotoUrl(selectedHuerta.photo_id || selectedHuerta.photo_id_path) || "/placeholder.svg"
+                }
+                alt="Foto actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.photo_id instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto actual de identificación"}
+              </p>
+            </div>
+          )}
+          <Input
+            ref={editPhotoIdRef}
+            id="edit-photo-id"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              console.log("Nueva foto ID:", file?.name);
+              setSelectedHuerta({ ...selectedHuerta, photo_id: file });
+            }}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => editPhotoIdRef.current?.click()}
+            className="w-full"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            {selectedHuerta.photo_id ? 
+              "Reemplazar foto de identificación" : 
+              "Seleccionar foto de identificación"}
+          </Button>
+        </div>
+
+        {/* EDITAR FOTO DE PORTADA */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-cover-photo">Cambiar Foto de Portada</Label>
+          {(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.cover_photo instanceof File
+                    ? URL.createObjectURL(selectedHuerta.cover_photo)
+                    : orchardService.getPhotoUrl(selectedHuerta.cover_photo || selectedHuerta.cover_photo_path) || "/placeholder.svg"
+                }
+                alt="Foto actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.cover_photo instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto actual de portada"}
+              </p>
+            </div>
+          )}
+          
+          <Input
+            ref={editCoverPhotoRef}
+            id="edit-cover-photo"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              console.log("Nueva foto portada:", file?.name);
+              setSelectedHuerta({ ...selectedHuerta, cover_photo: file });
+            }}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => editCoverPhotoRef.current?.click()}
+            className="w-full"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            {selectedHuerta.cover_photo ? 
+              "Reemplazar foto de portada" : 
+              "Seleccionar foto de portada"}
+          </Button>
+        </div>
+
+        {/* EDITAR FOTO EXTRA */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-extra-photo">Cambiar Foto Area Huerta</Label>
+          {(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) && (
+            <div className="mb-2">
+              <img
+                src={
+                  selectedHuerta.extra_photo instanceof File
+                    ? URL.createObjectURL(selectedHuerta.extra_photo)
+                    : orchardService.getPhotoUrl(selectedHuerta.extra_photo || selectedHuerta.extra_photo_path) || "/placeholder.svg"
+                }
+                alt="Foto extra actual"
+                className="w-full h-32 object-cover rounded-lg"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedHuerta.extra_photo instanceof File
+                  ? "Nueva foto seleccionada"
+                  : "Foto extra actual"}
+              </p>
+            </div>
+        )}
+  
+        <Input
+          ref={editExtraPhotoRef}
+          id="edit-extra-photo"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            console.log("Nueva foto extra:", file?.name);
+            setSelectedHuerta({ ...selectedHuerta, extra_photo: file });
+          }}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => editExtraPhotoRef.current?.click()}
+          className="w-full"
+        >
+          <ImageIcon className="h-4 w-4 mr-2" />
+          {selectedHuerta.extra_photo ? 
+            "Reemplazar foto area huerta" : 
+            "Seleccionar foto area huerta"}
+        </Button>
+      </div>
               </div>
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} type="button">
                 Cancelar
               </Button>
-              <Button onClick={handleEditHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleEditHuerta} disabled={isLoading} className="bg-green-600 hover:bg-green-700" type="button">
                 {isLoading ? "Guardando..." : "Guardar Cambios"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }

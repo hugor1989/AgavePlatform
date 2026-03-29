@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { companiService } from "@/services/companiService"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
+  DialogFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -31,89 +32,49 @@ import {
   Plus,
   Search,
   Eye,
+  EyeOff,
   Edit,
   MoreHorizontal,
   CheckCircle,
   XCircle,
-  TrendingUp,
-  DollarSign,
-  ShoppingCart,
 } from "lucide-react"
-import { AdminLayout } from "@/components/admin-layout"
+import { AppLayout } from "@/components/layouts/app-layout"
+import { alert } from "@/lib/alert"
 
 export default function AdminCompaniesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
   const [isAddingCompany, setIsAddingCompany] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditingCompany, setIsEditingCompany] = useState(false)
+  const [companies, setCompanies] = useState<any[]>([])
+  const [editOpen, setEditOpen] = useState(false)
 
-  const [companies, setCompanies] = useState([
-    {
-      id: 1,
-      name: "Tequila Premium SA de CV",
-      email: "contacto@tequilapremium.com",
-      phone: "+52 33 1234 5678",
-      factoryLocation: "Guadalajara, Jalisco",
-      rfc: "TPR123456789",
-      address: "Av. Tequila 123, Guadalajara, Jalisco",
-      status: "active",
-      registeredAt: "2024-01-10",
-      lastActivity: "2024-01-20",
-      totalPurchases: 12,
-      totalSpent: 8900000,
-      activeOffers: 3,
-      website: "https://tequilapremium.com",
-    },
-    {
-      id: 2,
-      name: "Agave Industries México",
-      email: "info@agaveindustries.mx",
-      phone: "+52 33 9876 5432",
-      factoryLocation: "Zapopan, Jalisco",
-      rfc: "AIM987654321",
-      address: "Blvd. Agave 456, Zapopan, Jalisco",
-      status: "active",
-      registeredAt: "2024-01-08",
-      lastActivity: "2024-01-19",
-      totalPurchases: 9,
-      totalSpent: 6700000,
-      activeOffers: 2,
-      website: "https://agaveindustries.mx",
-    },
-    {
-      id: 3,
-      name: "Destilería El Mirador",
-      email: "ventas@elmirador.com",
-      phone: "+52 33 5555 1234",
-      factoryLocation: "Tequila, Jalisco",
-      rfc: "DEM555123456",
-      address: "Carretera Nacional Km 15, Tequila, Jalisco",
-      status: "inactive",
-      registeredAt: "2023-12-15",
-      lastActivity: "2024-01-05",
-      totalPurchases: 7,
-      totalSpent: 5400000,
-      activeOffers: 0,
-      website: "https://elmirador.com",
-    },
-    {
-      id: 4,
-      name: "Grupo Agavero Nacional",
-      email: "compras@grupoagavero.mx",
-      phone: "+52 33 7777 8888",
-      factoryLocation: "Guadalajara, Jalisco",
-      rfc: "GAN777888999",
-      address: "Torre Corporativa, Guadalajara, Jalisco",
-      status: "inactive",
-      registeredAt: "2024-01-18",
-      lastActivity: "2024-01-18",
-      totalPurchases: 0,
-      totalSpent: 0,
-      activeOffers: 0,
-      website: "https://grupoagavero.mx",
-    },
-  ])
+  const [selectedCompanyEditar, setSelectedCompanyEditar] = useState<any | null>(null)
+  const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
+
+  const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
+
+  // Estado y funciones para cambiar contraseña
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+  const [selectedCompanyPassword, setSelectedCompanyPassword] = useState<any | null>(null)
+  const [newPassword, setNewPassword] = useState("")
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+
+
+  //Estado nuevo
+    const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
+    const [otpCode, setOtpCode] = useState("")
+    const [verifying, setVerifying] = useState(false)
+
+  interface FarmerCredentials {
+    email: string
+    password: string
+    id: string | number
+  }
+
 
   const [newCompanyForm, setNewCompanyForm] = useState({
     name: "",
@@ -124,51 +85,233 @@ export default function AdminCompaniesPage() {
     address: "",
   })
 
-  const filteredCompanies = companies.filter((company) => {
-    const matchesSearch =
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.factoryLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.rfc.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || company.status === statusFilter
+  //Obtener lista de empresas desde el servicio
+  const fetchCompanies = async () => {
+    try {
+      const data = await companiService.getAll()
 
-    return matchesSearch && matchesStatus
-  })
+      // Mapear status numérico → texto
+    const mapped = data.map((c: any) => ({
+      ...c,
+      status: c.status === 1 ? "active" : "inactive",
+    }))
 
-  const handleAddCompany = (e: React.FormEvent) => {
+      setCompanies(mapped)
+    } catch (error) {
+      console.error("Error al obtener empresas:", error)
+
+      await alert.error("No se pudieron cargar las empresas")
+    }
+  }
+
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  //Agregar nueva empresa usando el servicio
+  const handleAddCompany = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsAddingCompany(true)
-
-    setTimeout(() => {
-      const newCompany = {
-        id: companies.length + 1,
-        ...newCompanyForm,
-        representative: newCompanyForm.factoryLocation, // Map to existing data structure
-        status: "active" as const,
-        registeredAt: new Date().toISOString().split("T")[0],
-        lastActivity: new Date().toISOString().split("T")[0],
-        totalPurchases: 0,
-        totalSpent: 0,
-        activeOffers: 0,
+    try {
+      const payload = {
+        business_name: newCompanyForm.name,
+        email: newCompanyForm.email,
+        phone: newCompanyForm.phone,
+        factory_location: newCompanyForm.factoryLocation,
+        rfc: newCompanyForm.rfc,
+        fiscal_address: newCompanyForm.address,
+        status: 1,
       }
 
-      setCompanies((prev) => [newCompany, ...prev])
+      const response =  await companiService.create(payload)
+
+      if(response.success){
+
+        const credentials = response?.data?.credentials
+
+        await fetchCompanies()
+
+
+          //Cierra el diálogo de registro y abre el de credenciales
+          setIsAddDialogOpen(false)
+          setNewFarmerCredentials(credentials)
+          setIsCredentialsDialogOpen(true)
+
+
+          setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+      }else{
+          
+          await fetchCompanies()
+
+          await alert.error("No se pudo registrar la empresa", response.message)
+
+
+          //Cierra el diálogo de registro y abre el de credenciales
+          setIsAddDialogOpen(false)
+
+          setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+      }
+
+     
+      
+    } catch (error) {
+      console.error("Error al crear empresa:", error)
+      
+      setIsAddDialogOpen(false)
+
+      await alert.error("No se pudo registrar la empresa")
+
       setNewCompanyForm({
-        name: "",
-        email: "",
-        phone: "",
-        factoryLocation: "",
-        rfc: "",
-        address: "",
-      })
-      setIsAddingCompany(false)
-    }, 1500)
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+      
+    } finally {
+      setIsAddDialogOpen(false)
+
+       setNewCompanyForm({
+            name: "",
+            email: "",
+            phone: "",
+            factoryLocation: "",
+            rfc: "",
+            address: "",
+          })
+    }
   }
 
-  const handleStatusChange = (companyId: number, newStatus: string) => {
-    setCompanies((prev) =>
-      prev.map((company) => (company.id === companyId ? { ...company, status: newStatus } : company)),
-    )
+  //Boton editar
+  const handleEditClick = (company: any) => {
+  setSelectedCompanyEditar(company)
+  setEditOpen(true)
+}
+
+const handleUpdateCompany = async () => {
+  if (!selectedCompanyEditar) return
+
+  const payload = {
+    business_name: selectedCompanyEditar.name, // o selectedCompany.business_name si el backend usa ese campo
+    email: selectedCompanyEditar.email,
+    rfc: selectedCompanyEditar.rfc,
+    phone: selectedCompanyEditar.phone,
+    factory_location: selectedCompanyEditar.factory_location,
+    fiscal_address: selectedCompanyEditar.fiscal_address
+
   }
+
+  try {
+    await companiService.update(selectedCompanyEditar.id, payload)
+    toast.success("Empresa actualizada correctamente")
+
+    setCompanies((prev) =>
+      prev.map((c) =>
+        c.id === selectedCompanyEditar.id ? selectedCompanyEditar : c
+      )
+    )
+    setEditOpen(false)
+  } catch (error) {
+    console.error("Error al actualizar empresa:", error)
+    toast.error("No se pudo actualizar la empresa")
+  }
+}
+
+//Cammbiar contraseña
+const handleOpenPasswordDialog = (company: any) => {
+  setSelectedCompanyPassword(company)
+  setNewPassword("")
+  setIsPasswordDialogOpen(true)
+}
+
+const handleChangePassword = async () => {
+  if (!selectedCompanyPassword) return
+
+  try {
+    setChangingPassword(true)
+    const payload = {
+      id: selectedCompanyPassword.id,
+      new_password: newPassword,
+    }
+
+    await companiService.resetPassword(payload)
+
+    await alert.success("Contraseña actualizada correctamente", "El usuario podrá iniciar sesión con la nueva contraseña.")
+    setIsPasswordDialogOpen(false)
+  } catch (error) {
+    console.error("Error al cambiar contraseña:", error)
+    await alert.error("No se pudo actualizar la contraseña", "Verifica la conexión o intenta más tarde.")
+  } finally {
+    setChangingPassword(false)
+  }
+}
+
+  // 🔹 Cambiar estado local (puedes integrar API después si se requiere)
+const handleStatusChange = async (companyId: number, newStatus: string) => {
+  try {
+    // Encuentra la empresa actual
+    const company = companies.find((c) => c.id === companyId)
+    if (!company) return await alert.error("Empresa no encontrada")
+
+    // Prepara el payload que exige el backend
+    const payload = {
+      business_name: company.name, // o company.business_name si tu backend lo usa así
+      email: company.email,
+      status: newStatus === "active" ? 1 : 0,
+    }
+
+    // Llama al endpoint de actualización
+    const response = await companiService.update(companyId, payload)
+
+    if(response.success){
+
+       // Actualiza estado local
+    setCompanies((prev) =>
+      prev.map((c) =>
+        c.id === companyId ? { ...c, status: newStatus } : c
+      )
+    )
+
+    await alert.success(
+      `Empresa marcada como ${newStatus === "active" ? "activa" : "inactiva"}`
+    )
+
+    }else{
+
+      await alert.error(response.message)
+
+    }
+   
+  } catch (error) {
+
+    await alert.error(error.message)
+  }
+}
+
+  const filteredCompanies = companies.filter((company) => {
+    const matchesSearch =
+      company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.factory_location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.rfc?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || company.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -192,7 +335,7 @@ export default function AdminCompaniesPage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout type="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -200,7 +343,7 @@ export default function AdminCompaniesPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Gestión de Empresas</h1>
             <p className="text-gray-600">Administra las empresas registradas en la plataforma</p>
           </div>
-          <Dialog>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
                 <Plus className="h-4 w-4 mr-2" />
@@ -216,79 +359,213 @@ export default function AdminCompaniesPage() {
               </DialogHeader>
               <form onSubmit={handleAddCompany} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Razón social */}
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Razón Social *</Label>
                     <Input
                       id="companyName"
                       value={newCompanyForm.name}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCompanyForm((prev) => ({ ...prev, name: e.target.value }))
+                      }
                       required
                     />
                   </div>
+
+                  {/* RFC */}
                   <div className="space-y-2">
                     <Label htmlFor="companyRfc">RFC *</Label>
                     <Input
                       id="companyRfc"
                       value={newCompanyForm.rfc}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, rfc: e.target.value }))}
+                      maxLength={13}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                        setNewCompanyForm((prev) => ({ ...prev, rfc: value }));
+                      }}
                       required
                     />
+                    <small className="text-gray-500 text-xs">Máx. 13 caracteres (solo letras y números)</small>
                   </div>
+
+                  {/* Email */}
                   <div className="space-y-2">
                     <Label htmlFor="companyEmail">Email *</Label>
                     <Input
                       id="companyEmail"
                       type="email"
                       value={newCompanyForm.email}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCompanyForm((prev) => ({ ...prev, email: e.target.value }))
+                      }
                       required
                     />
                   </div>
+
+                  {/* Teléfono */}
                   <div className="space-y-2">
                     <Label htmlFor="companyPhone">Teléfono *</Label>
                     <Input
                       id="companyPhone"
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       value={newCompanyForm.phone}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setNewCompanyForm((prev) => ({ ...prev, phone: value }));
+                      }}
                       required
                     />
+                    <small className="text-gray-500 text-xs">Debe tener 10 dígitos numéricos</small>
                   </div>
+
+                  {/* Ubicación de Fábrica */}
                   <div className="space-y-2">
                     <Label htmlFor="companyFactoryLocation">Ubicación de Fábrica *</Label>
                     <Input
                       id="companyFactoryLocation"
                       value={newCompanyForm.factoryLocation}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, factoryLocation: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCompanyForm((prev) => ({
+                          ...prev,
+                          factoryLocation: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
+
+                  {/* Dirección Fiscal */}
                   <div className="space-y-2">
                     <Label htmlFor="companyAddress">Dirección Fiscal *</Label>
                     <Input
                       id="companyAddress"
                       value={newCompanyForm.address}
-                      onChange={(e) => setNewCompanyForm((prev) => ({ ...prev, address: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCompanyForm((prev) => ({ ...prev, address: e.target.value }))
+                      }
                       required
                     />
                   </div>
                 </div>
+
+                {/* Botón */}
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" disabled={isAddingCompany} className="bg-green-600 hover:bg-green-700">
+                  <Button
+                    type="submit"
+                    disabled={isAddingCompany}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     {isAddingCompany ? "Registrando..." : "Registrar Empresa"}
                   </Button>
                 </div>
               </form>
+
+            </DialogContent>
+          </Dialog>
+
+          {/*Segundo diálogo: Mostrar credenciales */}
+        <Dialog open={isCredentialsDialogOpen} onOpenChange={setIsCredentialsDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>✅ Empresa creada correctamente</DialogTitle>
+              <DialogDescription>
+                Aquí están las credenciales de la nueva empresa:
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-4 border rounded-md p-4 bg-gray-50">
+              <p><strong>Email:</strong> {newFarmerCredentials?.email}</p>
+              <p><strong>Contraseña:</strong> {newFarmerCredentials?.password}</p>
+            </div>
+
+            <DialogFooter className="mt-6">
+              <Button onClick={() => setIsCredentialsDialogOpen(false)}>
+                Cerrar
+              </Button>
+              <Button
+                    onClick={() => {
+                      setIsCredentialsDialogOpen(false)
+                      setIsOtpDialogOpen(true)
+                    }}
+                    className="bg-green-600 hover:bg-green-700">
+                  Verificar Código OTP
+                </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+          {/*Diálogo para ingresar OTP */}
+          <Dialog open={isOtpDialogOpen} onOpenChange={setIsOtpDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Verificar Código de Activación</DialogTitle>
+                <DialogDescription>
+                  Ingresa el código OTP que la empresa te haya proporcionado.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-4">
+                <Input
+                  placeholder="Código OTP"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="text-center text-lg font-mono tracking-widest"
+                />
+              </div>
+
+              <DialogFooter className="mt-6 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOtpDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={verifying || otpCode.trim().length === 0}
+                  onClick={async () => {
+                    try {
+                      setVerifying(true)
+                      const confirmotp = {
+                        user_type: "company",
+                        user_id: newFarmerCredentials?.id,
+                        code: otpCode.trim()
+                        
+                      }
+                      console.log(confirmotp);
+                      const res = await companiService.verifyCode(confirmotp)
+                      console.log(res);
+                      await alert.success("Código verificado correctamente", "La empresa ha sido validado con éxito.")
+                      setIsOtpDialogOpen(false)
+                      await fetchCompanies()
+                    } catch (err) {
+                      console.error(err)
+                      await alert.error("Código inválido o expirado", "Por favor verifica e intenta de nuevo.")
+                    } finally {
+                      setVerifying(false)
+                    }
+                  }}
+                >
+                  {verifying ? "Verificando..." : "Verificar"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Main Content */}
-        <Card>
+        {/* Tabla */}
+        <div className="w-full max-w-[100vw] overflow-x-hidden px-2">
+          <Card className="w-full overflow-hidden">
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <CardTitle>Listado de Empresas</CardTitle>
-                <CardDescription>Lista completa de empresas registradas en la plataforma</CardDescription>
+                <CardDescription>
+                  Lista completa de empresas registradas en la plataforma
+                </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <div className="relative">
@@ -313,16 +590,15 @@ export default function AdminCompaniesPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
+          <CardContent className="overflow-x-auto w-full no-scrollbar">
+            <div className="w-full min-w-[600px] table-fixed">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empresa</TableHead>
-                    <TableHead className="hidden md:table-cell">Ubicación</TableHead>
+                    <TableHead className="hidden md:table-cell">Ubicación Fabrica</TableHead>
                     <TableHead className="hidden lg:table-cell">Contacto</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead className="hidden sm:table-cell">Compras</TableHead>
                     <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -331,12 +607,16 @@ export default function AdminCompaniesPage() {
                     <TableRow key={company.id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{company.name}</div>
-                          <div className="text-sm text-gray-500 md:hidden">{company.factoryLocation}</div>
+                          <div className="font-medium">{company.business_name}</div>
+                          <div className="text-sm text-gray-500 md:hidden">
+                            {company.factory_location}
+                          </div>
                           <div className="text-sm text-gray-500">{company.rfc}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{company.factoryLocation}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {company.factory_location}
+                      </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         <div className="text-sm">
                           <div>{company.email}</div>
@@ -344,12 +624,6 @@ export default function AdminCompaniesPage() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(company.status)}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="text-sm">
-                          <div className="font-medium">{company.totalPurchases} compras</div>
-                          <div className="text-gray-500">${(company.totalSpent / 1000000).toFixed(1)}M</div>
-                        </div>
-                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -363,19 +637,29 @@ export default function AdminCompaniesPage() {
                               <Eye className="h-4 w-4 mr-2" />
                               Ver detalles
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setIsEditingCompany(true)}>
+                            <DropdownMenuItem onClick={() => handleEditClick(company)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenPasswordDialog(company)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Cambiar contraseña
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {company.status === "active" && (
-                              <DropdownMenuItem onClick={() => handleStatusChange(company.id, "inactive")}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusChange(company.id, "inactive")
+                                }
+                              >
                                 <XCircle className="h-4 w-4 mr-2" />
                                 Desactivar
                               </DropdownMenuItem>
                             )}
                             {company.status === "inactive" && (
-                              <DropdownMenuItem onClick={() => handleStatusChange(company.id, "active")}>
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChange(company.id, "active")}
+                              >
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Activar
                               </DropdownMenuItem>
@@ -390,59 +674,135 @@ export default function AdminCompaniesPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
+        
 
-        {/* Company Details Modal */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar empresa</DialogTitle>
+              <DialogDescription>
+                Modifica los datos de la empresa seleccionada.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedCompanyEditar && (
+              <div className="space-y-4 py-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Nombre de la empresa</label>
+                  <Input
+                    value={selectedCompanyEditar.business_name}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Email</label>
+                  <Input
+                    value={selectedCompanyEditar.email}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                 <div className="grid gap-2">
+                  <label className="text-sm font-medium">Telefono</label>
+                  <Input
+                    value={selectedCompanyEditar.phone}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Ubicacion Fabrica</label>
+                  <Input
+                    value={selectedCompanyEditar.factory_location}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        factory_location: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                 <div className="grid gap-2">
+                  <label className="text-sm font-medium">Direccion Fiscal</label>
+                  <Input
+                    value={selectedCompanyEditar.fiscal_address}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        fiscal_address: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">RFC</label>
+                  <Input
+                    type="text"
+                    value={selectedCompanyEditar.rfc}
+                    onChange={(e) =>
+                      setSelectedCompanyEditar({
+                        ...selectedCompanyEditar,
+                        rfc: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateCompany}>Guardar cambios</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* Modal Detalle */}
         {selectedCompany && (
           <Dialog open={!!selectedCompany} onOpenChange={() => setSelectedCompany(null)}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  {selectedCompany.name}
+                  {selectedCompany.business_name}
                 </DialogTitle>
-                <DialogDescription>Información detallada de la empresa</DialogDescription>
+                <DialogDescription>
+                  Información detallada de la empresa
+                </DialogDescription>
               </DialogHeader>
+
               <div className="space-y-6">
-                {/* Status and Basic Info */}
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div className="flex items-center gap-2">
                     {getStatusBadge(selectedCompany.status)}
-                    <span className="text-sm text-gray-500">Registrada el {selectedCompany.registeredAt}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Editar
-                    </Button>
+                    <span className="text-sm text-gray-500">
+                      Registrada el {selectedCompany.created_at?.split("T")[0]}
+                    </span>
                   </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <ShoppingCart className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold">{selectedCompany.totalPurchases}</div>
-                      <div className="text-sm text-gray-500">Compras Realizadas</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold">${(selectedCompany.totalSpent / 1000000).toFixed(1)}M</div>
-                      <div className="text-sm text-gray-500">Total Invertido</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <TrendingUp className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold">{selectedCompany.activeOffers}</div>
-                      <div className="text-sm text-gray-500">Ofertas Activas</div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Detailed Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="font-semibold mb-3">Información de Contacto</h4>
@@ -454,10 +814,12 @@ export default function AdminCompaniesPage() {
                         <span className="font-medium">Teléfono:</span> {selectedCompany.phone}
                       </div>
                       <div>
-                        <span className="font-medium">Ubicación de Fábrica:</span> {selectedCompany.factoryLocation}
+                        <span className="font-medium">Ubicación Fabrica:</span>{" "}
+                        {selectedCompany.factory_location}
                       </div>
                       <div>
-                        <span className="font-medium">Dirección:</span> {selectedCompany.address}
+                        <span className="font-medium">Dirección:</span>{" "}
+                        {selectedCompany.fiscal_address}
                       </div>
                     </div>
                   </div>
@@ -467,9 +829,6 @@ export default function AdminCompaniesPage() {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium">RFC:</span> {selectedCompany.rfc}
-                      </div>
-                      <div>
-                        <span className="font-medium">Última actividad:</span> {selectedCompany.lastActivity}
                       </div>
                       <div>
                         <span className="font-medium">Estado:</span>{" "}
@@ -482,7 +841,73 @@ export default function AdminCompaniesPage() {
             </DialogContent>
           </Dialog>
         )}
+
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cambiar contraseña</DialogTitle>
+            <DialogDescription>
+              Ingresa una nueva contraseña para la empresa{" "}
+              <strong>{selectedCompanyPassword?.business_name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Nueva contraseña</label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="********"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+
+              {/*Mensaje de ayuda */}
+              <p className="text-xs text-gray-500">
+                La contraseña debe tener al menos <strong>6 caracteres</strong>.
+              </p>
+
+              {/*Mensaje de error opcional */}
+              {newPassword && newPassword.length < 6 && (
+                <p className="text-xs text-red-500">
+                  La contraseña es demasiado corta.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={newPassword.length < 6 || changingPassword}
+              onClick={handleChangePassword}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {changingPassword ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       </div>
-    </AdminLayout>
+    </AppLayout>
   )
 }
