@@ -38,7 +38,12 @@ export const farmerService = {
     return response.data
   },
 
-    async resetPassword(payload: any) {
+  resendOtp: async (userId: number | string) => {
+    const response = await api.post("/admin/resend-otp", { user_type: "farmer", user_id: userId })
+    return response.data
+  },
+
+  async resetPassword(payload: any) {
     return api.post(`/farmer/reset-password`, payload)
   }
 

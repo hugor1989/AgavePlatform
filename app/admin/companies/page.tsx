@@ -37,6 +37,7 @@ import {
   MoreHorizontal,
   CheckCircle,
   XCircle,
+  Mail,
 } from "lucide-react"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { alert } from "@/lib/alert"
@@ -64,10 +65,12 @@ export default function AdminCompaniesPage() {
   const [showPassword, setShowPassword] = useState(false)
 
 
-  //Estado nuevo
-    const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
-    const [otpCode, setOtpCode] = useState("")
-    const [verifying, setVerifying] = useState(false)
+  //Estado OTP
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState("")
+  const [verifying, setVerifying] = useState(false)
+  const [otpTargetId, setOtpTargetId] = useState<number | string | null>(null)
+  const [resendingOtp, setResendingOtp] = useState(false)
 
   interface FarmerCredentials {
     email: string
@@ -185,6 +188,7 @@ export default function AdminCompaniesPage() {
           })
       
     } finally {
+      setIsAddingCompany(false)
       setIsAddDialogOpen(false)
 
        setNewCompanyForm({
@@ -303,6 +307,21 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
     await alert.error(error.message)
   }
 }
+
+  const handleResendOtp = async (company: any) => {
+    setResendingOtp(true)
+    try {
+      await companiService.resendOtp(company.id)
+      await alert.success("Código reenviado", `Se envió un nuevo OTP al correo ${company.email}`)
+      setOtpTargetId(company.id)
+      setOtpCode("")
+      setIsOtpDialogOpen(true)
+    } catch (err: any) {
+      await alert.error("No se pudo reenviar el OTP", err?.message || "Intenta más tarde.")
+    } finally {
+      setResendingOtp(false)
+    }
+  }
 
   const filteredCompanies = companies.filter((company) => {
     const matchesSearch =
@@ -487,6 +506,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
               </Button>
               <Button
                     onClick={() => {
+                      setOtpTargetId(newFarmerCredentials?.id ?? null)
+                      setOtpCode("")
                       setIsCredentialsDialogOpen(false)
                       setIsOtpDialogOpen(true)
                     }}
@@ -531,9 +552,8 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                       setVerifying(true)
                       const confirmotp = {
                         user_type: "company",
-                        user_id: newFarmerCredentials?.id,
+                        user_id: otpTargetId,
                         code: otpCode.trim()
-                        
                       }
                       console.log(confirmotp);
                       const res = await companiService.verifyCode(confirmotp)
@@ -645,6 +665,12 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                               <Edit className="h-4 w-4 mr-2" />
                               Cambiar contraseña
                             </DropdownMenuItem>
+                            {company.status === "inactive" && (
+                              <DropdownMenuItem onClick={() => handleResendOtp(company)}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Reenviar OTP y activar
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             {company.status === "active" && (
                               <DropdownMenuItem

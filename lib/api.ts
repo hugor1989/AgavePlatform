@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Crear instancia de Axios
 const api = axios.create({
-  baseURL: "https://backend.productoresageve.com.mx/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
   headers: {
     'Accept': 'application/json',
   },

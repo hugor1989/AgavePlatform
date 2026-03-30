@@ -1,203 +1,131 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-  Search,
-  Calendar,
-  DollarSign,
-  Clock,
-  MessageSquare,
-  CheckCircle,
-  XCircle,
-  Hash,
-  MapPin,
-  Share2,
-  Map,
-  Building,
-} from "lucide-react"
-import { CompanyLayout } from "@/components/company-layout"
+import { Search, MessageSquare, CheckCircle, XCircle, Clock, Hash } from "lucide-react"
 import { AppLayout } from "@/components/layouts/app-layout"
-
-// Icono de Agave personalizado
-const AgaveIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2L10 8h4l-2-6zm0 0l2 6h4l-6-6zm0 0L8 8h4L12 2zm0 0L6 8l6-6zm0 0l6 6-6-6zm0 8l-2 6h4l-2-6zm0 0l2 6h4l-6-6zm0 0l-4 6h4l-4-6zm0 0l-6 6l6-6zm0 0l6 6-6-6z" />
-  </svg>
-)
+import { offerService, Offer } from "@/services/offerService"
 
 export default function CompanyNegotiations() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [offers, setOffers] = useState<Offer[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const offers = [
-    {
-      id: "NEG-2024-001",
-      huertaName: "Huerta Los Altos Premium",
-      huertaId: "HAP-2020-001",
-      tipo: "Premium Tequilana Weber",
-      farmer: "Juan Pérez García",
-      farmerContact: "juan.perez@email.com",
-      amount: "$2,850,000",
-      date: "15 Mar 2024",
-      status: "En Proceso",
-      plants: 27627,
-      age: "4 años",
-      year: 2020,
-      estado: "Jalisco",
-      municipio: "Amatitán",
-      ubicacion: "20.7969° N, 103.5581° W",
-      lastActivity: "Hace 2 días",
-    },
-  ]
+  useEffect(() => {
+    offerService.getAll()
+      .then(setOffers)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
-  const filteredOffers = offers.filter(
-    (offer) =>
-      offer.huertaName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.farmer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.huertaId.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filtered = offers.filter(
+    (o) =>
+      o.orchard?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.orchard?.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(o.id).includes(searchTerm),
   )
 
-  const inProcessOffers = filteredOffers.filter((offer) => offer.status === "En Proceso")
-  const acceptedOffers = filteredOffers.filter((offer) => offer.status === "Aceptada")
-  const rejectedOffers = filteredOffers.filter((offer) => offer.status === "Rechazada")
+  const byStatus = (s: Offer["status"]) => filtered.filter((o) => o.status === s)
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Offer["status"]) => {
     switch (status) {
-      case "En Proceso":
-        return "bg-blue-100 text-blue-800"
-      case "Aceptada":
-        return "bg-green-100 text-green-800"
-      case "Rechazada":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+      case "pendiente": return "bg-yellow-100 text-yellow-800"
+      case "revisada":  return "bg-blue-100 text-blue-800"
+      case "aceptada":  return "bg-green-100 text-green-800"
+      case "rechazada": return "bg-red-100 text-red-800"
+      default:          return "bg-gray-100 text-gray-800"
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: Offer["status"]) => {
     switch (status) {
-      case "En Proceso":
-        return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-      case "Aceptada":
-        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-      case "Rechazada":
-        return <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-      default:
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+      case "pendiente": return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+      case "revisada":  return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+      case "aceptada":  return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+      case "rechazada": return <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+      default:          return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
     }
   }
 
-  const shareLocation = (ubicacion: string, nombre: string) => {
-    if (navigator.share) {
-      navigator.share({
-        title: `Ubicación de ${nombre}`,
-        text: `Coordenadas: ${ubicacion}`,
-        url: `https://maps.google.com/?q=${ubicacion}`,
-      })
-    } else {
-      // Fallback para navegadores que no soportan Web Share API
-      const url = `https://maps.google.com/?q=${ubicacion}`
-      window.open(url, "_blank")
-    }
-  }
+  const statusLabel = (status: Offer["status"]) =>
+    ({ pendiente: "En Revisión", revisada: "Enviada al Agricultor", aceptada: "Aceptada", rechazada: "Rechazada" }[status] ?? status)
 
-  const OfferCard = ({ offer }: { offer: any }) => (
+  const OfferCard = ({ offer }: { offer: Offer }) => (
     <Card className="w-full overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
-        {/* 1. Nombre */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-base sm:text-lg font-semibold text-gray-900 break-words leading-tight">
-              {offer.huertaName}
+              {offer.orchard?.name ?? `Huerta #${offer.orchard_id}`}
             </CardTitle>
             <div className="flex items-center gap-2 mt-1">
               <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
-              <p className="text-xs sm:text-sm text-muted-foreground break-words">{offer.huertaId}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Oferta #{offer.id}</p>
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {new Date(offer.created_at).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+            </p>
           </div>
           <Badge className={`${getStatusColor(offer.status)} flex items-center gap-1 text-xs px-2 py-1 flex-shrink-0`}>
             {getStatusIcon(offer.status)}
-            {offer.status}
+            {statusLabel(offer.status)}
           </Badge>
-        </div>
-
-        {/* Monto destacado */}
-        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-         
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* 2. Tipo y 3. Cantidad de Plantas */}
-          <div className="border border-gray-200 rounded-lg p-6 space-y-4">
-              <h4 className="font-medium text-gray-900 mb-4">Detalles de la Oferta</h4>
+        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+          <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
 
-               <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="precio">Precio $ *</Label>
-                            <Input
-                              id="precio"
-                              type="number"
-                              readOnly
-                              placeholder="0"
-                              value="500"
-                            />
-                          </div>
+          <div className="space-y-2">
+            <Label>Precio $</Label>
+            <Input type="number" readOnly value={offer.price} />
+          </div>
+          <div className="space-y-2">
+            <Label>Cm de Jima</Label>
+            <Input type="number" readOnly value={offer.jima_cm} />
+          </div>
+          <div className="space-y-2">
+            <Label>Meses financiado</Label>
+            <Input type="number" readOnly value={offer.financing_months} />
+          </div>
+          <div className="space-y-2">
+            <Label>Fecha de mes de jima</Label>
+            <Input type="date" readOnly value={offer.harvest_date} />
+          </div>
+          <div className="space-y-2">
+            <Label>Kilos mínimos por viaje</Label>
+            <Input type="number" readOnly value={offer.min_kilos} />
+          </div>
+          <div className="space-y-2">
+            <Label>Pagos de viajes jimados</Label>
+            <textarea readOnly value={offer.payment_terms} rows={2}
+              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+          </div>
+          <div className="space-y-2">
+            <Label>Logística</Label>
+            <textarea readOnly value={offer.logistics} rows={2}
+              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+          </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="cm-jima">Cm de Jima *</Label>
-                            <Input id="cm-jima" type="number" placeholder="Centímetros" readOnly value={5} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="meses-financiado">Meses financiado *</Label>
-                            <Input id="meses-financiado" type="number" placeholder="Número de meses" readOnly value={5} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
-                            <Input id="fecha-jima" type="date" readOnly value={"Marzo 2025"} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
-                            <Input id="kilos-minimo" type="number" placeholder="Kilos mínimos" readOnly value={15} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
-                            <textarea
-                              id="pagos-viajes"
-                              placeholder="Describe cómo serían los pagos..."
-                              readOnly
-                              value={"Pago contra entrega por viaje completado"}
-                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-                              rows={2}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="logistica">
-                              El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
-                            </Label>
-                            <textarea
-                              id="logistica"
-                              placeholder="Especifica la logística..."
-                              readOnly
-                              value={"La fábrica se encarga de toda la logística de transporte"}
-                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-                              rows={2}
-                            />
-                          </div>
-
-                         
-                          </div>
+          {offer.farmer_notified && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-blue-800">Oferta enviada al agricultor para su aprobación</p>
             </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  const EmptyCard = ({ message }: { message: string }) => (
+    <Card className="w-full">
+      <CardContent className="flex items-center justify-center h-32">
+        <p className="text-muted-foreground text-sm sm:text-base">{message}</p>
       </CardContent>
     </Card>
   )
@@ -207,82 +135,83 @@ export default function CompanyNegotiations() {
       <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">
           <div className="space-y-4 sm:space-y-6">
-            {/* Barra de búsqueda */}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Mis Negociaciones</h1>
+              <p className="text-gray-600">Seguimiento de todas tus ofertas enviadas</p>
+            </div>
+
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por huerta, agricultor, ID..."
+                placeholder="Buscar por huerta, agricultor o ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full text-sm sm:text-base"
               />
             </div>
 
-            {/* Tabs */}
-            <Tabs defaultValue="process" className="w-full">
-              <div className="overflow-x-auto">
-                <TabsList className="grid w-full grid-cols-3 mb-4 sm:mb-6 min-w-max">
-                  <TabsTrigger value="process" className="text-xs sm:text-sm whitespace-nowrap">
-                    En Proceso ({inProcessOffers.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="accepted" className="text-xs sm:text-sm whitespace-nowrap">
-                    Aceptadas ({acceptedOffers.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="rejected" className="text-xs sm:text-sm whitespace-nowrap">
-                    Rechazadas ({rejectedOffers.length})
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+            {loading ? (
+              <p className="text-gray-500">Cargando ofertas...</p>
+            ) : (
+              <Tabs defaultValue="process" className="w-full">
+                <div className="overflow-x-auto">
+                  <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 min-w-max">
+                    <TabsTrigger value="process" className="text-xs sm:text-sm whitespace-nowrap">
+                      En Revisión ({byStatus("pendiente").length})
+                    </TabsTrigger>
+                    <TabsTrigger value="sent" className="text-xs sm:text-sm whitespace-nowrap">
+                      Enviadas ({byStatus("revisada").length})
+                    </TabsTrigger>
+                    <TabsTrigger value="accepted" className="text-xs sm:text-sm whitespace-nowrap">
+                      Aceptadas ({byStatus("aceptada").length})
+                    </TabsTrigger>
+                    <TabsTrigger value="rejected" className="text-xs sm:text-sm whitespace-nowrap">
+                      Rechazadas ({byStatus("rechazada").length})
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
-              {/* Contenido de las tabs */}
-              <TabsContent value="process" className="w-full">
-                {inProcessOffers.length > 0 ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 w-full">
-                    {inProcessOffers.map((offer) => (
-                      <OfferCard key={offer.id} offer={offer} />
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="w-full">
-                    <CardContent className="flex items-center justify-center h-32">
-                      <p className="text-muted-foreground text-sm sm:text-base">No hay ofertas en proceso</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
+                <TabsContent value="process" className="w-full">
+                  {byStatus("pendiente").length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                      {byStatus("pendiente").map((o) => <OfferCard key={o.id} offer={o} />)}
+                    </div>
+                  ) : (
+                    <EmptyCard message="No hay ofertas en revisión" />
+                  )}
+                </TabsContent>
 
-              <TabsContent value="accepted" className="w-full">
-                {acceptedOffers.length > 0 ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 w-full">
-                    {acceptedOffers.map((offer) => (
-                      <OfferCard key={offer.id} offer={offer} />
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="w-full">
-                    <CardContent className="flex items-center justify-center h-32">
-                      <p className="text-muted-foreground text-sm sm:text-base">No hay ofertas aceptadas</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
+                <TabsContent value="sent" className="w-full">
+                  {byStatus("revisada").length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                      {byStatus("revisada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                    </div>
+                  ) : (
+                    <EmptyCard message="No hay ofertas esperando respuesta" />
+                  )}
+                </TabsContent>
 
-              <TabsContent value="rejected" className="w-full">
-                {rejectedOffers.length > 0 ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 w-full">
-                    {rejectedOffers.map((offer) => (
-                      <OfferCard key={offer.id} offer={offer} />
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="w-full">
-                    <CardContent className="flex items-center justify-center h-32">
-                      <p className="text-muted-foreground text-sm sm:text-base">No hay ofertas rechazadas</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="accepted" className="w-full">
+                  {byStatus("aceptada").length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                      {byStatus("aceptada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                    </div>
+                  ) : (
+                    <EmptyCard message="No hay ofertas aceptadas" />
+                  )}
+                </TabsContent>
+
+                <TabsContent value="rejected" className="w-full">
+                  {byStatus("rechazada").length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                      {byStatus("rechazada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                    </div>
+                  ) : (
+                    <EmptyCard message="No hay ofertas rechazadas" />
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </div>
       </div>

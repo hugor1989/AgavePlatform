@@ -38,6 +38,7 @@ import {
   CheckCircle,
   UserPlus,
   XCircle,
+  Mail,
 } from "lucide-react"
 import { alert } from "@/lib/alert"
 
@@ -50,10 +51,12 @@ export default function AdminFarmersPage() {
   const [isCredentialsDialogOpen, setIsCredentialsDialogOpen] = useState(false)
   const [newFarmerCredentials, setNewFarmerCredentials] = useState<FarmerCredentials | null>(null)
 
-  // 🔹 Estado nuevo
+  // 🔹 Estado OTP
   const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false)
   const [otpCode, setOtpCode] = useState("")
   const [verifying, setVerifying] = useState(false)
+  const [otpTargetId, setOtpTargetId] = useState<number | string | null>(null)
+  const [resendingOtp, setResendingOtp] = useState(false)
 
 
   const [selectedFarmer, setSelectedFarmer] = useState<any | null>(null)
@@ -170,6 +173,21 @@ const handleChangePassword = async () => {
   }
 }
 
+  const handleResendOtp = async (farmer: any) => {
+    setResendingOtp(true)
+    try {
+      await farmerService.resendOtp(farmer.id)
+      await alert.success("Código reenviado", `Se envió un nuevo OTP al correo ${farmer.email}`)
+      setOtpTargetId(farmer.id)
+      setOtpCode("")
+      setIsOtpDialogOpen(true)
+    } catch (err: any) {
+      await alert.error("No se pudo reenviar el OTP", err?.message || "Intenta más tarde.")
+    } finally {
+      setResendingOtp(false)
+    }
+  }
+
   const filteredFarmers = farmers.filter((farmer) => {
   const name = farmer.full_name ?? ""
   const email = farmer.email ?? ""
@@ -273,6 +291,8 @@ const handleChangePassword = async () => {
                 </Button>
                 <Button
                     onClick={() => {
+                      setOtpTargetId(newFarmerCredentials?.id ?? null)
+                      setOtpCode("")
                       setIsCredentialsDialogOpen(false)
                       setIsOtpDialogOpen(true)
                     }}
@@ -317,9 +337,8 @@ const handleChangePassword = async () => {
                       setVerifying(true)
                       const confirmotp = {
                         user_type: "farmer",
-                        user_id: newFarmerCredentials?.id,
+                        user_id: otpTargetId,
                         code: otpCode.trim()
-                        
                       }
                       console.log(confirmotp);
                       const res = await farmerService.verifyCode(confirmotp)
@@ -563,6 +582,12 @@ const handleChangePassword = async () => {
                               <Edit className="h-4 w-4 mr-2" />
                               Cambiar contraseña
                             </DropdownMenuItem>
+                            {farmer.status === 0 && (
+                              <DropdownMenuItem onClick={() => handleResendOtp(farmer)}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Reenviar OTP y activar
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             {farmer.status === "active" && (
                               <DropdownMenuItem

@@ -95,7 +95,7 @@ export const orchardService = {
     return data.data
   },
   getById: async (id: number | string) => {
-    const { data } = await api.get(`/orchards/${id}`)
+    const { data } = await api.get(`/orchards/get-by-id/${id}`)
     return data.data
   },
 
@@ -197,7 +197,7 @@ export const orchardService = {
   },
 
   delete: async (id: number | string) => {
-    const { data } = await api.delete(`/orchards/${id}`)
+    const { data } = await api.delete(`/orchards/delete/${id}`)
     return data
   },
 

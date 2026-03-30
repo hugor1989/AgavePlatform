@@ -31,6 +31,12 @@ export const companiService = {
     const response = await api.post("/admin/verify-code", otpData)
     return response.data
   },
+
+  resendOtp: async (userId: number | string) => {
+    const response = await api.post("/admin/resend-otp", { user_type: "company", user_id: userId })
+    return response.data
+  },
+
   async resetPassword(payload: any) {
     return api.post(`/companies/reset-password`, payload)
   }

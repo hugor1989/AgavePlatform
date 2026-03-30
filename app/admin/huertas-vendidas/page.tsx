@@ -1,841 +1,264 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { AdminLayout } from "@/components/admin-layout"
+import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Building2, Calendar, Eye, MapPin, Clock, Leaf, Share2, Camera, Check } from "lucide-react"
-import { toast } from "sonner"
-import { AppLayout } from "@/components/layouts/app-layout"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Search, MapPin, FileText, Calendar, Clock, User, Building2, DollarSign } from "lucide-react"
 import Image from "next/image"
-
-// Datos simulados de huertas vendidas
-const mockSoldHuertas = [
-  {
-    id: 1,
-    name: "Huerta Los Altos Premium",
-    number: "#1",
-    type: "Azul Tequilana Weber",
-    year: 2020,
-    age: "4 años",
-    plants: 27627,
-    description: "Excelente huerta con agave de alta calidad, ideal para producción de tequila premium.",
-    farmerName: "Juan Pérez García",
-    farmerUniqueId: "1705123456",
-    companyName: "Tequila Premium SA",
-    salePrice: 850000,
-    saleDate: "2024-01-17T11:30:00Z",
-    photoId: "/agave-field-plantation.png",
-    state: "Jalisco",
-    municipality: "Tequila",
-    coordinates: "20.8818, -103.8370",
-    photos: 8,
-    featured: true,
-    status: "Disponible",
-    acceptedOffer: {
-      companyName: "Tequila Premium SA",
-      companyLogo: "/placeholder.svg",
-      offerId: "OFF-2024-001",
-      offerDate: "2024-01-15",
-      price: "45.50",
-      jimaSize: "35 cm mínimo",
-      financedMonths: "18 meses",
-      jimaDate: "Marzo 2024",
-      minimumKilos: "500 kg",
-      paymentDetails: "Pago semanal por viajes jimados, liquidación inmediata al entregar en báscula",
-      logistics: "La fábrica se encarga de toda la logística de transporte desde la huerta hasta la planta procesadora",
-    },
-    jimaSchedule: {
-      totalPhases: 3,
-      completedPhases: 1,
-      inProgressPhases: 1,
-      scheduledPhases: 1,
-      weeklySchedule: [
-        {
-          week: "Semana 1 (Feb 1-7, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-01", trips: 5 },
-            { day: "Martes", date: "2024-02-02", trips: 4 },
-            { day: "Miércoles", date: "2024-02-03", trips: 6 },
-            { day: "Jueves", date: "2024-02-04", trips: 3 },
-            { day: "Viernes", date: "2024-02-05", trips: 5 },
-            { day: "Sábado", date: "2024-02-06", trips: 2 },
-            { day: "Domingo", date: "2024-02-07", trips: 0 },
-          ],
-          totalTrips: 25,
-          status: "completed",
-        },
-        {
-          week: "Semana 2 (Feb 8-14, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-08", trips: 4 },
-            { day: "Martes", date: "2024-02-09", trips: 5 },
-            { day: "Miércoles", date: "2024-02-10", trips: 4 },
-            { day: "Jueves", date: "2024-02-11", trips: 6 },
-            { day: "Viernes", date: "2024-02-12", trips: 3 },
-            { day: "Sábado", date: "2024-02-13", trips: 2 },
-            { day: "Domingo", date: "2024-02-14", trips: 1 },
-          ],
-          totalTrips: 25,
-          status: "in_progress",
-        },
-        {
-          week: "Semana 3 (Feb 15-21, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-15", trips: 5 },
-            { day: "Martes", date: "2024-02-16", trips: 4 },
-            { day: "Miércoles", date: "2024-02-17", trips: 5 },
-            { day: "Jueves", date: "2024-02-18", trips: 4 },
-            { day: "Viernes", date: "2024-02-19", trips: 6 },
-            { day: "Sábado", date: "2024-02-20", trips: 3 },
-            { day: "Domingo", date: "2024-02-21", trips: 0 },
-          ],
-          totalTrips: 27,
-          status: "scheduled",
-        },
-      ],
-      guidePhotos: [
-        {
-          id: 1,
-          title: "Entrada Principal",
-          url: "/agave-field-plantation.png",
-          description: "Acceso principal a la huerta desde carretera",
-        },
-        {
-          id: 2,
-          title: "Punto de Referencia",
-          url: "/placeholder-n4bzz.png",
-          description: "Casa del agricultor como punto de referencia",
-        },
-        {
-          id: 3,
-          title: "Área de Carga",
-          url: "/agave-field-plantation.png",
-          description: "Zona designada para carga de camiones",
-        },
-      ],
-    },
-  },
-  {
-    id: 2,
-    name: "Agavera San Miguel",
-    number: "#2",
-    type: "Azul Tequilana Weber",
-    year: 2021,
-    age: "3 años",
-    plants: 18900,
-    description: "Huerta joven con gran potencial de crecimiento y excelente manejo.",
-    farmerName: "Carlos Rodríguez Mendoza",
-    farmerUniqueId: "1707345678",
-    companyName: "Destilería Tradicional",
-    salePrice: 650000,
-    saleDate: "2024-01-17T11:30:00Z",
-    photoId: "/agave-field-plantation.png",
-    state: "Nayarit",
-    municipality: "Tepic",
-    coordinates: "21.5041, -104.8942",
-    photos: 5,
-    featured: false,
-    status: "Vendida",
-    acceptedOffer: {
-      companyName: "Destilería Tradicional",
-      companyLogo: "/placeholder.svg",
-      offerId: "OFF-2024-002",
-      offerDate: "2024-01-12",
-      price: "42.00",
-      jimaSize: "38 cm mínimo",
-      financedMonths: "12 meses",
-      jimaDate: "Abril 2024",
-      minimumKilos: "300 kg",
-      paymentDetails: "Pago quincenal por viajes jimados, con adelanto del 30% al inicio",
-      logistics: "El agave será puesto en fábrica por parte del agricultor, transporte incluido en precio",
-    },
-    jimaSchedule: {
-      totalPhases: 1,
-      completedPhases: 0,
-      inProgressPhases: 0,
-      scheduledPhases: 1,
-      weeklySchedule: [
-        {
-          week: "Semana 1 (Feb 1-7, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-01", trips: 5 },
-            { day: "Martes", date: "2024-02-02", trips: 4 },
-            { day: "Miércoles", date: "2024-02-03", trips: 6 },
-            { day: "Jueves", date: "2024-02-04", trips: 3 },
-            { day: "Viernes", date: "2024-02-05", trips: 5 },
-            { day: "Sábado", date: "2024-02-06", trips: 2 },
-            { day: "Domingo", date: "2024-02-07", trips: 0 },
-          ],
-          totalTrips: 25,
-          status: "completed",
-        },
-        {
-          week: "Semana 2 (Feb 8-14, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-08", trips: 4 },
-            { day: "Martes", date: "2024-02-09", trips: 5 },
-            { day: "Miércoles", date: "2024-02-10", trips: 4 },
-            { day: "Jueves", date: "2024-02-11", trips: 6 },
-            { day: "Viernes", date: "2024-02-12", trips: 3 },
-            { day: "Sábado", date: "2024-02-13", trips: 2 },
-            { day: "Domingo", date: "2024-02-14", trips: 1 },
-          ],
-          totalTrips: 25,
-          status: "in_progress",
-        },
-        {
-          week: "Semana 3 (Feb 15-21, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-15", trips: 5 },
-            { day: "Martes", date: "2024-02-16", trips: 4 },
-            { day: "Miércoles", date: "2024-02-17", trips: 5 },
-            { day: "Jueves", date: "2024-02-18", trips: 4 },
-            { day: "Viernes", date: "2024-02-19", trips: 6 },
-            { day: "Sábado", date: "2024-02-20", trips: 3 },
-            { day: "Domingo", date: "2024-02-21", trips: 0 },
-          ],
-          totalTrips: 27,
-          status: "scheduled",
-        },
-      ],
-      guidePhotos: [
-        {
-          id: 1,
-          title: "Entrada Principal",
-          url: "/agave-field-plantation.png",
-          description: "Acceso principal a la huerta desde carretera",
-        },
-        {
-          id: 2,
-          title: "Punto de Referencia",
-          url: "/placeholder-n4bzz.png",
-          description: "Casa del agricultor como punto de referencia",
-        },
-        {
-          id: 3,
-          title: "Área de Carga",
-          url: "/agave-field-plantation.png",
-          description: "Zona designada para carga de camiones",
-        },
-      ],
-    },
-  },
-  {
-    id: 3,
-    name: "Plantación El Mirador",
-    number: "#3",
-    type: "Azul Tequilana Weber",
-    year: 2019,
-    age: "5 años",
-    plants: 22450,
-    description: "Plantación madura con excelente ubicación y acceso a carreteras principales.",
-    farmerName: "María González López",
-    farmerUniqueId: "1706234567",
-    companyName: "Agave Industries",
-    salePrice: 1100000,
-    saleDate: "2024-01-10T14:20:00Z",
-    photoId: "/placeholder-n4bzz.png",
-    state: "Michoacán",
-    municipality: "Uruapan",
-    coordinates: "19.4204, -102.0631",
-    photos: 12,
-    featured: true,
-    status: "En Proceso",
-    acceptedOffer: {
-      companyName: "Agave Industries",
-      companyLogo: "/placeholder.svg",
-      offerId: "OFF-2024-003",
-      offerDate: "2024-01-08",
-      price: "48.75",
-      jimaSize: "40 cm mínimo",
-      financedMonths: "24 meses",
-      jimaDate: "Mayo 2024",
-      minimumKilos: "800 kg",
-      paymentDetails: "Pago mensual por viajes jimados, con bonificación por calidad premium",
-      logistics: "Logística compartida: fábrica proporciona transporte, agricultor carga y descarga",
-    },
-    jimaSchedule: {
-      totalPhases: 2,
-      completedPhases: 2,
-      inProgressPhases: 0,
-      scheduledPhases: 0,
-      weeklySchedule: [
-        {
-          week: "Semana 1 (Feb 1-7, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-01", trips: 5 },
-            { day: "Martes", date: "2024-02-02", trips: 4 },
-            { day: "Miércoles", date: "2024-02-03", trips: 6 },
-            { day: "Jueves", date: "2024-02-04", trips: 3 },
-            { day: "Viernes", date: "2024-02-05", trips: 5 },
-            { day: "Sábado", date: "2024-02-06", trips: 2 },
-            { day: "Domingo", date: "2024-02-07", trips: 0 },
-          ],
-          totalTrips: 25,
-          status: "completed",
-        },
-        {
-          week: "Semana 2 (Feb 8-14, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-08", trips: 4 },
-            { day: "Martes", date: "2024-02-09", trips: 5 },
-            { day: "Miércoles", date: "2024-02-10", trips: 4 },
-            { day: "Jueves", date: "2024-02-11", trips: 6 },
-            { day: "Viernes", date: "2024-02-12", trips: 3 },
-            { day: "Sábado", date: "2024-02-13", trips: 2 },
-            { day: "Domingo", date: "2024-02-14", trips: 1 },
-          ],
-          totalTrips: 25,
-          status: "in_progress",
-        },
-        {
-          week: "Semana 3 (Feb 15-21, 2024)",
-          days: [
-            { day: "Lunes", date: "2024-02-15", trips: 5 },
-            { day: "Martes", date: "2024-02-16", trips: 4 },
-            { day: "Miércoles", date: "2024-02-17", trips: 5 },
-            { day: "Jueves", date: "2024-02-18", trips: 4 },
-            { day: "Viernes", date: "2024-02-19", trips: 6 },
-            { day: "Sábado", date: "2024-02-20", trips: 3 },
-            { day: "Domingo", date: "2024-02-21", trips: 0 },
-          ],
-          totalTrips: 27,
-          status: "scheduled",
-        },
-      ],
-      guidePhotos: [
-        {
-          id: 1,
-          title: "Entrada Principal",
-          url: "/agave-field-plantation.png",
-          description: "Acceso principal a la huerta desde carretera",
-        },
-        {
-          id: 2,
-          title: "Punto de Referencia",
-          url: "/placeholder-n4bzz.png",
-          description: "Casa del agricultor como punto de referencia",
-        },
-        {
-          id: 3,
-          title: "Área de Carga",
-          url: "/agave-field-plantation.png",
-          description: "Zona designada para carga de camiones",
-        },
-      ],
-    },
-  },
-]
+import { AppLayout } from "@/components/layouts/app-layout"
+import { saleService, OrchardSale } from "@/services/saleService"
+import { orchardService } from "@/services/orchardService"
 
 export default function AdminHuertasVendidasPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCompany, setSelectedCompany] = useState<string>("all")
-  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
-  const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false)
-  const [selectedHuerta, setSelectedHuerta] = useState<any>(null)
-  const [soldHuertas, setSoldHuertas] = useState(mockSoldHuertas)
-  const [isUploading, setIsUploading] = useState(false)
+  const [searchTerm, setSearchTerm]       = useState("")
+  const [sales, setSales]                 = useState<OrchardSale[]>([])
+  const [loading, setLoading]             = useState(true)
+  const [selectedSale, setSelectedSale]   = useState<OrchardSale | null>(null)
+  const [showDialog, setShowDialog]       = useState(false)
 
-  const companies = Array.from(new Set(mockSoldHuertas.map((huerta) => huerta.companyName)))
+  useEffect(() => {
+    saleService.getAll()
+      .then(setSales)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
 
-  const filteredHuertas = soldHuertas.filter((huerta) => {
-    const matchesSearch =
-      huerta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.farmerUniqueId.includes(searchTerm)
-    const matchesCompany = selectedCompany === "all" || huerta.companyName === selectedCompany
-    return matchesSearch && matchesCompany
-  })
+  const filtered = sales.filter(
+    (s) =>
+      s.orchard?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.company?.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.farmer?.unique_identifier?.includes(searchTerm) ||
+      String(s.id).includes(searchTerm),
+  )
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-MX", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
-
-  const getPhaseStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800"
-      case "in_progress":
-        return "bg-blue-100 text-blue-800"
-      case "scheduled":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getPhaseStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "Completada"
-      case "in_progress":
-        return "En Progreso"
-      case "scheduled":
-        return "Programada"
-      default:
-        return status
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Disponible":
-        return "bg-green-100 text-green-800"
-      case "Vendida":
-        return "bg-blue-100 text-blue-800"
-      case "En Proceso":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const handleImageUpload = async (phaseId: number, file: File) => {
-    setIsUploading(true)
-
-    // Simular subida de archivo
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // Crear URL temporal para la imagen
-    const imageUrl = URL.createObjectURL(file)
-
-    // Actualizar la fase con la imagen
-    const updatedHuertas = soldHuertas.map((huerta) => {
-      if (huerta.id === selectedHuerta?.id) {
-        return {
-          ...huerta,
-          jimaSchedule: {
-            ...huerta.jimaSchedule,
-            phases: huerta.jimaSchedule.phases.map((phase) =>
-              phase.id === phaseId ? { ...phase, guideImage: imageUrl } : phase,
-            ),
-          },
-        }
-      }
-      return huerta
-    })
-
-    setSoldHuertas(updatedHuertas)
-
-    // Actualizar selectedHuerta también
-    const updatedSelectedHuerta = updatedHuertas.find((h) => h.id === selectedHuerta?.id)
-    setSelectedHuerta(updatedSelectedHuerta)
-
-    setIsUploading(false)
-    toast.success("Imagen de guía subida exitosamente")
-  }
-
-  const handleFileSelect = (phaseId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.type.startsWith("image/")) {
-        handleImageUpload(phaseId, file)
-      } else {
-        toast.error("Por favor selecciona un archivo de imagen válido")
-      }
-    }
-  }
+  if (loading) return <AppLayout type="admin"><p className="p-4">Cargando huertas vendidas...</p></AppLayout>
 
   return (
     <AppLayout type="admin">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Huertas Vendidas</h1>
-            <p className="text-gray-600">Gestiona las huertas vendidas y supervisa las jimas programadas</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Huertas Vendidas</h1>
+          <p className="text-gray-600">Registro de todas las ventas completadas en la plataforma</p>
         </div>
 
-        {/* Búsqueda y filtros */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex items-center gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por huerta, empresa o identificador..."
+              placeholder="Buscar por huerta, empresa, agricultor o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-          <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-            <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Filtrar por empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las empresas</SelectItem>
-              {companies.map((company) => (
-                <SelectItem key={company} value={company}>
-                  {company}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Badge variant="secondary" className="text-sm px-3 py-1 whitespace-nowrap">
+            {sales.length} {sales.length === 1 ? "venta" : "ventas"}
+          </Badge>
         </div>
 
-        {/* Grid de huertas vendidas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredHuertas.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-500">No se encontraron huertas vendidas</p>
-            </div>
-          ) : (
-            filteredHuertas.map((huerta) => (
-              <div
-                key={huerta.id}
-                className="bg-orange-50 border border-orange-200 rounded-lg shadow-sm overflow-hidden"
-              >
-                {/* Imagen con badges */}
-                <div className="relative h-48">
-                  <img
-                    src={huerta.photoId || "/placeholder.svg"}
-                    alt={huerta.name}
-                    className="w-full h-full object-cover"
+        {filtered.length === 0 ? (
+          <p className="text-gray-500">No hay ventas registradas aún.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((sale) => (
+              <Card key={sale.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative">
+                  <Image
+                    src={orchardService.getPhotoUrl(sale.orchard?.cover_photo ?? null) || "/agave-field-plantation.png"}
+                    alt={sale.orchard?.name ?? "Huerta"}
+                    width={400}
+                    height={200}
+                    className="w-full h-48 object-cover"
                   />
-                  <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                    <Camera className="h-3 w-3" />
-                    {huerta.photos} fotos
-                  </div>
-                  {huerta.featured && (
-                    <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded text-xs font-medium">
-                      Destacada
-                    </div>
-                  )}
-                </div>
-
-                {/* Contenido */}
-                <div className="p-4 space-y-4">
-                  {/* Título y status */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">{huerta.name}</h3>
-                      <Badge className={getStatusColor(huerta.status)}>{huerta.status}</Badge>
-                    </div>
-                    <p className="text-sm text-gray-500">{huerta.number}</p>
-                  </div>
-
-                  {/* Tipo de agave */}
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
-                    <span>{huerta.type}</span>
-                  </div>
-
-                  {/* Cantidad de plantas */}
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-1">Cantidad de Plantas</p>
-                    <p className="text-3xl font-bold text-blue-600">{huerta.plants.toLocaleString()}</p>
-                  </div>
-
-                  {/* Información de ubicación */}
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <MapPin className="h-4 w-4" />
-                        <span className="font-medium">Estado</span>
-                      </div>
-                      <p className="text-sm text-gray-900 ml-6">{huerta.state}</p>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <div className="h-2 w-2 bg-gray-400 rounded-full ml-1" />
-                        <span className="font-medium">Municipio</span>
-                      </div>
-                      <p className="text-sm text-gray-900 ml-6">{huerta.municipality}</p>
-                    </div>
-                  </div>
-
-                  {/* Año y edad */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <div>
-                        <p className="font-medium">Año</p>
-                        <p className="text-gray-900">{huerta.year}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      <div>
-                        <p className="font-medium">Edad</p>
-                        <p className="text-gray-900">{huerta.age}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ubicación con coordenadas */}
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-800">Ubicación</p>
-                        <p className="text-sm text-green-700">{huerta.coordinates}</p>
-                      </div>
-                      <Share2 className="h-4 w-4 text-green-600" />
-                    </div>
-                  </div>
-
-                  {/* Botones */}
-                  <div className="space-y-2">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedHuerta(huerta)
-                        setIsScheduleDialogOpen(true)
-                      }}
-                      className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Ver Programa de Jima
-                    </Button>
-                    <Button size="sm" className="w-full bg-green-600 text-white hover:bg-green-700">
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver Huerta
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedHuerta(huerta)
-                        setIsOfferDialogOpen(true)
-                      }}
-                      className="w-full bg-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Building2 className="h-4 w-4 mr-1" />
-                      Ver Detalle Oferta
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        // Función para ver ID Foto
-                        toast.info("Funcionalidad de Ver ID Foto en desarrollo")
-                      }}
-                      className="w-full bg-orange-600 text-white hover:bg-orange-700"
-                    >
-                      <Camera className="h-4 w-4 mr-1" />
-                      Ver Id Foto
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        // Función para ver ID Foto
-                        toast.info("Funcionalidad de Ver ID Foto en desarrollo")
-                      }}
-                      className="w-full bg-red-600 text-white hover:bg-red-600"
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Terminar Jima
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Modal para ver programa de jimas */}
-        <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Programa de Jimas</DialogTitle>
-              <DialogDescription>
-                {selectedHuerta?.name} - {selectedHuerta?.companyName}
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedHuerta && (
-              <div className="space-y-6 py-4">
-                {/* Información básica de la huerta */}
-                <div className="border border-gray-200 rounded-lg p-6">
-                  <h4 className="font-medium text-gray-900 mb-4">Información de la Huerta</h4>
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Nombre:</span>
-                      <span className="text-gray-900">{selectedHuerta.name}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Empresa:</span>
-                      <span className="text-gray-900">{selectedHuerta.companyName}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Total Plantas:</span>
-                      <span className="text-gray-900">{selectedHuerta.plants.toLocaleString()}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 min-w-[120px]">Precio de Venta:</span>
-                      <span className="text-green-600 font-semibold">{formatCurrency(selectedHuerta.salePrice)}</span>
-                    </div>
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-green-600 text-white">Vendida</Badge>
                   </div>
                 </div>
 
-                {/* Programación Semanal */}
-                <div className="border border-gray-200 rounded-lg p-6">
-                  <h4 className="font-medium text-gray-900 mb-4">Programación Semanal de Viajes</h4>
-                  <div className="space-y-6">
-                    {selectedHuerta.jimaSchedule.weeklySchedule?.map((week: any, weekIndex: number) => (
-                      <div key={weekIndex} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-4">
-                          <h5 className="font-medium text-gray-900">{week.week}</h5>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getPhaseStatusColor(week.status)}>
-                              {getPhaseStatusText(week.status)}
-                            </Badge>
-                            <span className="text-sm font-semibold text-blue-600">Total: {week.totalTrips} viajes</span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                          {week.days.map((day: any, dayIndex: number) => (
-                            <div key={dayIndex} className="text-center p-3 bg-white rounded border">
-                              <div className="text-xs font-medium text-gray-600 mb-1">{day.day}</div>
-                              <div className="text-xs text-gray-500 mb-2">{formatDate(day.date)}</div>
-                              <div
-                                className={`text-2xl font-bold ${day.trips > 0 ? "text-green-600" : "text-gray-400"}`}
-                              >
-                                {day.trips}
-                              </div>
-                              <div className="text-xs text-gray-500">viajes</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Fotos de Guías */}
-                <div className="border border-gray-200 rounded-lg p-6">
-                  <h4 className="font-medium text-gray-900 mb-4">Fotos de Guías para la Empresa</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {selectedHuerta.jimaSchedule.guidePhotos?.map((photo: any) => (
-                      <div key={photo.id} className="bg-gray-50 rounded-lg overflow-hidden">
-                        <img
-                          src={photo.url || "/placeholder.svg"}
-                          alt={photo.title}
-                          className="w-full h-48 object-cover"
-                        />
-                        <div className="p-3">
-                          <h6 className="font-medium text-gray-900 text-sm mb-1">{photo.title}</h6>
-                          <p className="text-xs text-gray-600">{photo.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal para ver detalle de oferta */}
-        <Dialog open={isOfferDialogOpen} onOpenChange={setIsOfferDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Detalle de Oferta Aceptada</DialogTitle>
-              <DialogDescription>
-                {selectedHuerta?.name} - {selectedHuerta?.companyName}
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedHuerta && selectedHuerta.acceptedOffer && (
-              <div className="space-y-6 py-4">
-                {/* Información de la empresa */}
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <img
-                    src={selectedHuerta.acceptedOffer.companyLogo || "/placeholder.svg"}
-                    alt={selectedHuerta.acceptedOffer.companyName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                <CardContent className="p-4 space-y-3">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{selectedHuerta.acceptedOffer.companyName}</h3>
-                    <p className="text-sm text-gray-600">ID Oferta: {selectedHuerta.acceptedOffer.offerId}</p>
-                    <p className="text-sm text-gray-600">Fecha: {formatDate(selectedHuerta.acceptedOffer.offerDate)}</p>
+                    <h3 className="font-semibold text-lg text-gray-900">{sale.orchard?.name ?? `Huerta #${sale.orchard_id}`}</h3>
+                    <p className="text-sm text-gray-500">Venta #{sale.id} · {formatDate(sale.sold_at)}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+                    <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-900">{sale.orchard?.agave_type?.name ?? "—"}</span>
+                  </div>
+
+                  <div className="text-center py-2">
+                    <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {(sale.orchard?.plant_quantity ?? 0).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Estado</p>
+                        <p className="text-sm font-medium text-gray-900">{sale.orchard?.state ?? "—"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div>
+                        <p className="text-sm text-gray-500">Municipio</p>
+                        <p className="text-sm font-medium text-gray-900">{sale.orchard?.municipality ?? "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Año</p>
+                        <p className="text-sm font-medium text-gray-900">{sale.orchard?.year ?? "—"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Edad</p>
+                        <p className="text-sm font-medium text-gray-900">{sale.orchard?.age ?? "—"} años</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Agricultor</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{sale.farmer?.full_name ?? "—"}</p>
+                      <p className="text-xs text-gray-400">{sale.farmer?.unique_identifier}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <Building2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">Empresa compradora</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{sale.company?.business_name ?? "—"}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-700">Precio empresa</p>
+                      <p className="text-sm font-bold text-blue-800">
+                        ${Number(sale.company_price).toLocaleString("es-MX")}
+                      </p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-xs text-green-700">Precio agricultor</p>
+                      <p className="text-sm font-bold text-green-800">
+                        ${Number(sale.farmer_price).toLocaleString("es-MX")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-orange-600" />
+                      <p className="text-xs text-orange-700 font-medium">Comisión plataforma</p>
+                    </div>
+                    <p className="text-lg font-bold text-orange-800 mt-1">
+                      ${(Number(sale.company_price) - Number(sale.farmer_price)).toLocaleString("es-MX")}
+                    </p>
+                  </div>
+
+                  <Button className="w-full bg-teal-600 hover:bg-teal-700" onClick={() => { setSelectedSale(sale); setShowDialog(true) }}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Ver Oferta Completa
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Oferta Completa — {selectedSale?.orchard?.name}</DialogTitle>
+            </DialogHeader>
+            {selectedSale?.offer && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-gray-500">Agricultor</p>
+                    <p className="font-medium">{selectedSale.farmer?.full_name}</p>
+                    <p className="text-xs text-gray-400">{selectedSale.farmer?.unique_identifier}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-gray-500">Empresa</p>
+                    <p className="font-medium">{selectedSale.company?.business_name}</p>
                   </div>
                 </div>
 
-                {/* Información de la oferta en un solo contenedor */}
-                <div className="border border-gray-200 rounded-lg p-6 space-y-4">
-                  <h4 className="font-medium text-gray-900 mb-4">Detalles de la Oferta</h4>
-
-                  <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="precio">Precio $ *</Label>
-                            <Input
-                              id="precio"
-                              type="number"
-                              readOnly
-                              placeholder="0"
-                              value="500"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="cm-jima">Cm de Jima *</Label>
-                            <Input id="cm-jima" type="number" placeholder="Centímetros" readOnly value={5} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="meses-financiado">Meses financiado *</Label>
-                            <Input id="meses-financiado" type="number" placeholder="Número de meses" readOnly value={5} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="fecha-jima">Fecha de mes de jima *</Label>
-                            <Input id="fecha-jima" type="date" readOnly value={"Marzo 2025"} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="kilos-minimo">Se jimará a partir de * kilos para arriba *</Label>
-                            <Input id="kilos-minimo" type="number" placeholder="Kilos mínimos" readOnly value={15} />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="pagos-viajes">Cómo serían los pagos de viajes jimados *</Label>
-                            <textarea
-                              id="pagos-viajes"
-                              placeholder="Describe cómo serían los pagos..."
-                              readOnly
-                              value={"Pago contra entrega por viaje completado"}
-                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-                              rows={2}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="logistica">
-                              El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *
-                            </Label>
-                            <textarea
-                              id="logistica"
-                              placeholder="Especifica la logística..."
-                              readOnly
-                              value={"La fábrica se encarga de toda la logística de transporte"}
-                              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
-                              rows={2}
-                            />
-                          </div>
-
-                         
-                    </div>
-
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                    <p className="text-xs text-blue-700">Precio empresa</p>
+                    <p className="font-bold text-blue-800">${Number(selectedSale.company_price).toLocaleString("es-MX")}</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                    <p className="text-xs text-green-700">Precio agricultor</p>
+                    <p className="font-bold text-green-800">${Number(selectedSale.farmer_price).toLocaleString("es-MX")}</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                    <p className="text-xs text-orange-700">Comisión</p>
+                    <p className="font-bold text-orange-800">
+                      ${(Number(selectedSale.company_price) - Number(selectedSale.farmer_price)).toLocaleString("es-MX")}
+                    </p>
+                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Precio ofertado $</Label>
+                  <Input type="number" readOnly value={selectedSale.offer.price} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cm de Jima</Label>
+                  <Input type="number" readOnly value={selectedSale.offer.jima_cm} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Meses financiado</Label>
+                  <Input type="number" readOnly value={selectedSale.offer.financing_months} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fecha de mes de jima</Label>
+                  <Input type="date" readOnly value={selectedSale.offer.harvest_date} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kilos mínimos por viaje</Label>
+                  <Input type="number" readOnly value={selectedSale.offer.min_kilos} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Pagos de viajes jimados</Label>
+                  <textarea readOnly value={selectedSale.offer.payment_terms} rows={2}
+                    className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Logística</Label>
+                  <textarea readOnly value={selectedSale.offer.logistics} rows={2}
+                    className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+                </div>
+                {selectedSale.offer.admin_notes && (
+                  <div className="space-y-2">
+                    <Label>Notas del admin</Label>
+                    <textarea readOnly value={selectedSale.offer.admin_notes} rows={2}
+                      className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
