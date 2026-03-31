@@ -82,9 +82,21 @@ export default function CompanyNegotiations() {
           <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
 
           <div className="space-y-2">
-            <Label>Precio $</Label>
+            <Label>Precio por planta $</Label>
             <Input type="number" readOnly value={offer.price} />
           </div>
+
+          {offer.orchard?.plant_quantity && (
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+              <p className="text-sm text-teal-700 font-medium mb-1">Total estimado de la oferta</p>
+              <p className="text-2xl font-bold text-teal-800">
+                ${(offer.price * offer.orchard.plant_quantity).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-teal-600 mt-1">
+                ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {offer.orchard.plant_quantity.toLocaleString()} plantas
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Cm de Jima</Label>
             <Input type="number" readOnly value={offer.jima_cm} />
@@ -153,9 +165,12 @@ export default function CompanyNegotiations() {
             {loading ? (
               <p className="text-gray-500">Cargando ofertas...</p>
             ) : (
-              <Tabs defaultValue="process" className="w-full">
+              <Tabs defaultValue="all" className="w-full">
                 <div className="overflow-x-auto">
-                  <TabsList className="grid w-full grid-cols-4 mb-4 sm:mb-6 min-w-max">
+                  <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 min-w-max">
+                    <TabsTrigger value="all" className="text-xs sm:text-sm whitespace-nowrap">
+                      Todas ({filtered.length})
+                    </TabsTrigger>
                     <TabsTrigger value="process" className="text-xs sm:text-sm whitespace-nowrap">
                       En Revisión ({byStatus("pendiente").length})
                     </TabsTrigger>
@@ -170,6 +185,16 @@ export default function CompanyNegotiations() {
                     </TabsTrigger>
                   </TabsList>
                 </div>
+
+                <TabsContent value="all" className="w-full">
+                  {filtered.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                      {filtered.map((o) => <OfferCard key={o.id} offer={o} />)}
+                    </div>
+                  ) : (
+                    <EmptyCard message="No hay ofertas" />
+                  )}
+                </TabsContent>
 
                 <TabsContent value="process" className="w-full">
                   {byStatus("pendiente").length > 0 ? (

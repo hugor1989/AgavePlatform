@@ -132,7 +132,7 @@ export default function FarmerSoldPage() {
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-xs text-green-700">Tu precio de venta</p>
                     <p className="text-xl font-bold text-green-800">
-                      ${Number(sale.farmer_price).toLocaleString("es-MX")}
+                      ${Number(sale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
                       Vendida a {sale.company?.business_name} · {formatDate(sale.sold_at)}
@@ -168,10 +168,6 @@ export default function FarmerSoldPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Precio ofertado $</Label>
-                  <Input type="number" readOnly value={selectedSale.offer.price} />
-                </div>
-                <div className="space-y-2">
                   <Label>Cm de Jima</Label>
                   <Input type="number" readOnly value={selectedSale.offer.jima_cm} />
                 </div>
@@ -201,7 +197,7 @@ export default function FarmerSoldPage() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-sm font-semibold text-green-800 mb-1">Tu precio de venta</p>
                   <p className="text-2xl font-bold text-green-900">
-                    ${Number(selectedSale.farmer_price).toLocaleString("es-MX")}
+                    ${Number(selectedSale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </p>
                   {selectedSale.offer.admin_notes && (
                     <p className="text-xs text-green-600 mt-2">{selectedSale.offer.admin_notes}</p>

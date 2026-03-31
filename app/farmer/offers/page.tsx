@@ -82,22 +82,17 @@ export default function FarmerOffersPage() {
   const executeOfferAction = async (offerId: number, action: "aceptada" | "rechazada") => {
     setActionLoading(true)
     try {
-      const updated = await offerService.updateStatus(offerId, action)
-      setSelectedGroup(prev => {
-        if (!prev) return prev
-        return { ...prev, offers: prev.offers.map(o => o.id === updated.id ? updated : o) }
-      })
-      setOrchardGroups(prev =>
-        prev.map(g => ({
-          ...g,
-          offers: g.offers.map(o => o.id === updated.id ? updated : o),
-        }))
-      )
+      await offerService.updateStatus(offerId, action)
+      setConfirmingOffer(null)
+      if (action === "aceptada") {
+        setShowOffersDialog(false)
+        setSelectedGroup(null)
+      }
+      await fetchOffers()
     } catch {
       alert.error("Error", "No se pudo procesar la oferta. Inténtalo de nuevo.")
     } finally {
       setActionLoading(false)
-      setConfirmingOffer(null)
     }
   }
 
@@ -280,10 +275,6 @@ export default function FarmerOffersPage() {
                     ) : (
                       /* ── Oferta revisada o con resolución: detalles completos ── */
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Precio $</Label>
-                          <Input type="number" readOnly value={offer.price} />
-                        </div>
                         <div className="space-y-2">
                           <Label>Cm de Jima</Label>
                           <Input type="number" readOnly value={offer.jima_cm} />

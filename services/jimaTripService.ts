@@ -1,0 +1,41 @@
+import api from "@/lib/api"
+
+export interface JimaTrip {
+  id: number
+  sale_id: number
+  scheduled_date: string
+  trip_number: number
+  guide_path: string | null
+  status: "programado" | "completado"
+  created_at: string
+}
+
+export const jimaTripService = {
+  getBySale: async (saleId: number): Promise<JimaTrip[]> => {
+    const { data } = await api.get(`/jima-trips?sale_id=${saleId}`)
+    return Array.isArray(data?.data) ? data.data : []
+  },
+
+  schedule: async (saleId: number, scheduledDate: string, numTrips: number): Promise<JimaTrip[]> => {
+    const { data } = await api.post("/jima-trips", {
+      sale_id:        saleId,
+      scheduled_date: scheduledDate,
+      num_trips:      numTrips,
+    })
+    return Array.isArray(data?.data) ? data.data : []
+  },
+
+  uploadGuide: async (tripId: number, file: File): Promise<JimaTrip> => {
+    const form = new FormData()
+    form.append("guide", file)
+    const { data } = await api.post(`/jima-trips/${tripId}/upload-guide`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return data.data
+  },
+
+  getGuideUrl: async (tripId: number): Promise<string> => {
+    const { data } = await api.get(`/jima-trips/${tripId}/guide-url`)
+    return data.url
+  },
+}

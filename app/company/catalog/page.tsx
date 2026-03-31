@@ -362,13 +362,19 @@ export default function CompanyCatalogPage() {
                   <Button className="w-full bg-teal-600 hover:bg-teal-700">Ver Huerta</Button>
 
                   {/* Botón Hacer Oferta */}
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={() => { setSelectedHuerta(huerta); setOfferForm(emptyForm); setOfferDialogOpen(true) }}
-                  >
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Hacer Oferta
-                  </Button>
+                  {huerta.status === "vendida" ? (
+                    <div className="w-full text-center bg-gray-100 border border-gray-300 rounded-md py-2 text-sm font-medium text-gray-500">
+                      Huerta vendida
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() => { setSelectedHuerta(huerta); setOfferForm(emptyForm); setOfferDialogOpen(true) }}
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Hacer Oferta
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -385,9 +391,22 @@ export default function CompanyCatalogPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Precio $ *</Label>
+                <Label>Precio por planta $ *</Label>
                 <Input type="number" placeholder="0" value={offerForm.price} onChange={e => setField("price", e.target.value)} />
               </div>
+
+              {/* Total calculado */}
+              {offerForm.price && selectedHuerta?.plant_quantity && (
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                  <p className="text-sm text-teal-700 font-medium mb-1">Total estimado de la oferta</p>
+                  <p className="text-2xl font-bold text-teal-800">
+                    ${(parseFloat(offerForm.price) * selectedHuerta.plant_quantity).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-teal-600 mt-1">
+                    ${parseFloat(offerForm.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {selectedHuerta.plant_quantity.toLocaleString()} plantas
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Cm de Jima *</Label>
                 <Input type="number" placeholder="Centímetros" value={offerForm.jima_cm} onChange={e => setField("jima_cm", e.target.value)} />

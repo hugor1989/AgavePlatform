@@ -7,11 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, MapPin, FileText, Calendar, Clock, User } from "lucide-react"
+import { Calendar as CalendarPicker } from "@/components/ui/calendar"
+import { Search, MapPin, FileText, Calendar, Clock, User, Scissors } from "lucide-react"
 import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { saleService, OrchardSale } from "@/services/saleService"
 import { orchardService } from "@/services/orchardService"
+import { jimaTripService, JimaTrip } from "@/services/jimaTripService"
+import { toast } from "sonner"
 
 export default function CompanyPurchasesPage() {
   const [searchTerm, setSearchTerm]       = useState("")
@@ -19,6 +22,14 @@ export default function CompanyPurchasesPage() {
   const [loading, setLoading]             = useState(true)
   const [selectedSale, setSelectedSale]   = useState<OrchardSale | null>(null)
   const [showDialog, setShowDialog]       = useState(false)
+
+  // Programar jimas
+  const [jimaDialogOpen, setJimaDialogOpen]   = useState(false)
+  const [jimaSale, setJimaSale]               = useState<OrchardSale | null>(null)
+  const [selectedDate, setSelectedDate]       = useState<Date | undefined>(undefined)
+  const [numTrips, setNumTrips]               = useState("")
+  const [isSavingJima, setIsSavingJima]       = useState(false)
+  const [scheduledTrips, setScheduledTrips]   = useState<JimaTrip[]>([])
 
   useEffect(() => {
     saleService.getAll()
@@ -36,6 +47,44 @@ export default function CompanyPurchasesPage() {
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })
+
+  const openJimaDialog = async (sale: OrchardSale) => {
+    setJimaSale(sale)
+    setSelectedDate(undefined)
+    setNumTrips("")
+    setJimaDialogOpen(true)
+    try {
+      const trips = await jimaTripService.getBySale(sale.id)
+      setScheduledTrips(trips)
+    } catch {
+      setScheduledTrips([])
+    }
+  }
+
+  const handleSaveJima = async () => {
+    if (!jimaSale || !selectedDate || !numTrips) return
+    setIsSavingJima(true)
+    try {
+      const dateStr = selectedDate.toISOString().split("T")[0]
+      const newTrips = await jimaTripService.schedule(jimaSale.id, dateStr, parseInt(numTrips))
+      setScheduledTrips(prev => [...prev, ...newTrips])
+      setSelectedDate(undefined)
+      setNumTrips("")
+      toast.success(`${newTrips.length} viaje(s) programado(s) para el ${dateStr}`)
+    } catch {
+      toast.error("No se pudo programar la jima. Intenta de nuevo.")
+    } finally {
+      setIsSavingJima(false)
+    }
+  }
+
+  // Agrupar viajes por fecha para mostrarlos
+  const tripsByDate = scheduledTrips.reduce<Record<string, JimaTrip[]>>((acc, t) => {
+    const d = t.scheduled_date
+    if (!acc[d]) acc[d] = []
+    acc[d].push(t)
+    return acc
+  }, {})
 
   if (loading) return <AppLayout type="company"><p className="p-4">Cargando compras...</p></AppLayout>
 
@@ -135,13 +184,23 @@ export default function CompanyPurchasesPage() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-xs text-blue-700">Precio de compra</p>
-                    <p className="text-xl font-bold text-blue-800">
-                      ${Number(sale.company_price).toLocaleString("es-MX")}
+                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                    <p className="text-xs text-teal-700">Total estimado (precio × plantas)</p>
+                    <p className="text-xl font-bold text-teal-800">
+                      ${(Number(sale.company_price) * (sale.orchard?.plant_quantity ?? 0)).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">{formatDate(sale.sold_at)}</p>
+                    <p className="text-xs text-teal-600 mt-1">
+                      ${Number(sale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {(sale.orchard?.plant_quantity ?? 0).toLocaleString()} plantas · {formatDate(sale.sold_at)}
+                    </p>
                   </div>
+
+                  <Button
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    onClick={() => openJimaDialog(sale)}
+                  >
+                    <Scissors className="w-4 h-4 mr-2" />
+                    Programar Jimas
+                  </Button>
 
                   <Button className="w-full bg-teal-600 hover:bg-teal-700" onClick={() => { setSelectedSale(sale); setShowDialog(true) }}>
                     <FileText className="w-4 h-4 mr-2" />
@@ -171,10 +230,16 @@ export default function CompanyPurchasesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Precio ofertado $</Label>
-                  <Input type="number" readOnly value={selectedSale.offer.price} />
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-teal-800 mb-1">Total estimado (precio × plantas)</p>
+                  <p className="text-2xl font-bold text-teal-900">
+                    ${(Number(selectedSale.company_price) * (selectedSale.orchard?.plant_quantity ?? 0)).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-teal-600 mt-1">
+                    ${Number(selectedSale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {(selectedSale.orchard?.plant_quantity ?? 0).toLocaleString()} plantas
+                  </p>
                 </div>
+
                 <div className="space-y-2">
                   <Label>Cm de Jima</Label>
                   <Input type="number" readOnly value={selectedSale.offer.jima_cm} />
@@ -203,6 +268,94 @@ export default function CompanyPurchasesPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        {/* Dialog programar jimas */}
+        <Dialog open={jimaDialogOpen} onOpenChange={setJimaDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Programar Jimas — {jimaSale?.orchard?.name}</DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-col md:flex-row gap-6 mt-2">
+              {/* Izquierda: calendario */}
+              <div className="flex-shrink-0">
+                <p className="text-sm font-medium text-gray-700 mb-2">Selecciona un día</p>
+                <div className="border border-gray-200 rounded-lg p-2 bg-white">
+                  <CalendarPicker
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={{ before: new Date() }}
+                    className="rounded-md"
+                  />
+                </div>
+              </div>
+
+              {/* Derecha: input + historial */}
+              <div className="flex-1 space-y-5">
+                {/* Input número de viajes */}
+                <div className={`space-y-3 transition-opacity ${selectedDate ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                    <p className="text-sm text-teal-700 font-medium">
+                      {selectedDate
+                        ? selectedDate.toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+                        : "Selecciona una fecha en el calendario"}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Número de viajes *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={50}
+                      placeholder="Ej. 3"
+                      value={numTrips}
+                      onChange={e => setNumTrips(e.target.value)}
+                    />
+                    <p className="text-xs text-gray-500">Se creará un registro individual por cada viaje.</p>
+                  </div>
+                  <Button
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    disabled={!selectedDate || !numTrips || isSavingJima}
+                    onClick={handleSaveJima}
+                  >
+                    {isSavingJima ? "Guardando..." : "Guardar Programación"}
+                  </Button>
+                </div>
+
+                {/* Historial de viajes programados */}
+                {Object.keys(tripsByDate).length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Viajes programados</p>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {Object.entries(tripsByDate)
+                        .sort(([a], [b]) => a.localeCompare(b))
+                        .map(([date, trips]) => (
+                          <div key={date} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-800">
+                                {(() => {
+                                  const [y, m, d] = date.substring(0, 10).split("-").map(Number)
+                                  return new Date(y, m - 1, d).toLocaleDateString("es-MX", { weekday: "short", year: "numeric", month: "short", day: "numeric" })
+                                })()}
+                              </span>
+                              <Badge className="bg-orange-100 text-orange-800">{trips.length} viaje{trips.length !== 1 ? "s" : ""}</Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {trips.map(t => (
+                                <span key={t.id} className={`text-xs px-2 py-0.5 rounded-full ${t.guide_path ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                                  Viaje {t.trip_number} {t.guide_path ? "· guía ✓" : "· sin guía"}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
