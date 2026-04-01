@@ -11,6 +11,11 @@ export interface JimaTrip {
 }
 
 export const jimaTripService = {
+  getAll: async (): Promise<JimaTrip[]> => {
+    const { data } = await api.get("/jima-trips")
+    return Array.isArray(data?.data) ? data.data : []
+  },
+
   getBySale: async (saleId: number): Promise<JimaTrip[]> => {
     const { data } = await api.get(`/jima-trips?sale_id=${saleId}`)
     return Array.isArray(data?.data) ? data.data : []
@@ -35,7 +40,9 @@ export const jimaTripService = {
   },
 
   getGuideUrl: async (tripId: number): Promise<string> => {
-    const { data } = await api.get(`/jima-trips/${tripId}/guide-url`)
-    return data.url
+    const { data } = await api.get(`/jima-trips/${tripId}/guide-url`, {
+      responseType: "blob",
+    })
+    return URL.createObjectURL(data)
   },
 }
