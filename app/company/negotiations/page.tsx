@@ -82,7 +82,7 @@ export default function CompanyNegotiations() {
           <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
 
           <div className="space-y-2">
-            <Label>Precio por planta $</Label>
+            <Label>Precio por kg. $</Label>
             <Input type="number" readOnly value={offer.price} />
           </div>
 
