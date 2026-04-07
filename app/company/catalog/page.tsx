@@ -391,7 +391,7 @@ export default function CompanyCatalogPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Precio por planta $ *</Label>
+                <Label>Precio por kg. $ *</Label>
                 <Input type="number" placeholder="0" value={offerForm.price} onChange={e => setField("price", e.target.value)} />
               </div>
 
