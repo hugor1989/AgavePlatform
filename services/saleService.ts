@@ -10,6 +10,8 @@ export interface OrchardSale {
   company_price: number
   farmer_price: number
   sold_at: string
+  status: string
+  finished_at: string | null
   created_at: string
   offer?: Offer
   orchard?: {
@@ -21,6 +23,9 @@ export interface OrchardSale {
     year: number
     age: number
     cover_photo: string | null
+    photo_id: string | null
+    extra_photo: string | null
+    location_url: string | null
     agave_type?: { id: number; name: string }
   }
   company?: {
@@ -46,6 +51,11 @@ export const saleService = {
 
   getById: async (id: number | string): Promise<OrchardSale> => {
     const { data } = await api.get(`/sales/${id}`)
+    return data.data
+  },
+
+  finish: async (id: number | string): Promise<OrchardSale> => {
+    const { data } = await api.patch(`/sales/${id}/finish`)
     return data.data
   },
 }

@@ -190,19 +190,8 @@ export default function AdminOfertasPage() {
                               <DollarSign className="h-5 w-5 text-gray-600 flex-shrink-0" />
                               Información de la Oferta
                             </h4>
-                            {offer.orchard?.plant_quantity && (
-                              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4">
-                                <p className="text-sm text-teal-700 font-medium mb-1">Total estimado de la oferta</p>
-                                <p className="text-2xl font-bold text-teal-800">
-                                  ${(offer.price * offer.orchard.plant_quantity).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
-                                <p className="text-xs text-teal-600 mt-1">
-                                  ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {offer.orchard.plant_quantity.toLocaleString()} plantas
-                                </p>
-                              </div>
-                            )}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                              <div><span className="font-medium text-gray-600">Precio por planta:</span> ${Number(offer.price).toLocaleString("es-MX")}</div>
+                              <div><span className="font-medium text-gray-600">Precio:</span> ${Number(offer.price).toLocaleString("es-MX")}</div>
                               <div><span className="font-medium text-gray-600">Cm Jima:</span> {offer.jima_cm} cm</div>
                               <div><span className="font-medium text-gray-600">Financiamiento:</span> {offer.financing_months} meses</div>
                               <div><span className="font-medium text-gray-600">Fecha jima:</span> {offer.harvest_date}</div>
@@ -305,29 +294,40 @@ export default function AdminOfertasPage() {
                     <span>{selectedOffer?.orchard?.name}</span>
                   </div>
                   <div className="flex justify-between gap-1">
-                    <strong>Precio por planta:</strong>
+                    <strong>Precio por kg empresa:</strong>
                     <span className="text-blue-600 font-bold">${Number(selectedOffer?.price ?? 0).toLocaleString("es-MX")}</span>
                   </div>
-                  {selectedOffer?.orchard?.plant_quantity && (
-                    <div className="flex justify-between gap-1">
-                      <strong>Total estimado:</strong>
-                      <span className="text-teal-700 font-bold">
-                        ${((selectedOffer.price ?? 0) * selectedOffer.orchard.plant_quantity).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Precio a Agricultor (MXN) *</Label>
+                  <Label>Precio por kg al agricultor (MXN) *</Label>
                   <Input
                     type="number"
                     value={farmerPrice}
                     onChange={(e) => setFarmerPrice(e.target.value)}
-                    placeholder="750000"
+                    placeholder="0.00"
                     min="0"
                   />
                 </div>
+
+                {farmerPrice && Number(farmerPrice) > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm space-y-1">
+                    <div className="flex justify-between gap-1">
+                      <span className="text-gray-600">Precio empresa por kg:</span>
+                      <span className="font-medium">${Number(selectedOffer?.price ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between gap-1">
+                      <span className="text-gray-600">Precio agricultor por kg:</span>
+                      <span className="font-medium">${Number(farmerPrice).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between gap-1 border-t border-orange-200 pt-1 mt-1">
+                      <span className="text-orange-700 font-semibold">Comisión plataforma por kg:</span>
+                      <span className="text-orange-800 font-bold">
+                        ${(Number(selectedOffer?.price ?? 0) - Number(farmerPrice)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label>Notas (opcional)</Label>

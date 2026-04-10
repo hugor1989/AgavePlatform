@@ -86,17 +86,6 @@ export default function CompanyNegotiations() {
             <Input type="number" readOnly value={offer.price} />
           </div>
 
-          {offer.orchard?.plant_quantity && (
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-              <p className="text-sm text-teal-700 font-medium mb-1">Total estimado de la oferta</p>
-              <p className="text-2xl font-bold text-teal-800">
-                ${(offer.price * offer.orchard.plant_quantity).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-              <p className="text-xs text-teal-600 mt-1">
-                ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {offer.orchard.plant_quantity.toLocaleString()} plantas
-              </p>
-            </div>
-          )}
           <div className="space-y-2">
             <Label>Cm de Jima</Label>
             <Input type="number" readOnly value={offer.jima_cm} />

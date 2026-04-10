@@ -31,7 +31,7 @@ import {
   MessageSquare,
   Search,
   ShoppingCart,
-  
+  Video,
 } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useAuth } from '@/hooks/useAuth'
@@ -46,13 +46,14 @@ interface AppLayoutProps {
 // --- Navegaciones por tipo ---
 const NAVIGATION: Record<LayoutType, { name: string; href: string; icon: any }[]> = {
   admin: [
-    { name: "Historias de Jima", href: "/admin/dashboard", icon: Home },
+    { name: "Dashboard", href: "/admin/dashboard", icon: Home },
     { name: "Agricultores", href: "/admin/farmers", icon: User },
     { name: "Empresas", href: "/admin/companies", icon: Building2 },
     { name: "Huertas", href: "/admin/huertas", icon: Sprout },
     { name: "Ofertas", href: "/admin/ofertas", icon: DollarSign },
     { name: "Huertas Vendidas", href: "/admin/huertas-vendidas", icon: CheckCircle },
     { name: "Jimas Terminada", href: "/admin/jimas-terminadas", icon: CheckCircle },
+    { name: "Historias de Jima", href: "/admin/historias-jima", icon: Video },
     { name: "Configuración", href: "/admin/settings", icon: Settings },
   ],
   company: [

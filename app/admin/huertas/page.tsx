@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Search, Plus, Calendar, Clock, ImageIcon, Eye, Edit, Camera, MapPin, Share2 } from "lucide-react"
+import { Search, Plus, Calendar, Clock, ImageIcon, Eye, Edit, Camera, MapPin, Share2, User, Mail, Phone } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
 
@@ -828,6 +828,32 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                             <Share2 className="h-4 w-4 text-green-700" />
                           </button>
                        </div>
+                      )}
+
+                      {orchard.farmer && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1.5">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Agricultor</p>
+                          <div className="flex items-center gap-2">
+                            <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm font-medium text-gray-900">{orchard.farmer.full_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 ml-0.5 font-mono">ID</span>
+                            <span className="text-sm text-gray-600">{orchard.farmer.unique_identifier}</span>
+                          </div>
+                          {orchard.farmer.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                              <span className="text-sm text-gray-600 truncate">{orchard.farmer.email}</span>
+                            </div>
+                          )}
+                          {orchard.farmer.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                              <span className="text-sm text-gray-600">{orchard.farmer.phone}</span>
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       <div className="space-y-2">

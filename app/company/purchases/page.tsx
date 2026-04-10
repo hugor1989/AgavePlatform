@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Calendar as CalendarPicker } from "@/components/ui/calendar"
-import { Search, MapPin, FileText, Calendar, Clock, User, Scissors } from "lucide-react"
+import {
+  Search, MapPin, FileText, Calendar, Clock, Scissors,
+  ImageIcon, Eye, Camera, ExternalLink, Share2,
+} from "lucide-react"
 import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { saleService, OrchardSale } from "@/services/saleService"
@@ -21,7 +24,17 @@ export default function CompanyPurchasesPage() {
   const [sales, setSales]                 = useState<OrchardSale[]>([])
   const [loading, setLoading]             = useState(true)
   const [selectedSale, setSelectedSale]   = useState<OrchardSale | null>(null)
-  const [showDialog, setShowDialog]       = useState(false)
+
+  // Dialogs
+  const [showOfferDialog, setShowOfferDialog]       = useState(false)
+  const [showPhotoIdDialog, setShowPhotoIdDialog]   = useState(false)
+  const [showGuiasDialog, setShowGuiasDialog]       = useState(false)
+
+  // Carrusel y lightbox
+  const [activeImageIndex, setActiveImageIndex]     = useState<Record<number, number>>({})
+  const [selectedPhoto, setSelectedPhoto]           = useState("")
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen]   = useState(false)
+  const touchStartX                                 = useRef<number | null>(null)
 
   // Programar jimas
   const [jimaDialogOpen, setJimaDialogOpen]   = useState(false)
@@ -30,6 +43,10 @@ export default function CompanyPurchasesPage() {
   const [numTrips, setNumTrips]               = useState("")
   const [isSavingJima, setIsSavingJima]       = useState(false)
   const [scheduledTrips, setScheduledTrips]   = useState<JimaTrip[]>([])
+
+  // Guías y pesadas
+  const [guiasTrips, setGuiasTrips]   = useState<JimaTrip[]>([])
+  const [loadingGuias, setLoadingGuias] = useState(false)
 
   useEffect(() => {
     saleService.getAll()
@@ -48,6 +65,41 @@ export default function CompanyPurchasesPage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent, saleId: number) => {
+    if (touchStartX.current === null) return
+    const diffX = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(diffX) > 50) {
+      setActiveImageIndex(prev => ({ ...prev, [saleId]: (prev[saleId] || 0) === 0 ? 1 : 0 }))
+    }
+    touchStartX.current = null
+  }
+
+  const handleViewPhoto = (photoPath: string | null) => {
+    const url = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
+    setSelectedPhoto(url)
+    setIsPhotoDialogOpen(true)
+  }
+
+  const handleOpenLocation = (url: string) => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const finalUrl = isIOS && url.includes("google.com/maps")
+      ? url.replace("https://www.google.com/maps", "https://maps.apple.com")
+      : url
+    window.open(finalUrl, "_blank")
+  }
+
+  const handleShareLocation = async (url: string) => {
+    if (navigator.share) {
+      try { await navigator.share({ url }) } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
   const openJimaDialog = async (sale: OrchardSale) => {
     setJimaSale(sale)
     setSelectedDate(undefined)
@@ -58,6 +110,20 @@ export default function CompanyPurchasesPage() {
       setScheduledTrips(trips)
     } catch {
       setScheduledTrips([])
+    }
+  }
+
+  const openGuiasDialog = async (sale: OrchardSale) => {
+    setSelectedSale(sale)
+    setShowGuiasDialog(true)
+    setLoadingGuias(true)
+    try {
+      const trips = await jimaTripService.getBySale(sale.id)
+      setGuiasTrips(trips)
+    } catch {
+      setGuiasTrips([])
+    } finally {
+      setLoadingGuias(false)
     }
   }
 
@@ -78,7 +144,6 @@ export default function CompanyPurchasesPage() {
     }
   }
 
-  // Agrupar viajes por fecha para mostrarlos
   const tripsByDate = scheduledTrips.reduce<Record<string, JimaTrip[]>>((acc, t) => {
     const d = t.scheduled_date
     if (!acc[d]) acc[d] = []
@@ -99,7 +164,7 @@ export default function CompanyPurchasesPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por huerta o agricultor..."
+            placeholder="Buscar por huerta..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -112,14 +177,56 @@ export default function CompanyPurchasesPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((sale) => (
               <Card key={sale.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-orange-50 border-orange-200">
-                <div className="relative">
-                  <Image
-                    src={orchardService.getPhotoUrl(sale.orchard?.cover_photo ?? null) || "/agave-field-plantation.png"}
-                    alt={sale.orchard?.name ?? "Huerta"}
-                    width={400}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                  />
+                <div className="relative group">
+                  {sale.orchard?.extra_photo && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => ({ ...prev, [sale.id]: (prev[sale.id] || 0) === 0 ? 1 : 0 })) }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => ({ ...prev, [sale.id]: (prev[sale.id] || 0) === 0 ? 1 : 0 })) }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    </>
+                  )}
+
+                  <div
+                    className="relative w-full h-48 overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={(e) => handleTouchEnd(e, sale.id)}
+                  >
+                    <button
+                      onClick={() => handleViewPhoto((activeImageIndex[sale.id] || 0) === 0 ? sale.orchard?.cover_photo ?? null : sale.orchard?.extra_photo ?? null)}
+                      className="block w-full h-full"
+                    >
+                      <Image
+                        src={orchardService.getPhotoUrl((activeImageIndex[sale.id] || 0) === 0 ? sale.orchard?.cover_photo ?? null : sale.orchard?.extra_photo ?? null) || "/agave-field-plantation.png"}
+                        alt={sale.orchard?.name ?? "Huerta"}
+                        width={400}
+                        height={200}
+                        className="w-full h-48 object-cover"
+                      />
+                    </button>
+                  </div>
+
+                  {sale.orchard?.extra_photo && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-1">
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 0 ? "bg-white" : "bg-white/50"}`} />
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 1 ? "bg-white" : "bg-white/50"}`} />
+                    </div>
+                  )}
+
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="bg-black/70 text-white">
+                      <Camera className="w-3 h-3 mr-1" />
+                      {sale.orchard?.extra_photo ? "2" : "1"} foto{sale.orchard?.extra_photo ? "s" : ""}
+                    </Badge>
+                  </div>
                   <div className="absolute top-3 right-3">
                     <Badge className="bg-blue-600 text-white">Comprada</Badge>
                   </div>
@@ -176,43 +283,121 @@ export default function CompanyPurchasesPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-500">Agricultor</p>
-                      <p className="text-sm font-medium text-gray-900">{sale.farmer?.full_name ?? "—"}</p>
+                  {sale.orchard?.location_url && (
+                    <div
+                      onClick={() => handleOpenLocation(sale.orchard!.location_url!)}
+                      className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:bg-green-100 active:scale-[0.98] transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-200 shrink-0">
+                          <MapPin className="h-5 w-5 text-green-700" />
+                        </div>
+                        <p className="text-sm font-medium text-green-800">Ver ubicación</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleShareLocation(sale.orchard!.location_url!) }}
+                        className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-green-200 transition"
+                        aria-label="Compartir ubicación"
+                      >
+                        <Share2 className="h-4 w-4 text-green-700" />
+                      </button>
                     </div>
+                  )}
+
+                  <div className="space-y-2 pt-1">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => { setSelectedSale(sale); setShowPhotoIdDialog(true) }}
+                      disabled={!sale.orchard?.photo_id}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-2" />
+                      Ver Foto ID
+                    </Button>
+
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Huerta
+                    </Button>
+
+                    <Button
+                      className="w-full bg-orange-600 hover:bg-orange-700"
+                      onClick={() => openJimaDialog(sale)}
+                    >
+                      <Scissors className="w-4 h-4 mr-2" />
+                      Programar Jimas
+                    </Button>
+
+                    <Button
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      onClick={() => { setSelectedSale(sale); setShowOfferDialog(true) }}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Ver Detalle Oferta
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full border-gray-300"
+                      onClick={() => openGuiasDialog(sale)}
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Ver Fotos de Guías y Pesadas
+                    </Button>
                   </div>
-
-                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                    <p className="text-xs text-teal-700">Total estimado (precio × plantas)</p>
-                    <p className="text-xl font-bold text-teal-800">
-                      ${(Number(sale.company_price) * (sale.orchard?.plant_quantity ?? 0)).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-xs text-teal-600 mt-1">
-                      ${Number(sale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {(sale.orchard?.plant_quantity ?? 0).toLocaleString()} plantas · {formatDate(sale.sold_at)}
-                    </p>
-                  </div>
-
-                  <Button
-                    className="w-full bg-orange-600 hover:bg-orange-700"
-                    onClick={() => openJimaDialog(sale)}
-                  >
-                    <Scissors className="w-4 h-4 mr-2" />
-                    Programar Jimas
-                  </Button>
-
-                  <Button className="w-full bg-teal-600 hover:bg-teal-700" onClick={() => { setSelectedSale(sale); setShowDialog(true) }}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Ver Detalle Oferta
-                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        {/* ── Dialog Foto ID ── */}
+        <Dialog open={showPhotoIdDialog} onOpenChange={setShowPhotoIdDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Foto ID — {selectedSale?.orchard?.name}</DialogTitle>
+            </DialogHeader>
+            {selectedSale?.orchard?.photo_id ? (
+              <div className="flex justify-center">
+                <Image
+                  src={orchardService.getPhotoUrl(selectedSale.orchard.photo_id) || "/placeholder.svg"}
+                  alt="Foto ID"
+                  width={500}
+                  height={400}
+                  className="rounded-lg object-contain max-h-[60vh] w-auto"
+                />
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-6">Sin foto ID disponible.</p>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Lightbox foto ── */}
+        <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader><DialogTitle>Foto de la Huerta</DialogTitle></DialogHeader>
+            <div className="flex justify-center">
+              <div className="overflow-auto max-h-[70vh] p-2">
+                <img
+                  src={selectedPhoto || "/placeholder.svg"}
+                  alt="Foto"
+                  className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                  style={{ width: "100%", height: "auto" }}
+                  onClick={(e) => {
+                    const img = e.currentTarget
+                    if (img.style.width === "100%") { img.style.width = "200%"; img.style.cursor = "zoom-out" }
+                    else { img.style.width = "100%"; img.style.cursor = "zoom-in" }
+                  }}
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Dialog Detalle Oferta ── */}
+        <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalle de Oferta — {selectedSale?.orchard?.name}</DialogTitle>
@@ -221,23 +406,9 @@ export default function CompanyPurchasesPage() {
               <div className="space-y-4">
                 <div className="bg-blue-50 rounded-lg p-4 text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Agricultor:</span>
-                    <span className="font-medium">{selectedSale.farmer?.full_name}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span className="text-gray-600">Fecha de compra:</span>
                     <span className="font-medium">{formatDate(selectedSale.sold_at)}</span>
                   </div>
-                </div>
-
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-teal-800 mb-1">Total estimado (precio × plantas)</p>
-                  <p className="text-2xl font-bold text-teal-900">
-                    ${(Number(selectedSale.company_price) * (selectedSale.orchard?.plant_quantity ?? 0)).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-xs text-teal-600 mt-1">
-                    ${Number(selectedSale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })} × {(selectedSale.orchard?.plant_quantity ?? 0).toLocaleString()} plantas
-                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -270,7 +441,56 @@ export default function CompanyPurchasesPage() {
             )}
           </DialogContent>
         </Dialog>
-        {/* Dialog programar jimas */}
+
+        {/* ── Dialog Guías y Pesadas ── */}
+        <Dialog open={showGuiasDialog} onOpenChange={setShowGuiasDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Guías y Pesadas — {selectedSale?.orchard?.name}</DialogTitle>
+            </DialogHeader>
+            {loadingGuias ? (
+              <p className="text-gray-500 py-4 text-center">Cargando...</p>
+            ) : guiasTrips.length === 0 ? (
+              <p className="text-gray-500 py-4 text-center">No hay viajes registrados aún.</p>
+            ) : (
+              <div className="space-y-3">
+                {guiasTrips.sort((a, b) => a.trip_number - b.trip_number).map((trip) => (
+                  <div key={trip.id} className="flex items-center gap-4 border border-gray-200 rounded-lg px-4 py-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                      <span className="text-xs font-bold text-teal-700">#{trip.trip_number}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">
+                        Viaje {trip.trip_number} — {new Date(trip.scheduled_date + "T12:00:00").toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {trip.guide_path ? "Guía adjunta" : "Sin guía"}
+                      </p>
+                    </div>
+                    {trip.guide_path ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-teal-300 text-teal-700 hover:bg-teal-50 flex-shrink-0"
+                        onClick={async () => {
+                          const url = await jimaTripService.getGuideUrl(trip.id)
+                          window.open(url, "_blank")
+                        }}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Ver
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-gray-400 flex-shrink-0">Pendiente</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Dialog Programar Jimas ── */}
         <Dialog open={jimaDialogOpen} onOpenChange={setJimaDialogOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -278,7 +498,6 @@ export default function CompanyPurchasesPage() {
             </DialogHeader>
 
             <div className="flex flex-col md:flex-row gap-6 mt-2">
-              {/* Izquierda: calendario */}
               <div className="flex-shrink-0">
                 <p className="text-sm font-medium text-gray-700 mb-2">Selecciona un día</p>
                 <div className="border border-gray-200 rounded-lg p-2 bg-white">
@@ -292,9 +511,7 @@ export default function CompanyPurchasesPage() {
                 </div>
               </div>
 
-              {/* Derecha: input + historial */}
               <div className="flex-1 space-y-5">
-                {/* Input número de viajes */}
                 <div className={`space-y-3 transition-opacity ${selectedDate ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
                   <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
                     <p className="text-sm text-teal-700 font-medium">
@@ -324,7 +541,6 @@ export default function CompanyPurchasesPage() {
                   </Button>
                 </div>
 
-                {/* Historial de viajes programados */}
                 {Object.keys(tripsByDate).length > 0 && (
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-2">Viajes programados</p>

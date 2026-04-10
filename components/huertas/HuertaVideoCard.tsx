@@ -2,128 +2,82 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Play, MapPin, User, Clock, Video } from "lucide-react"
 import Image from "next/image"
 
-import {
-  Play,
-  Camera,
-  MapPin,
-  Calendar,
-  Clock,
-  Eye,
-  Edit,
-  Share2,
-  Video,
-} from "lucide-react"
-
-interface Huerta {
+interface StoryCardData {
   id: string | number
-  name: string
-  videoUrl?: string
-  videos: number
-  featured?: boolean
-  status: string
-  type: string
-  plants: number
+  orchardName: string
+  farmerName: string
+  agaveType: string
   state: string
   municipality: string
-  year: number
-  age: string
-  location: string
+  daysRemaining: number
+  createdAt: string
+  expired: boolean
 }
 
 interface HuertaVideoCardProps {
-  huerta: Huerta
-  getStatusColor: (status: string) => string
+  huerta: StoryCardData
+  thumbnailUrl?: string
 }
 
-export default function HuertaVideoCard({
-  huerta,
-  getStatusColor,
-}: HuertaVideoCardProps) {
+export default function HuertaVideoCard({ huerta, thumbnailUrl }: HuertaVideoCardProps) {
+  const daysColor =
+    huerta.expired        ? "bg-gray-100 text-gray-600 border-gray-200"
+    : huerta.daysRemaining <= 1 ? "bg-red-100 text-red-700 border-red-200"
+    : huerta.daysRemaining <= 3 ? "bg-orange-100 text-orange-700 border-orange-200"
+    : "bg-green-100 text-green-700 border-green-200"
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative">
-       <div className="aspect-video bg-gray-200 flex items-center justify-center relative">
-                  <Play className="h-12 w-12 sm:h-16 sm:w-16 text-white bg-black bg-opacity-50 rounded-full p-3 sm:p-4 hover:bg-opacity-70 transition-all cursor-pointer" />
-
-                  {/* Duración del video */}
-                  <div className="absolute bottom-3 right-3 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                    5
-                  </div>
-                </div>
+      {/* Thumbnail / preview */}
+      <div className="relative aspect-video bg-gray-900 overflow-hidden">
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Video className="w-10 h-10 text-gray-600 opacity-30" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+          <Play className="h-12 w-12 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 transition-all cursor-pointer" />
+        </div>
+        <Badge className={`absolute top-2 right-2 text-xs border ${daysColor}`}>
+          {huerta.expired ? "Expirada" : `${huerta.daysRemaining}d`}
+        </Badge>
       </div>
 
-      <CardContent className="p-4 space-y-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-lg text-gray-900">{huerta.name}</h3>
-            <p className="text-sm text-gray-500">#{huerta.id}</p>
-          </div>
-          <Badge className={getStatusColor(huerta.status)}>{huerta.status}</Badge>
+      <CardContent className="p-3 space-y-2">
+        {/* Nombre huerta */}
+        <div>
+          <h3 className="font-semibold text-gray-900 text-sm leading-tight">{huerta.orchardName}</h3>
+          <p className="text-xs text-gray-400">Historia #{huerta.id}</p>
         </div>
 
-        <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-          <Image src="/agave-icon.svg" alt="Agave" width={16} height={16} className="w-4 h-4" />
-          <span className="text-sm font-medium text-gray-900">{huerta.type}</span>
+        {/* Tipo agave */}
+        <div className="flex items-center gap-1.5">
+          <Image src="/agave-icon.svg" alt="Agave" width={14} height={14} className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="text-xs text-gray-700 font-medium">{huerta.agaveType}</span>
         </div>
 
-        <div className="text-center py-2">
-          <p className="text-sm text-gray-500 mb-1">Cantidad de Plantas</p>
-          <span className="text-2xl font-bold text-blue-600">{huerta.plants.toLocaleString()}</span>
+        {/* Agricultor */}
+        <div className="flex items-center gap-1.5">
+          <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-xs text-gray-600 truncate">{huerta.farmerName}</span>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-500">Estado</span>
-            </div>
-            <span className="text-sm font-medium text-gray-900 ml-6">{huerta.state}</span>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 flex items-center justify-center">
-                <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-              </div>
-              <span className="text-sm text-gray-500">Municipio</span>
-            </div>
-            <span className="text-sm font-medium text-gray-900 ml-6">{huerta.municipality}</span>
-          </div>
+        {/* Ubicación */}
+        <div className="flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-xs text-gray-600 truncate">{huerta.state}, {huerta.municipality}</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Año</p>
-              <p className="text-sm font-medium text-gray-900">{huerta.year}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <div>
-              <p className="text-sm text-gray-500">Edad</p>
-              <p className="text-sm font-medium text-gray-900">{huerta.age}</p>
-            </div>
-          </div>
+        {/* Fecha */}
+        <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100">
+          <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-xs text-gray-500">{huerta.createdAt}</span>
         </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700 font-medium">Ubicación</p>
-              <p className="text-sm font-mono text-green-800">{huerta.location}</p>
-            </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
-              <Share2 className="w-4 h-4 text-green-700" />
-            </Button>
-          </div>
-        </div>
-
-       
       </CardContent>
     </Card>
   )

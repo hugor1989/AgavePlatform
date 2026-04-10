@@ -27,6 +27,8 @@ export interface Orchard {
     id: number
     full_name: string
     unique_identifier: string
+    email?: string
+    phone?: string
   }
   agave_type?: {
     id: number

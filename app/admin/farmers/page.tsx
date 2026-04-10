@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { farmerService } from "@/services/farmerService"
+import { orchardService } from "@/services/orchardService"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,12 +40,16 @@ import {
   UserPlus,
   XCircle,
   Mail,
+  Sprout,
 } from "lucide-react"
 import { alert } from "@/lib/alert"
+import { useRouter } from "next/navigation"
 
 
 export default function AdminFarmersPage() {
+  const router = useRouter()
   const [farmers, setFarmers] = useState<any[]>([])
+  const [orchardCount, setOrchardCount] = useState<Record<number, number>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -61,6 +66,11 @@ export default function AdminFarmersPage() {
 
   const [selectedFarmer, setSelectedFarmer] = useState<any | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  // Editar agricultor
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", address: "", gender: "" })
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   // Estado y funciones para cambiar contraseña
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
@@ -92,17 +102,24 @@ export default function AdminFarmersPage() {
   }, [])
 
   const fetchFarmers = async () => {
-  try {
-    setIsLoading(true)
-    const farmersList = await farmerService.getAll()
-    setFarmers(farmersList)
-  } catch (err) {
-    console.error("Error al cargar agricultores:", err)
-    setFarmers([])
-  } finally {
-    setIsLoading(false)
+    try {
+      setIsLoading(true)
+      const [farmersList, orchardsData] = await Promise.all([
+        farmerService.getAll(),
+        orchardService.getAll({ per_page: 1000 }),
+      ])
+      setFarmers(farmersList)
+      const list = Array.isArray(orchardsData) ? orchardsData : (orchardsData as any)?.data ?? []
+      const count: Record<number, number> = {}
+      list.forEach((o: any) => { count[o.farmer_id] = (count[o.farmer_id] ?? 0) + 1 })
+      setOrchardCount(count)
+    } catch (err) {
+      console.error("Error al cargar agricultores:", err)
+      setFarmers([])
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
 
   const handleAddFarmer = async () => {
     const { name, email, phone, address, gender } = newFarmerForm
@@ -172,6 +189,33 @@ const handleChangePassword = async () => {
     setChangingPassword(false)
   }
 }
+
+  const handleOpenEditDialog = (farmer: any) => {
+    setSelectedFarmer(farmer)
+    setEditForm({
+      full_name: farmer.full_name ?? "",
+      email:     farmer.email ?? "",
+      phone:     farmer.phone ?? "",
+      address:   farmer.address ?? "",
+      gender:    farmer.gender ?? "",
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedFarmer) return
+    setIsSavingEdit(true)
+    try {
+      await farmerService.update(selectedFarmer.id, editForm)
+      await fetchFarmers()
+      setIsEditDialogOpen(false)
+      await alert.success("Agricultor actualizado correctamente", "")
+    } catch {
+      await alert.error("No se pudo actualizar el agricultor", "")
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
 
   const handleResendOtp = async (farmer: any) => {
     setResendingOtp(true)
@@ -491,6 +535,53 @@ const handleChangePassword = async () => {
           )}
         </DialogContent>
       </Dialog>
+          {/* Dialog editar agricultor */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Editar Agricultor</DialogTitle>
+                <DialogDescription>Modifica los datos de {selectedFarmer?.full_name}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 py-2">
+                <Input
+                  placeholder="Nombre completo"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                />
+                <Input
+                  placeholder="Correo"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+                <Input
+                  placeholder="Teléfono"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                />
+                <Input
+                  placeholder="Dirección"
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                />
+                <select
+                  value={editForm.gender}
+                  onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                  className="border rounded-md px-3 py-2 w-full text-sm"
+                >
+                  <option value="">Seleccionar género...</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSaveEdit} disabled={isSavingEdit} className="bg-green-600 hover:bg-green-700">
+                  {isSavingEdit ? "Guardando..." : "Guardar cambios"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         <Card>
           <CardHeader>
@@ -537,8 +628,8 @@ const handleChangePassword = async () => {
                       </TableCell>
                       <TableCell>{farmer.address}</TableCell>
                        <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">0</div>
+                        <div className="text-sm font-medium">
+                          {orchardCount[farmer.id] ?? 0}
                         </div>
                       </TableCell>
                       <TableCell className="hidden xl:table-cell">NA</TableCell>
@@ -574,10 +665,14 @@ const handleChangePassword = async () => {
                                 <Eye className="h-4 w-4 mr-2" />
                                 Ver detalles
                             </DropdownMenuItem>
-                            {/* <DropdownMenuItem onClick={() => handleEditClick(farmer)}>
+                            <DropdownMenuItem onClick={() => handleOpenEditDialog(farmer)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
-                            </DropdownMenuItem> */}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/admin/farmers/${farmer.id}/huertas`)}>
+                              <Sprout className="h-4 w-4 mr-2" />
+                              Ver Huertas
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleOpenPasswordDialog(farmer)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Cambiar contraseña
