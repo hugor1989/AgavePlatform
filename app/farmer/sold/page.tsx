@@ -7,22 +7,33 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, MapPin, Eye, FileText, Calendar, Clock } from "lucide-react"
+import { Search, MapPin, FileText, Calendar, Clock, Images, CheckCircle2, ExternalLink, AlertCircle, Truck } from "lucide-react"
 import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { saleService, OrchardSale } from "@/services/saleService"
 import { orchardService } from "@/services/orchardService"
+import { jimaTripService, JimaTrip } from "@/services/jimaTripService"
 
 export default function FarmerSoldPage() {
   const [searchTerm, setSearchTerm]       = useState("")
   const [sales, setSales]                 = useState<OrchardSale[]>([])
+  const [tripsMap, setTripsMap]           = useState<Record<number, JimaTrip[]>>({})
   const [loading, setLoading]             = useState(true)
   const [selectedSale, setSelectedSale]   = useState<OrchardSale | null>(null)
   const [showDialog, setShowDialog]       = useState(false)
+  const [showTripsDialog, setShowTripsDialog] = useState(false)
 
   useEffect(() => {
-    saleService.getAll()
-      .then(setSales)
+    Promise.all([saleService.getAll(), jimaTripService.getAll()])
+      .then(([salesData, tripsData]) => {
+        setSales(salesData)
+        const map: Record<number, JimaTrip[]> = {}
+        tripsData.forEach((t) => {
+          if (!map[t.sale_id]) map[t.sale_id] = []
+          map[t.sale_id].push(t)
+        })
+        setTripsMap(map)
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
@@ -143,11 +154,112 @@ export default function FarmerSoldPage() {
                     <FileText className="w-4 h-4 mr-2" />
                     Ver Detalles de Oferta
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full border-teal-300 text-teal-700 hover:bg-teal-50"
+                    onClick={() => { setSelectedSale(sale); setShowTripsDialog(true) }}
+                  >
+                    <Images className="w-4 h-4 mr-2" />
+                    Ver fotos de guías y pesadas
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* ── Dialog guías y pesadas ── */}
+        <Dialog open={showTripsDialog} onOpenChange={setShowTripsDialog}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-blue-600" />
+                Guías y pesadas — {selectedSale?.orchard?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedSale && (() => {
+              const trips = (tripsMap[selectedSale.id] ?? []).sort(
+                (a, b) => a.scheduled_date.localeCompare(b.scheduled_date) || a.trip_number - b.trip_number
+              )
+              if (trips.length === 0)
+                return (
+                  <div className="flex flex-col items-center gap-3 py-8 text-gray-500">
+                    <AlertCircle className="w-10 h-10 text-gray-300" />
+                    <p>No hay viajes registrados para esta huerta.</p>
+                  </div>
+                )
+              const byDate: Record<string, JimaTrip[]> = {}
+              trips.forEach((t) => {
+                if (!byDate[t.scheduled_date]) byDate[t.scheduled_date] = []
+                byDate[t.scheduled_date].push(t)
+              })
+              return (
+                <div className="space-y-4">
+                  {Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, dayTrips]) => (
+                    <div key={date} className="border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="bg-gray-50 px-4 py-2 flex items-center gap-2 border-b border-gray-200">
+                        <Calendar className="w-4 h-4 text-blue-600" />
+                        <span className="font-semibold text-sm text-gray-800">
+                          {new Date(date).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+                        </span>
+                        <span className="ml-auto text-xs text-gray-500">{dayTrips.length} viaje{dayTrips.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      <div className="divide-y divide-gray-100">
+                        {dayTrips.map((trip) => (
+                          <div key={trip.id} className="px-4 py-3 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs font-bold text-blue-700">#{trip.trip_number}</span>
+                              </div>
+                              <span className="text-sm font-medium text-gray-800">Viaje {trip.trip_number}</span>
+                              <Badge className={trip.status === "completado" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}>
+                                {trip.status === "completado" ? "Completado" : "Programado"}
+                              </Badge>
+                            </div>
+                            {/* Guía */}
+                            <div className="pl-11 flex items-center gap-2">
+                              {trip.guide_path ? (
+                                <>
+                                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                  <span className="text-xs text-green-700">Guía disponible</span>
+                                  <button
+                                    className="ml-2 text-xs text-teal-600 underline flex items-center gap-1 hover:text-teal-800"
+                                    onClick={async () => { const url = await jimaTripService.getGuideUrl(trip.id); window.open(url, "_blank") }}
+                                  >
+                                    <ExternalLink className="w-3 h-3" /> Ver guía
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400">Sin guía adjunta</span>
+                              )}
+                            </div>
+                            {/* Pesada */}
+                            <div className="pl-11 flex items-center gap-2">
+                              {trip.weigh_path ? (
+                                <>
+                                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                                  <span className="text-xs text-blue-700">Pesada disponible</span>
+                                  <button
+                                    className="ml-2 text-xs text-blue-600 underline flex items-center gap-1 hover:text-blue-800"
+                                    onClick={async () => { const url = await jimaTripService.getWeighUrl(trip.id); window.open(url, "_blank") }}
+                                  >
+                                    <ExternalLink className="w-3 h-3" /> Ver pesada
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400">Sin pesada adjunta</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">

@@ -21,6 +21,7 @@ interface SaleCardsPanelProps {
   sales: OrchardSale[]
   tripsMap: Record<number, JimaTrip[]>
   isTerminatedView?: boolean
+  role?: "admin" | "farmer" | "company"
   onTripsUpdate?: (saleId: number, updatedTrip: JimaTrip) => void
   onSaleFinished?: (updatedSale: OrchardSale) => void
 }
@@ -29,6 +30,7 @@ export function SaleCardsPanel({
   sales,
   tripsMap,
   isTerminatedView = false,
+  role = "admin",
   onTripsUpdate,
   onSaleFinished,
 }: SaleCardsPanelProps) {
@@ -104,7 +106,7 @@ export function SaleCardsPanel({
             <Card
               key={sale.id}
               className={`overflow-hidden hover:shadow-lg transition-shadow ${
-                isTerminatedView ? "bg-red-50 border-red-200" : "bg-orange-50 border-orange-200"
+                isTerminatedView ? "bg-red-200 border-red-500" : "bg-orange-50 border-orange-200"
               }`}
             >
               <div className="relative">
@@ -180,27 +182,46 @@ export function SaleCardsPanel({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                {role === "admin" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-xs text-green-700">Precio por kg agricultor</p>
+                        <p className="text-base font-bold text-green-800">
+                          ${Number(sale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                        <p className="text-xs text-teal-700">Precio por kg empresa</p>
+                        <p className="text-base font-bold text-teal-800">
+                          ${Number(sale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <p className="text-xs text-purple-700 font-medium">Comisión plataforma por kg</p>
+                      <p className="text-base font-bold text-purple-800">
+                        ${(Number(sale.company_price) - Number(sale.farmer_price)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </>
+                )}
+                {role === "farmer" && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-green-700">Precio por kg agricultor</p>
+                    <p className="text-xs text-green-700">Tu precio por kg</p>
                     <p className="text-base font-bold text-green-800">
                       ${Number(sale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
+                )}
+                {role === "company" && (
                   <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                    <p className="text-xs text-teal-700">Precio por kg empresa</p>
+                    <p className="text-xs text-teal-700">Tu precio de oferta por kg</p>
                     <p className="text-base font-bold text-teal-800">
-                      ${Number(sale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                      ${Number(sale.offer?.price ?? sale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
-                </div>
-
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <p className="text-xs text-purple-700 font-medium">Comisión plataforma por kg</p>
-                  <p className="text-base font-bold text-purple-800">
-                    ${(Number(sale.company_price) - Number(sale.farmer_price)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
+                )}
 
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <Building2 className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -226,13 +247,9 @@ export function SaleCardsPanel({
                       <Truck className="w-4 h-4 mr-2" />
                       Ver programa de jima ({trips.length})
                     </Button>
-                    <Button variant="outline" className="w-full" disabled>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver huerta
-                    </Button>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full border-teal-300 text-teal-700 hover:bg-teal-50"
                       onClick={() => { setSelectedSale(sale); setShowOfferDialog(true) }}
                     >
                       <FileText className="w-4 h-4 mr-2" />
@@ -240,7 +257,7 @@ export function SaleCardsPanel({
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-40"
+                      className="w-full border-teal-300 text-teal-700 hover:bg-teal-50 disabled:opacity-40"
                       disabled={!sale.orchard?.photo_id}
                       onClick={() => { setSelectedSale(sale); setShowPhotoIdDialog(true) }}
                     >
@@ -253,7 +270,7 @@ export function SaleCardsPanel({
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
-                        className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-40"
+                        className="w-full border-teal-300 text-teal-700 hover:bg-teal-50 disabled:opacity-40"
                         disabled={!sale.orchard?.photo_id}
                         onClick={() => { setSelectedSale(sale); setShowPhotoIdDialog(true) }}
                       >
@@ -262,7 +279,7 @@ export function SaleCardsPanel({
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full"
+                        className="w-full border-teal-300 text-teal-700 hover:bg-teal-50"
                         onClick={() => { setSelectedSale(sale); setShowOfferDialog(true) }}
                       >
                         <FileText className="w-4 h-4 mr-2" />
@@ -276,14 +293,16 @@ export function SaleCardsPanel({
                       <Truck className="w-4 h-4 mr-2" />
                       Ver viajes ({trips.length})
                     </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full border-red-300 text-red-700 hover:bg-red-50"
-                      onClick={() => { setSelectedSale(sale); setShowFinishDialog(true) }}
-                    >
-                      <Flag className="w-4 h-4 mr-2" />
-                      Terminar jima
-                    </Button>
+                    {role === "admin" && (
+                      <Button
+                        variant="outline"
+                        className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => { setSelectedSale(sale); setShowFinishDialog(true) }}
+                      >
+                        <Flag className="w-4 h-4 mr-2" />
+                        Terminar jima
+                      </Button>
+                    )}
                   </>
                 )}
               </CardContent>
@@ -359,31 +378,51 @@ export function SaleCardsPanel({
                 </div>
               </div>
 
-              <div className="space-y-3">
+              {role === "admin" && (
+                <div className="space-y-3">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-xs text-green-700">Precio por kg al agricultor</p>
+                    <p className="text-xl font-bold text-green-800">
+                      ${Number(selectedSale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                    <p className="text-xs text-teal-700">Precio por kg empresa</p>
+                    <p className="text-xl font-bold text-teal-800">
+                      ${Number(selectedSale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <p className="text-xs text-purple-700 font-medium">Comisión plataforma por kg</p>
+                    <p className="text-xl font-bold text-purple-800">
+                      ${(Number(selectedSale.company_price) - Number(selectedSale.farmer_price)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {role === "farmer" && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-xs text-green-700">Precio por kg al agricultor</p>
+                  <p className="text-xs text-green-700">Tu precio por kg</p>
                   <p className="text-xl font-bold text-green-800">
                     ${Number(selectedSale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
+              )}
+              {role === "company" && (
                 <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                  <p className="text-xs text-teal-700">Precio por kg empresa</p>
+                  <p className="text-xs text-teal-700">Tu precio de oferta por kg</p>
                   <p className="text-xl font-bold text-teal-800">
-                    ${Number(selectedSale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    ${Number(selectedSale.offer?.price ?? selectedSale.company_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <p className="text-xs text-purple-700 font-medium">Comisión plataforma por kg</p>
-                  <p className="text-xl font-bold text-purple-800">
-                    ${(Number(selectedSale.company_price) - Number(selectedSale.farmer_price)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-              </div>
+              )}
 
-              <div className="space-y-2">
-                <Label>Precio ofertado $</Label>
-                <Input type="number" readOnly value={selectedSale.offer.price} />
-              </div>
+              {role !== "farmer" && (
+                <div className="space-y-2">
+                  <Label>Precio ofertado $</Label>
+                  <Input type="number" readOnly value={selectedSale.offer.price} />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Cm de Jima</Label>
                 <Input type="number" readOnly value={selectedSale.offer.jima_cm} />

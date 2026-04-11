@@ -20,9 +20,10 @@ interface StoryCardData {
 interface HuertaVideoCardProps {
   huerta: StoryCardData
   thumbnailUrl?: string
+  onPlay?: () => void
 }
 
-export default function HuertaVideoCard({ huerta, thumbnailUrl }: HuertaVideoCardProps) {
+export default function HuertaVideoCard({ huerta, thumbnailUrl, onPlay }: HuertaVideoCardProps) {
   const daysColor =
     huerta.expired        ? "bg-gray-100 text-gray-600 border-gray-200"
     : huerta.daysRemaining <= 1 ? "bg-red-100 text-red-700 border-red-200"
@@ -40,7 +41,7 @@ export default function HuertaVideoCard({ huerta, thumbnailUrl }: HuertaVideoCar
             <Video className="w-10 h-10 text-gray-600 opacity-30" />
           </div>
         )}
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center" onClick={onPlay}>
           <Play className="h-12 w-12 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 transition-all cursor-pointer" />
         </div>
         <Badge className={`absolute top-2 right-2 text-xs border ${daysColor}`}>
