@@ -31,6 +31,15 @@ export const jimaTripService = {
     return Array.isArray(data?.data) ? data.data : []
   },
 
+  updateDate: async (tripId: number, date: string): Promise<JimaTrip> => {
+    const { data } = await api.patch(`/jima-trips/${tripId}`, { scheduled_date: date })
+    return data.data
+  },
+
+  deleteTrip: async (tripId: number): Promise<void> => {
+    await api.delete(`/jima-trips/${tripId}`)
+  },
+
   uploadGuide: async (tripId: number, file: File): Promise<JimaTrip> => {
     const form = new FormData()
     form.append("guide", file)

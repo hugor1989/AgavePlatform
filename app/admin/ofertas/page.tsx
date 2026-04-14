@@ -1,102 +1,166 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { AppLayout } from "@/components/layouts/app-layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useEffect, useState } from "react";
+import { AppLayout } from "@/components/layouts/app-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Search, Building2, CheckCircle, XCircle, Calendar, Users, Send, Bell,
-  Calculator, DollarSign, Mail, Phone, User, Clock,
-} from "lucide-react"
-import { toast } from "sonner"
-import { offerService, Offer } from "@/services/offerService"
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Search,
+  Building2,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  Users,
+  Send,
+  Bell,
+  Calculator,
+  DollarSign,
+  Mail,
+  Phone,
+  User,
+  Clock,
+} from "lucide-react";
+import { toast } from "sonner";
+import { offerService, Offer } from "@/services/offerService";
 
 export default function AdminOfertasPage() {
-  const [offers, setOffers]               = useState<Offer[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [searchTerm, setSearchTerm]       = useState("")
-  const [selectedCompany, setSelectedCompany] = useState("all")
-  const [activeTab, setActiveTab]         = useState("all")
-  const [isLoading, setIsLoading]         = useState(false)
-  const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false)
-  const [selectedOffer, setSelectedOffer]           = useState<Offer | null>(null)
-  const [farmerPrice, setFarmerPrice]               = useState("")
-  const [adminNotes, setAdminNotes]                 = useState("")
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("all");
+  const [activeTab, setActiveTab] = useState("all");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isNotifyDialogOpen, setIsNotifyDialogOpen] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [farmerPrice, setFarmerPrice] = useState("");
+  const [adminNotes, setAdminNotes] = useState("");
 
   const fetchOffers = async () => {
     try {
-      setLoading(true)
-      const data = await offerService.getAll()
-      setOffers(data)
+      setLoading(true);
+      const data = await offerService.getAll();
+      setOffers(data);
     } catch (err) {
-      console.error(err)
-      toast.error("No se pudieron cargar las ofertas")
+      console.error(err);
+      toast.error("No se pudieron cargar las ofertas");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { fetchOffers() }, [])
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
-  const companies = Array.from(new Set(offers.map((o) => o.company?.business_name).filter(Boolean)))
+  const companies = Array.from(
+    new Set(offers.map((o) => o.company?.business_name).filter(Boolean)),
+  );
 
   const filtered = offers.filter((o) => {
     const matchSearch =
       o.orchard?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.company?.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.orchard?.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.orchard?.farmer?.unique_identifier?.includes(searchTerm)
-    const matchCompany = selectedCompany === "all" || o.company?.business_name === selectedCompany
+      o.company?.business_name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      o.orchard?.farmer?.full_name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      o.orchard?.farmer?.unique_identifier?.includes(searchTerm);
+    const matchCompany =
+      selectedCompany === "all" || o.company?.business_name === selectedCompany;
     const matchTab =
       activeTab === "all" ||
-      (activeTab === "pending"   && o.status === "pendiente") ||
-      (activeTab === "reviewed"  && o.status === "revisada")  ||
-      (activeTab === "accepted"  && o.status === "aceptada")  ||
-      (activeTab === "rejected"  && o.status === "rechazada")
-    return matchSearch && matchCompany && matchTab
-  })
+      (activeTab === "pending" && o.status === "pendiente") ||
+      (activeTab === "reviewed" && o.status === "revisada") ||
+      (activeTab === "accepted" && o.status === "aceptada") ||
+      (activeTab === "rejected" && o.status === "rechazada");
+    return matchSearch && matchCompany && matchTab;
+  });
 
-  const countByStatus = (s: Offer["status"]) => offers.filter((o) => o.status === s).length
+  const countByStatus = (s: Offer["status"]) =>
+    offers.filter((o) => o.status === s).length;
 
   const statusColor = (s: Offer["status"]) =>
-    ({ pendiente: "bg-yellow-100 text-yellow-800", revisada: "bg-blue-100 text-blue-800", aceptada: "bg-green-100 text-green-800", rechazada: "bg-red-100 text-red-800" }[s] ?? "bg-gray-100 text-gray-800")
+    ({
+      pendiente: "bg-yellow-100 text-yellow-800",
+      revisada: "bg-blue-100 text-blue-800",
+      aceptada: "bg-green-100 text-green-800",
+      rechazada: "bg-red-100 text-red-800",
+    })[s] ?? "bg-gray-100 text-gray-800";
 
   const statusLabel = (s: Offer["status"]) =>
-    ({ pendiente: "Pendiente", revisada: "Revisada", aceptada: "Aceptada", rechazada: "Rechazada" }[s] ?? s)
+    ({
+      pendiente: "Pendiente",
+      revisada: "Revisada",
+      aceptada: "Aceptada",
+      rechazada: "Rechazada",
+    })[s] ?? s;
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    new Date(d).toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const handleNotifyFarmer = async () => {
-    if (!selectedOffer || !farmerPrice) { toast.error("Ingresa el precio para el agricultor."); return }
-    setIsLoading(true)
+    if (!selectedOffer || !farmerPrice) {
+      toast.error("Ingresa el precio para el agricultor.");
+      return;
+    }
+    setIsLoading(true);
     try {
-      const updated = await offerService.notifyFarmer(selectedOffer.id, parseFloat(farmerPrice), adminNotes)
-      setOffers(prev => prev.map(o => o.id === updated.id ? updated : o))
-      toast.success(`Agricultor notificado con el precio $${Number(farmerPrice).toLocaleString("es-MX")}`)
-      setIsNotifyDialogOpen(false)
-      setFarmerPrice("")
-      setAdminNotes("")
-    } catch { toast.error("No se pudo notificar al agricultor.") }
-    finally { setIsLoading(false) }
-  }
+      const updated = await offerService.notifyFarmer(
+        selectedOffer.id,
+        parseFloat(farmerPrice),
+        adminNotes,
+      );
+      setOffers((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+      toast.success(
+        `Agricultor notificado con el precio $${Number(farmerPrice).toLocaleString("es-MX")}`,
+      );
+      setIsNotifyDialogOpen(false);
+      setFarmerPrice("");
+      setAdminNotes("");
+    } catch {
+      toast.error("No se pudo notificar al agricultor.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AppLayout type="admin">
       <div className="w-full overflow-x-hidden max-w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-
           <div className="space-y-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gestión de Ofertas</h1>
-            <p className="text-sm sm:text-base text-gray-600">Administra todas las ofertas recibidas de las empresas</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Gestión de Ofertas
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">
+              Administra todas las ofertas recibidas de las empresas
+            </p>
           </div>
 
           {/* Filtros */}
@@ -117,7 +181,9 @@ export default function AdminOfertasPage() {
               <SelectContent>
                 <SelectItem value="all">Todas las empresas</SelectItem>
                 {companies.map((c) => (
-                  <SelectItem key={c} value={c!}>{c}</SelectItem>
+                  <SelectItem key={c} value={c!}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -126,14 +192,43 @@ export default function AdminOfertasPage() {
           {loading ? (
             <p className="text-gray-500">Cargando ofertas...</p>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <div className="overflow-x-auto no-scrollbar w-full">
                 <TabsList className="flex w-max sm:w-full h-auto">
-                  <TabsTrigger value="all"      className="text-xs sm:text-sm px-2 py-2">Todas ({offers.length})</TabsTrigger>
-                  <TabsTrigger value="pending"  className="text-xs sm:text-sm px-2 py-2">Pendientes ({countByStatus("pendiente")})</TabsTrigger>
-                  <TabsTrigger value="reviewed" className="text-xs sm:text-sm px-2 py-2">Revisadas ({countByStatus("revisada")})</TabsTrigger>
-                  <TabsTrigger value="accepted" className="text-xs sm:text-sm px-2 py-2">Aceptadas ({countByStatus("aceptada")})</TabsTrigger>
-                  <TabsTrigger value="rejected" className="text-xs sm:text-sm px-2 py-2">Rechazadas ({countByStatus("rechazada")})</TabsTrigger>
+                  <TabsTrigger
+                    value="all"
+                    className="text-xs sm:text-sm px-2 py-2"
+                  >
+                    Todas ({offers.length})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="pending"
+                    className="text-xs sm:text-sm px-2 py-2"
+                  >
+                    Pendientes ({countByStatus("pendiente")})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="reviewed"
+                    className="text-xs sm:text-sm px-2 py-2"
+                  >
+                    Revisadas ({countByStatus("revisada")})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="accepted"
+                    className="text-xs sm:text-sm px-2 py-2"
+                  >
+                    Aceptadas ({countByStatus("aceptada")})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="rejected"
+                    className="text-xs sm:text-sm px-2 py-2"
+                  >
+                    Rechazadas ({countByStatus("rechazada")})
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -145,14 +240,17 @@ export default function AdminOfertasPage() {
                 ) : (
                   <div className="space-y-4">
                     {filtered.map((offer) => (
-                      <div key={offer.id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-
+                      <div
+                        key={offer.id}
+                        className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+                      >
                         {/* Header tarjeta */}
                         <div className="p-4 sm:p-6 border-b border-gray-100">
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                             <div className="min-w-0 flex-1">
                               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 break-words leading-tight">
-                                {offer.orchard?.name ?? `Huerta #${offer.orchard_id}`}
+                                {offer.orchard?.name ??
+                                  `Huerta #${offer.orchard_id}`}
                               </h3>
                               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-600">
                                 <div className="flex items-center gap-1">
@@ -166,17 +264,21 @@ export default function AdminOfertasPage() {
                               </div>
                             </div>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                              <Badge className={`${statusColor(offer.status)} whitespace-nowrap`}>
+                              <Badge
+                                className={`${statusColor(offer.status)} whitespace-nowrap`}
+                              >
                                 {statusLabel(offer.status)}
                               </Badge>
                               {offer.status === "pendiente" && (
                                 <Badge className="bg-orange-100 text-orange-800 whitespace-nowrap">
-                                  <Bell className="h-3 w-3 mr-1" />Sin calcular
+                                  <Bell className="h-3 w-3 mr-1" />
+                                  Sin calcular
                                 </Badge>
                               )}
                               {offer.status === "revisada" && (
                                 <Badge className="bg-blue-100 text-blue-800 whitespace-nowrap">
-                                  <Clock className="h-3 w-3 mr-1" />Esperando agricultor
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Esperando agricultor
                                 </Badge>
                               )}
                             </div>
@@ -191,47 +293,110 @@ export default function AdminOfertasPage() {
                               Información de la Oferta
                             </h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                              <div><span className="font-medium text-gray-600">Precio:</span> ${Number(offer.price).toLocaleString("es-MX")}</div>
-                              <div><span className="font-medium text-gray-600">Cm Jima:</span> {offer.jima_cm} cm</div>
-                              <div><span className="font-medium text-gray-600">Financiamiento:</span> {offer.financing_months} meses</div>
-                              <div><span className="font-medium text-gray-600">Fecha jima:</span> {offer.harvest_date}</div>
-                              <div><span className="font-medium text-gray-600">Kilos mín.:</span> {offer.min_kilos?.toLocaleString()}</div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Precio:
+                                </span>{" "}
+                                ${Number(offer.price).toLocaleString("es-MX")}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Cm Jima:
+                                </span>{" "}
+                                {offer.jima_cm} cm
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Financiamiento:
+                                </span>{" "}
+                                {offer.financing_months} meses
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Fecha jima:
+                                </span>{" "}
+                                {offer.harvest_date}
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Kilos mín.:
+                                </span>{" "}
+                                {offer.min_kilos?.toLocaleString()}
+                              </div>
                             </div>
                             <div className="mt-3 space-y-2 text-sm">
-                              <div><span className="font-medium text-gray-600">Pagos:</span> <span className="text-gray-700">{offer.payment_terms}</span></div>
-                              <div><span className="font-medium text-gray-600">Logística:</span> <span className="text-gray-700">{offer.logistics}</span></div>
-                            </div>
-                            {offer.farmer_notified && offer.farmer_price !== null && (
-                              <div className="mt-3 bg-orange-50 border border-orange-200 rounded p-3">
-                                <p className="text-sm font-medium text-orange-800">Precio comunicado al agricultor</p>
-                                <p className="text-lg font-bold text-orange-900">${Number(offer.farmer_price).toLocaleString("es-MX")}</p>
-                                {offer.admin_notes && <p className="text-xs text-orange-700 mt-1">{offer.admin_notes}</p>}
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  Pagos:
+                                </span>{" "}
+                                <span className="text-gray-700">
+                                  {offer.payment_terms}
+                                </span>
                               </div>
-                            )}
+                              <div>
+                                <span className="font-medium text-gray-600">
+                                  El Agave sería puesto en fábrica o la fábrica
+                                  se encargaría de toda la logística *:
+                                </span>{" "}
+                                <span className="text-gray-700">
+                                  {offer.logistics}
+                                </span>
+                              </div>
+                            </div>
+                            {offer.farmer_notified &&
+                              offer.farmer_price !== null && (
+                                <div className="mt-3 bg-orange-50 border border-orange-200 rounded p-3">
+                                  <p className="text-sm font-medium text-orange-800">
+                                    Precio comunicado al agricultor
+                                  </p>
+                                  <p className="text-lg font-bold text-orange-900">
+                                    $
+                                    {Number(offer.farmer_price).toLocaleString(
+                                      "es-MX",
+                                    )}
+                                  </p>
+                                  {offer.admin_notes && (
+                                    <p className="text-xs text-orange-700 mt-1">
+                                      {offer.admin_notes}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                           </div>
 
                           {/* Info agricultor */}
                           <div className="bg-green-50 rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-3">
                               <User className="h-5 w-5 text-green-600 flex-shrink-0" />
-                              <h4 className="font-medium text-gray-900">Información del Agricultor</h4>
+                              <h4 className="font-medium text-gray-900">
+                                Información del Agricultor
+                              </h4>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                               <div className="flex items-center gap-2">
                                 <Users className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <span>{offer.orchard?.farmer?.full_name ?? "—"}</span>
+                                <span>
+                                  {offer.orchard?.farmer?.full_name ?? "—"}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-500">ID:</span>
-                                <span>{offer.orchard?.farmer?.unique_identifier ?? "—"}</span>
+                                <span>
+                                  {offer.orchard?.farmer?.unique_identifier ??
+                                    "—"}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <span>{offer.orchard?.farmer?.email ?? "—"}</span>
+                                <span>
+                                  {offer.orchard?.farmer?.email ?? "—"}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                <span>{offer.orchard?.farmer?.phone ?? "—"}</span>
+                                <span>
+                                  {offer.orchard?.farmer?.phone ?? "—"}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -242,7 +407,12 @@ export default function AdminOfertasPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => { setSelectedOffer(offer); setFarmerPrice(""); setAdminNotes(""); setIsNotifyDialogOpen(true) }}
+                                onClick={() => {
+                                  setSelectedOffer(offer);
+                                  setFarmerPrice("");
+                                  setAdminNotes("");
+                                  setIsNotifyDialogOpen(true);
+                                }}
                                 className="text-orange-600 border-orange-600 hover:bg-orange-50 w-full sm:w-auto"
                               >
                                 <Calculator className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -279,12 +449,16 @@ export default function AdminOfertasPage() {
           )}
 
           {/* Dialog notificar agricultor */}
-          <Dialog open={isNotifyDialogOpen} onOpenChange={setIsNotifyDialogOpen}>
+          <Dialog
+            open={isNotifyDialogOpen}
+            onOpenChange={setIsNotifyDialogOpen}
+          >
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto mx-4">
               <DialogHeader>
                 <DialogTitle>Revisar oferta</DialogTitle>
                 <DialogDescription>
-                  Establece el precio para el agricultor {selectedOffer?.orchard?.farmer?.full_name}
+                  Establece el precio para el agricultor{" "}
+                  {selectedOffer?.orchard?.farmer?.full_name}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -295,7 +469,12 @@ export default function AdminOfertasPage() {
                   </div>
                   <div className="flex justify-between gap-1">
                     <strong>Precio por kg empresa:</strong>
-                    <span className="text-blue-600 font-bold">${Number(selectedOffer?.price ?? 0).toLocaleString("es-MX")}</span>
+                    <span className="text-blue-600 font-bold">
+                      $
+                      {Number(selectedOffer?.price ?? 0).toLocaleString(
+                        "es-MX",
+                      )}
+                    </span>
                   </div>
                 </div>
 
@@ -313,17 +492,38 @@ export default function AdminOfertasPage() {
                 {farmerPrice && Number(farmerPrice) > 0 && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm space-y-1">
                     <div className="flex justify-between gap-1">
-                      <span className="text-gray-600">Precio empresa por kg:</span>
-                      <span className="font-medium">${Number(selectedOffer?.price ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                      <span className="text-gray-600">
+                        Precio empresa por kg:
+                      </span>
+                      <span className="font-medium">
+                        $
+                        {Number(selectedOffer?.price ?? 0).toLocaleString(
+                          "es-MX",
+                          { minimumFractionDigits: 2 },
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between gap-1">
-                      <span className="text-gray-600">Precio agricultor por kg:</span>
-                      <span className="font-medium">${Number(farmerPrice).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</span>
+                      <span className="text-gray-600">
+                        Precio agricultor por kg:
+                      </span>
+                      <span className="font-medium">
+                        $
+                        {Number(farmerPrice).toLocaleString("es-MX", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
                     </div>
                     <div className="flex justify-between gap-1 border-t border-orange-200 pt-1 mt-1">
-                      <span className="text-orange-700 font-semibold">Comisión plataforma por kg:</span>
+                      <span className="text-orange-700 font-semibold">
+                        Comisión plataforma por kg:
+                      </span>
                       <span className="text-orange-800 font-bold">
-                        ${(Number(selectedOffer?.price ?? 0) - Number(farmerPrice)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        $
+                        {(
+                          Number(selectedOffer?.price ?? 0) -
+                          Number(farmerPrice)
+                        ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
@@ -340,7 +540,11 @@ export default function AdminOfertasPage() {
                 </div>
               </div>
               <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => setIsNotifyDialogOpen(false)} className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsNotifyDialogOpen(false)}
+                  className="w-full sm:w-auto"
+                >
                   Cancelar
                 </Button>
                 <Button
@@ -348,14 +552,20 @@ export default function AdminOfertasPage() {
                   disabled={isLoading || !farmerPrice}
                   className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto"
                 >
-                  {isLoading ? "Guardando..." : <><Send className="h-4 w-4 mr-2" />Confirmar</>}
+                  {isLoading ? (
+                    "Guardando..."
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Confirmar
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }

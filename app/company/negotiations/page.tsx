@@ -1,58 +1,84 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Search, MessageSquare, CheckCircle, XCircle, Clock, Hash } from "lucide-react"
-import { AppLayout } from "@/components/layouts/app-layout"
-import { offerService, Offer } from "@/services/offerService"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import {
+  Search,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Hash,
+} from "lucide-react";
+import { AppLayout } from "@/components/layouts/app-layout";
+import { offerService, Offer } from "@/services/offerService";
 
 export default function CompanyNegotiations() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [offers, setOffers] = useState<Offer[]>([])
-  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    offerService.getAll()
+    offerService
+      .getAll()
       .then(setOffers)
       .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = offers.filter(
     (o) =>
       o.orchard?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.orchard?.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.orchard?.farmer?.full_name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       String(o.id).includes(searchTerm),
-  )
+  );
 
-  const byStatus = (s: Offer["status"]) => filtered.filter((o) => o.status === s)
+  const byStatus = (s: Offer["status"]) =>
+    filtered.filter((o) => o.status === s);
 
   const getStatusColor = (status: Offer["status"]) => {
     switch (status) {
-      case "pendiente": return "bg-yellow-100 text-yellow-800"
-      case "revisada":  return "bg-blue-100 text-blue-800"
-      case "aceptada":  return "bg-green-100 text-green-800"
-      case "rechazada": return "bg-red-100 text-red-800"
-      default:          return "bg-gray-100 text-gray-800"
+      case "pendiente":
+        return "bg-yellow-100 text-yellow-800";
+      case "revisada":
+        return "bg-blue-100 text-blue-800";
+      case "aceptada":
+        return "bg-green-100 text-green-800";
+      case "rechazada":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getStatusIcon = (status: Offer["status"]) => {
     switch (status) {
-      case "pendiente": return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-      case "revisada":  return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-      case "aceptada":  return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-      case "rechazada": return <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-      default:          return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+      case "pendiente":
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "revisada":
+        return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "aceptada":
+        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />;
+      case "rechazada":
+        return <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />;
+      default:
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />;
     }
-  }
+  };
 
   const statusLabel = (status: Offer["status"]) =>
-    ({ pendiente: "En Revisión", revisada: "Enviada al Agricultor", aceptada: "Aceptada", rechazada: "Rechazada" }[status] ?? status)
+    ({
+      pendiente: "En Revisión",
+      revisada: "Enviada al Agricultor",
+      aceptada: "Aceptada",
+      rechazada: "Rechazada",
+    })[status] ?? status;
 
   const OfferCard = ({ offer }: { offer: Offer }) => (
     <Card className="w-full overflow-hidden hover:shadow-md transition-shadow">
@@ -64,13 +90,21 @@ export default function CompanyNegotiations() {
             </CardTitle>
             <div className="flex items-center gap-2 mt-1">
               <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
-              <p className="text-xs sm:text-sm text-muted-foreground">Oferta #{offer.id}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Oferta #{offer.id}
+              </p>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {new Date(offer.created_at).toLocaleDateString("es-MX", { year: "numeric", month: "short", day: "numeric" })}
+              {new Date(offer.created_at).toLocaleDateString("es-MX", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
             </p>
           </div>
-          <Badge className={`${getStatusColor(offer.status)} flex items-center gap-1 text-xs px-2 py-1 flex-shrink-0`}>
+          <Badge
+            className={`${getStatusColor(offer.status)} flex items-center gap-1 text-xs px-2 py-1 flex-shrink-0`}
+          >
             {getStatusIcon(offer.status)}
             {statusLabel(offer.status)}
           </Badge>
@@ -99,29 +133,42 @@ export default function CompanyNegotiations() {
             <Input type="date" readOnly value={offer.harvest_date} />
           </div>
           <div className="space-y-2">
-            <Label>Kilos mínimos por viaje</Label>
+            <Label>Se jimará a partir de * kilos para arriba * por viaje</Label>
             <Input type="number" readOnly value={offer.min_kilos} />
           </div>
           <div className="space-y-2">
-            <Label>Pagos de viajes jimados</Label>
-            <textarea readOnly value={offer.payment_terms} rows={2}
-              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+            <Label>Cómo serían los pagos de viajes jimados *</Label>
+            <textarea
+              readOnly
+              value={offer.payment_terms}
+              rows={2}
+              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Logística</Label>
-            <textarea readOnly value={offer.logistics} rows={2}
-              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50" />
+            <Label>
+              El Agave sería puesto en fábrica o la fábrica se encargaría de
+              toda la logística *
+            </Label>
+            <textarea
+              readOnly
+              value={offer.logistics}
+              rows={2}
+              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
+            />
           </div>
 
           {offer.farmer_notified && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-blue-800">Oferta enviada al agricultor para su aprobación</p>
+              <p className="text-sm font-medium text-blue-800">
+                Oferta enviada al agricultor para su aprobación
+              </p>
             </div>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   const EmptyCard = ({ message }: { message: string }) => (
     <Card className="w-full">
@@ -129,7 +176,7 @@ export default function CompanyNegotiations() {
         <p className="text-muted-foreground text-sm sm:text-base">{message}</p>
       </CardContent>
     </Card>
-  )
+  );
 
   return (
     <AppLayout type="company">
@@ -137,8 +184,12 @@ export default function CompanyNegotiations() {
         <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">
           <div className="space-y-4 sm:space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mis Negociaciones</h1>
-              <p className="text-gray-600">Seguimiento de todas tus ofertas enviadas</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Mis Negociaciones
+              </h1>
+              <p className="text-gray-600">
+                Seguimiento de todas tus ofertas enviadas
+              </p>
             </div>
 
             <div className="relative w-full">
@@ -157,19 +208,34 @@ export default function CompanyNegotiations() {
               <Tabs defaultValue="all" className="w-full">
                 <div className="overflow-x-auto">
                   <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 min-w-max">
-                    <TabsTrigger value="all" className="text-xs sm:text-sm whitespace-nowrap">
+                    <TabsTrigger
+                      value="all"
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
                       Todas ({filtered.length})
                     </TabsTrigger>
-                    <TabsTrigger value="process" className="text-xs sm:text-sm whitespace-nowrap">
+                    <TabsTrigger
+                      value="process"
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
                       En Revisión ({byStatus("pendiente").length})
                     </TabsTrigger>
-                    <TabsTrigger value="sent" className="text-xs sm:text-sm whitespace-nowrap">
+                    <TabsTrigger
+                      value="sent"
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
                       Enviadas ({byStatus("revisada").length})
                     </TabsTrigger>
-                    <TabsTrigger value="accepted" className="text-xs sm:text-sm whitespace-nowrap">
+                    <TabsTrigger
+                      value="accepted"
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
                       Aceptadas ({byStatus("aceptada").length})
                     </TabsTrigger>
-                    <TabsTrigger value="rejected" className="text-xs sm:text-sm whitespace-nowrap">
+                    <TabsTrigger
+                      value="rejected"
+                      className="text-xs sm:text-sm whitespace-nowrap"
+                    >
                       Rechazadas ({byStatus("rechazada").length})
                     </TabsTrigger>
                   </TabsList>
@@ -178,7 +244,9 @@ export default function CompanyNegotiations() {
                 <TabsContent value="all" className="w-full">
                   {filtered.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                      {filtered.map((o) => <OfferCard key={o.id} offer={o} />)}
+                      {filtered.map((o) => (
+                        <OfferCard key={o.id} offer={o} />
+                      ))}
                     </div>
                   ) : (
                     <EmptyCard message="No hay ofertas" />
@@ -188,7 +256,9 @@ export default function CompanyNegotiations() {
                 <TabsContent value="process" className="w-full">
                   {byStatus("pendiente").length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                      {byStatus("pendiente").map((o) => <OfferCard key={o.id} offer={o} />)}
+                      {byStatus("pendiente").map((o) => (
+                        <OfferCard key={o.id} offer={o} />
+                      ))}
                     </div>
                   ) : (
                     <EmptyCard message="No hay ofertas en revisión" />
@@ -198,7 +268,9 @@ export default function CompanyNegotiations() {
                 <TabsContent value="sent" className="w-full">
                   {byStatus("revisada").length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                      {byStatus("revisada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                      {byStatus("revisada").map((o) => (
+                        <OfferCard key={o.id} offer={o} />
+                      ))}
                     </div>
                   ) : (
                     <EmptyCard message="No hay ofertas esperando respuesta" />
@@ -208,7 +280,9 @@ export default function CompanyNegotiations() {
                 <TabsContent value="accepted" className="w-full">
                   {byStatus("aceptada").length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                      {byStatus("aceptada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                      {byStatus("aceptada").map((o) => (
+                        <OfferCard key={o.id} offer={o} />
+                      ))}
                     </div>
                   ) : (
                     <EmptyCard message="No hay ofertas aceptadas" />
@@ -218,7 +292,9 @@ export default function CompanyNegotiations() {
                 <TabsContent value="rejected" className="w-full">
                   {byStatus("rechazada").length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                      {byStatus("rechazada").map((o) => <OfferCard key={o.id} offer={o} />)}
+                      {byStatus("rechazada").map((o) => (
+                        <OfferCard key={o.id} offer={o} />
+                      ))}
                     </div>
                   ) : (
                     <EmptyCard message="No hay ofertas rechazadas" />
@@ -230,5 +306,5 @@ export default function CompanyNegotiations() {
         </div>
       </div>
     </AppLayout>
-  )
+  );
 }

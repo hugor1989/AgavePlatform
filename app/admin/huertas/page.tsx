@@ -483,7 +483,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         ref={photoIdInputRef}
                         id="photo-id"
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
                           console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
@@ -516,7 +516,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         ref={coverPhotoInputRef}
                         id="cover-photo"
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
                           console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
@@ -549,7 +549,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         ref={extraPhotoInputRef}
                         id="extra-photo"
                         type="file"
-                        accept="image/*"
+                        accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
                           console.log('📸 [EXTRA_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
@@ -1108,7 +1108,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             ref={editPhotoIdRef}
             id="edit-photo-id"
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={(e) => {
               const file = e.target.files?.[0];
               console.log("Nueva foto ID:", file?.name);
@@ -1155,7 +1155,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             ref={editCoverPhotoRef}
             id="edit-cover-photo"
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif"
             onChange={(e) => {
               const file = e.target.files?.[0];
               console.log("Nueva foto portada:", file?.name);
@@ -1202,7 +1202,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
           ref={editExtraPhotoRef}
           id="edit-extra-photo"
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           onChange={(e) => {
             const file = e.target.files?.[0];
             console.log("Nueva foto extra:", file?.name);
