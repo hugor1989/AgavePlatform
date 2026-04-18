@@ -317,8 +317,31 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
     return statusMap[status] || status
   }
 
+  // Bloquear navegación mientras se guarda
+  useEffect(() => {
+    if (!isLoading) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [isLoading])
+
   return (
     <AppLayout type="admin">
+      {/* Overlay de carga — bloquea toda interacción */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm mx-4 text-center">
+            <div className="w-14 h-14 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+            <div>
+              <p className="font-semibold text-gray-900 text-lg">Guardando huerta...</p>
+              <p className="text-sm text-gray-500 mt-1">Por favor espera, no cierres ni salgas de esta página</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

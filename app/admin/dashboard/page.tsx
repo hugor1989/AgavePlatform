@@ -350,8 +350,6 @@ export default function AdminDashboard() {
                           expired: true,
                         }}
                       />
-                          state: story.orchard?.state ?? "—",
-                          municipality: story.orchard?.municipality ?? "—",
                     </div>
                   ))}
                 </div>

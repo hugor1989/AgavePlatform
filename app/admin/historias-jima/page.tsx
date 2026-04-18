@@ -117,6 +117,17 @@ export default function AdminHistoriasJimaPage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })
 
+  // Bloquear navegación mientras se sube el video
+  useEffect(() => {
+    if (!isCreating) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [isCreating])
+
   if (loading) return <AppLayout type="admin"><p className="p-4">Cargando historias...</p></AppLayout>
 
   const active  = stories.filter(s => !s.is_expired)
@@ -124,6 +135,18 @@ export default function AdminHistoriasJimaPage() {
 
   return (
     <AppLayout type="admin">
+      {/* Overlay de carga — bloquea toda interacción */}
+      {isCreating && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl max-w-sm mx-4 text-center">
+            <div className="w-14 h-14 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
+            <div>
+              <p className="font-semibold text-gray-900 text-lg">Subiendo video...</p>
+              <p className="text-sm text-gray-500 mt-1">Por favor espera, no cierres ni salgas de esta página</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Historias de Jima</h1>
@@ -214,7 +237,7 @@ export default function AdminHistoriasJimaPage() {
                   <div className="space-y-2 py-4">
                     <Upload className="w-8 h-8 text-teal-400 mx-auto" />
                     <p className="text-sm text-teal-700 font-medium">Clic para seleccionar video</p>
-                    <p className="text-xs text-gray-500">MP4, MOV, AVI, WEBM — máx. 100 MB</p>
+                    <p className="text-xs text-gray-500">MP4, MOV, AVI, WEBM — máx. 500 MB</p>
                   </div>
                 )}
               </div>
@@ -342,7 +365,11 @@ function StoryCard({
       <CardContent className="p-4 space-y-3">
         <div>
           <p className="font-semibold text-gray-900">{story.orchard?.name ?? `Huerta #${story.orchard_id}`}</p>
-          <p className="text-xs text-gray-500">{story.orchard?.agave_type?.name ?? "—"} · {story.orchard?.state}</p>
+          <p className="text-xs text-gray-500">
+            {story.orchard?.agave_type?.name ?? "—"}
+            {!expired && story.orchard?.state && ` · ${story.orchard.state}`}
+            {!expired && story.orchard?.municipality && ` · ${story.orchard.municipality}`}
+          </p>
         </div>
 
         <p className="text-sm text-gray-600">
