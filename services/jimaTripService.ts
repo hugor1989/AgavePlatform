@@ -7,6 +7,7 @@ export interface JimaTrip {
   trip_number: number
   guide_path: string | null
   weigh_path: string | null
+  kilos: number | null
   status: "programado" | "completado"
   created_at: string
 }
@@ -56,9 +57,10 @@ export const jimaTripService = {
     return URL.createObjectURL(data)
   },
 
-  uploadWeigh: async (tripId: number, file: File): Promise<JimaTrip> => {
+  uploadWeigh: async (tripId: number, file: File, kilos: number): Promise<JimaTrip> => {
     const form = new FormData()
     form.append("weigh", file)
+    form.append("kilos", String(kilos))
     const { data } = await api.post(`/jima-trips/${tripId}/upload-weigh`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     })

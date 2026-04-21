@@ -64,7 +64,8 @@ useEffect(() => {
   const filteredHuertas = huertas.filter((huerta) => {
     const matchSearch =
       huerta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      huerta.id.toString().includes(searchTerm) ||
+      (huerta.orchard_number || '').includes(searchTerm)
 
     const matchYear =
       selectedYear === "all" || String(huerta.year) === selectedYear
@@ -305,6 +306,9 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{huerta.name}</h3>
                     <p className="text-sm text-gray-500">#{huerta.id}</p>
+                    {huerta.orchard_number && (
+                      <p className="text-sm text-blue-600 font-mono font-medium">Id Huerta: {huerta.orchard_number}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 pb-3 border-b border-gray-100">

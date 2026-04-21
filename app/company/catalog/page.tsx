@@ -28,6 +28,7 @@ import Image from "next/image"
 import { orchardService } from "@/services/orchardService"
 import { offerService } from "@/services/offerService"
 import { alert } from "@/lib/alert"
+import { toast } from "sonner"
 
 const emptyForm = {
   price: "",
@@ -79,7 +80,8 @@ export default function CompanyCatalogPage() {
     const matchesSearch =
       huerta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       huerta.municipality?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      huerta.id.toString().includes(searchTerm)
+      huerta.id.toString().includes(searchTerm) ||
+      (huerta.orchard_number || '').includes(searchTerm)
     const matchesYear = selectedYear === "all" || String(huerta.year) === selectedYear
     return matchesSearch && matchesYear
   })
@@ -98,7 +100,7 @@ export default function CompanyCatalogPage() {
       await offerService.create({
         orchard_id:        selectedHuerta.id,
         price:             parseFloat(price),
-        jima_cm:           parseInt(jima_cm),
+        jima_cm:           parseFloat(jima_cm),
         financing_months:  parseInt(financing_months),
         harvest_date,
         min_kilos:         parseInt(min_kilos),
@@ -111,7 +113,14 @@ export default function CompanyCatalogPage() {
       setSelectedHuerta(null)
       await alert.success("Oferta enviada", "Tu oferta fue enviada. El administrador la revisará.")
     } catch (err: any) {
-      await alert.error("Error al enviar oferta", err?.message || "Intenta de nuevo más tarde.")
+      if (err?.errors && typeof err.errors === "object") {
+        const messages = Object.values(err.errors as Record<string, string[]>)
+          .flat()
+          .join(" | ")
+        toast.error(`Error de validación: ${messages}`)
+      } else {
+        toast.error(err?.message || "Error al enviar oferta. Intenta de nuevo.")
+      }
     } finally {
       setIsSubmittingOffer(false)
     }
@@ -397,7 +406,7 @@ export default function CompanyCatalogPage() {
 
               <div className="space-y-2">
                 <Label>Cm de Jima *</Label>
-                <Input type="number" placeholder="Centímetros" value={offerForm.jima_cm} onChange={e => setField("jima_cm", e.target.value)} />
+                <Input type="number" step="0.01" placeholder="Centímetros" value={offerForm.jima_cm} onChange={e => setField("jima_cm", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Meses financiado *</Label>

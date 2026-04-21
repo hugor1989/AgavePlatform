@@ -69,7 +69,7 @@ export default function AdminFarmersPage() {
 
   // Editar agricultor
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", address: "", gender: "" })
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", address: "", gender: "", rfc: "", clabe: "" })
   const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   // Estado y funciones para cambiar contraseña
@@ -88,10 +88,12 @@ export default function AdminFarmersPage() {
   }
   const [newFarmerForm, setNewFarmerForm] = useState({
     name: "",
-    email: "",  
+    email: "",
     phone: "",
     address: "",
     gender: "",
+    rfc: "",
+    clabe: "",
   })
   const [showCredentialsAlert, setShowCredentialsAlert] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -122,8 +124,8 @@ export default function AdminFarmersPage() {
   }
 
   const handleAddFarmer = async () => {
-    const { name, email, phone, address, gender } = newFarmerForm
-    if (!name || !email || !phone || !address || !gender) return
+    const { name, email, phone, address, gender, rfc, clabe } = newFarmerForm
+    if (!name || !email || !phone || !address || !gender || !rfc || !clabe) return
 
     try {
       const payload = {
@@ -132,6 +134,8 @@ export default function AdminFarmersPage() {
       phone,
       address,
       gender: gender === "masculino" ? "M" : "F",
+      rfc,
+      clabe,
       status: 0
     }
       const response = await farmerService.create(payload)
@@ -148,7 +152,7 @@ export default function AdminFarmersPage() {
       setNewFarmerCredentials(credentials)
       setIsCredentialsDialogOpen(true)
 
-       setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "" })
+       setNewFarmerForm({ name: "", email: "", phone: "", address: "", gender: "", rfc: "", clabe: "" })
 
     } catch (err) {
       console.error("Error al crear agricultor:", err)
@@ -198,6 +202,8 @@ const handleChangePassword = async () => {
       phone:     farmer.phone ?? "",
       address:   farmer.address ?? "",
       gender:    farmer.gender ?? "",
+      rfc:       farmer.rfc ?? "",
+      clabe:     farmer.clabe ?? "",
     })
     setIsEditDialogOpen(true)
   }
@@ -301,11 +307,29 @@ const handleChangePassword = async () => {
                   <option value="masculino">Masculino</option>
                   <option value="femenino">Femenino</option>
                 </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="RFC *"
+                    value={newFarmerForm.rfc}
+                    onChange={(e) => setNewFarmerForm({ ...newFarmerForm, rfc: e.target.value.toUpperCase() })}
+                    maxLength={13}
+                  />
+                  <Input
+                    placeholder="CLABE interbancaria *"
+                    value={newFarmerForm.clabe}
+                    onChange={(e) => setNewFarmerForm({ ...newFarmerForm, clabe: e.target.value.replace(/\D/g, "") })}
+                    maxLength={18}
+                  />
+                </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleAddFarmer} className="bg-green-600 hover:bg-green-700">
+                  <Button
+                    onClick={handleAddFarmer}
+                    disabled={!newFarmerForm.name || !newFarmerForm.email || !newFarmerForm.phone || !newFarmerForm.address || !newFarmerForm.gender || !newFarmerForm.rfc || !newFarmerForm.clabe}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     Registrar Agricultor
                   </Button>
                 </div>
@@ -507,6 +531,14 @@ const handleChangePassword = async () => {
                   <p className="font-semibold text-gray-800 capitalize">{selectedFarmer.gender}</p>
                 </div>
                 <div>
+                  <label className="text-sm text-gray-500">RFC</label>
+                  <p className="font-semibold text-gray-800 font-mono">{selectedFarmer.rfc || "—"}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">CLABE Interbancaria</label>
+                  <p className="font-semibold text-gray-800 font-mono">{selectedFarmer.clabe || "—"}</p>
+                </div>
+                <div>
                   <label className="text-sm text-gray-500">Fecha de Registro</label>
                   <p className="font-semibold text-gray-800">{selectedFarmer.created_at}</p>
                 </div>
@@ -573,10 +605,24 @@ const handleChangePassword = async () => {
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    placeholder="RFC *"
+                    value={editForm.rfc}
+                    onChange={(e) => setEditForm({ ...editForm, rfc: e.target.value.toUpperCase() })}
+                    maxLength={13}
+                  />
+                  <Input
+                    placeholder="CLABE interbancaria *"
+                    value={editForm.clabe}
+                    onChange={(e) => setEditForm({ ...editForm, clabe: e.target.value.replace(/\D/g, "") })}
+                    maxLength={18}
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={handleSaveEdit} disabled={isSavingEdit} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={handleSaveEdit} disabled={isSavingEdit || !editForm.rfc || !editForm.clabe} className="bg-green-600 hover:bg-green-700">
                   {isSavingEdit ? "Guardando..." : "Guardar cambios"}
                 </Button>
               </DialogFooter>

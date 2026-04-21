@@ -29,7 +29,10 @@ import {
   Mail,
   Phone,
   Eye,
+  Camera,
+  Share2,
 } from "lucide-react";
+import { toast } from "sonner";
 import Image from "next/image";
 import { OrchardSale } from "@/services/saleService";
 import { JimaTrip, jimaTripService } from "@/services/jimaTripService";
@@ -64,8 +67,58 @@ export function SaleCardsPanel({
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
+  const [photoZoomUrl, setPhotoZoomUrl] = useState("");
+  const [photoZoomOpen, setPhotoZoomOpen] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState<Record<number, number>>({});
+  const touchStartX = useRef<number>(0);
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
-  const weighInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  // Estado para el diálogo de pesada (kilos + archivo)
+  const [weighDialog, setWeighDialog] = useState<{ tripId: number; saleId: number } | null>(null);
+  const [weighKilos, setWeighKilos] = useState("");
+  const [weighFile, setWeighFile] = useState<File | null>(null);
+  const weighFileRef = useRef<HTMLInputElement | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, saleId: number) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      setActiveImageIndex((prev) => ({ ...prev, [saleId]: diff > 0 ? 1 : 0 }));
+    }
+  };
+
+  const handleOpenLocation = (url: string) => {
+    try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      let finalUrl = url;
+      if (isIOS && url.includes("google.com/maps")) {
+        finalUrl = url.replace("https://www.google.com/maps", "https://maps.apple.com");
+      }
+      window.open(finalUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Error al abrir ubicación:", error);
+    }
+  };
+
+  const handleShareLocation = async (url: string) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Ubicación de la huerta",
+          text: "Mira la ubicación de esta huerta",
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Enlace copiado al portapapeles");
+      }
+    } catch (error) {
+      console.error("Error al compartir ubicación:", error);
+    }
+  };
 
   const tripsOf = (saleId: number) => tripsMap[saleId] ?? [];
 
@@ -92,20 +145,28 @@ export function SaleCardsPanel({
     }
   };
 
-  const handleUploadWeigh = async (
-    tripId: number,
-    saleId: number,
-    file: File,
-  ) => {
+  const handleUploadWeigh = async (tripId: number, saleId: number, file: File, kilos: number) => {
     setUploadingWeighId(tripId);
     try {
-      const updated = await jimaTripService.uploadWeigh(tripId, file);
+      const updated = await jimaTripService.uploadWeigh(tripId, file, kilos);
       onTripsUpdate?.(saleId, updated);
+      toast.success(`Pesada subida — ${kilos.toLocaleString("es-MX")} kg`);
     } catch (err) {
       console.error(err);
+      toast.error("No se pudo subir la pesada.");
     } finally {
       setUploadingWeighId(null);
     }
+  };
+
+  const handleConfirmWeigh = async () => {
+    if (!weighDialog || !weighFile || !weighKilos) return;
+    const kilos = parseFloat(weighKilos);
+    if (isNaN(kilos) || kilos <= 0) { toast.error("Ingresa una cantidad de kilos válida."); return; }
+    await handleUploadWeigh(weighDialog.tripId, weighDialog.saleId, weighFile, kilos);
+    setWeighDialog(null);
+    setWeighKilos("");
+    setWeighFile(null);
   };
 
   const handleConfirmFinish = async () => {
@@ -147,18 +208,81 @@ export function SaleCardsPanel({
                   : "bg-orange-50 border-orange-200"
               }`}
             >
-              <div className="relative">
-                <Image
-                  src={
-                    orchardService.getPhotoUrl(
-                      sale.orchard?.cover_photo ?? null,
-                    ) || "/agave-field-plantation.png"
-                  }
-                  alt={sale.orchard?.name ?? "Huerta"}
-                  width={400}
-                  height={200}
-                  className="w-full h-48 object-cover"
-                />
+              <div className="relative group">
+                {/* Flechas de navegación (solo si hay foto extra) */}
+                {sale.orchard?.extra_photo && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 0 }));
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 1 }));
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Foto activa con swipe */}
+                <div
+                  className="relative w-full h-48 overflow-hidden"
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={(e) => handleTouchEnd(e, sale.id)}
+                >
+                  <button
+                    className="block w-full h-full cursor-zoom-in"
+                    onClick={() => {
+                      const photo = (activeImageIndex[sale.id] || 0) === 0
+                        ? sale.orchard?.cover_photo ?? null
+                        : sale.orchard?.extra_photo ?? null;
+                      setPhotoZoomUrl(orchardService.getPhotoUrl(photo) || "/agave-field-plantation.png");
+                      setPhotoZoomOpen(true);
+                    }}
+                  >
+                    <Image
+                      src={
+                        (activeImageIndex[sale.id] || 0) === 0
+                          ? orchardService.getPhotoUrl(sale.orchard?.cover_photo ?? null) || "/agave-field-plantation.png"
+                          : orchardService.getPhotoUrl(sale.orchard?.extra_photo ?? null) || "/agave-field-plantation.png"
+                      }
+                      alt={sale.orchard?.name ?? "Huerta"}
+                      width={400}
+                      height={200}
+                      className="w-full h-48 object-cover"
+                    />
+                  </button>
+                </div>
+
+                {/* Indicadores de posición */}
+                {sale.orchard?.extra_photo && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 0 ? "bg-white" : "bg-white/50"}`} />
+                    <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 1 ? "bg-white" : "bg-white/50"}`} />
+                  </div>
+                )}
+
+                {/* Contador de fotos */}
+                <div className="absolute top-3 left-3">
+                  <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
+                    <Camera className="w-3 h-3 mr-1" />
+                    {sale.orchard?.extra_photo ? "2" : "1"} foto{sale.orchard?.extra_photo ? "s" : ""}
+                  </Badge>
+                </div>
+
                 <div className="absolute top-3 right-3 flex gap-2">
                   {isTerminatedView ? (
                     <Badge className="bg-gray-600 text-white">
@@ -249,6 +373,30 @@ export function SaleCardsPanel({
                   </div>
                 </div>
 
+                {sale.orchard?.location_url && (
+                  <div
+                    onClick={() => handleOpenLocation(sale.orchard!.location_url!)}
+                    className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:bg-green-100 active:scale-[0.98] transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-200 shrink-0">
+                        <MapPin className="h-5 w-5 text-green-700" />
+                      </div>
+                      <p className="text-sm font-medium text-green-800">Ver ubicación</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShareLocation(sale.orchard!.location_url!);
+                      }}
+                      className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-green-200 transition"
+                      aria-label="Compartir ubicación"
+                    >
+                      <Share2 className="h-4 w-4 text-green-700" />
+                    </button>
+                  </div>
+                )}
+
                 {role === "admin" && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
@@ -332,6 +480,48 @@ export function SaleCardsPanel({
                   </div>
                 )}
 
+                {isTerminatedView && (() => {
+                  const totalKilos = trips.reduce((sum, t) => sum + (t.kilos ? Number(t.kilos) : 0), 0);
+                  if (totalKilos === 0) return null;
+                  const fmt = (n: number) => n.toLocaleString("es-MX", { minimumFractionDigits: 2 });
+                  const companyPrice  = Number(sale.company_price);
+                  const farmerPrice   = Number(sale.farmer_price);
+                  const commission    = companyPrice - farmerPrice;
+
+                  if (role === "admin") return (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Totales finales — {totalKilos.toLocaleString("es-MX")} kg
+                      </p>
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                        <p className="text-xs text-teal-700">Total a cobrar a la empresa</p>
+                        <p className="text-lg font-bold text-teal-900">${fmt(totalKilos * companyPrice)}</p>
+                      </div>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <p className="text-xs text-green-700">Total a pagar al agricultor</p>
+                        <p className="text-lg font-bold text-green-900">${fmt(totalKilos * farmerPrice)}</p>
+                      </div>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                        <p className="text-xs text-purple-700">Comisión total plataforma</p>
+                        <p className="text-lg font-bold text-purple-900">${fmt(totalKilos * commission)}</p>
+                      </div>
+                    </div>
+                  );
+                  if (role === "company") return (
+                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                      <p className="text-xs text-teal-700">Total a pagar — {totalKilos.toLocaleString("es-MX")} kg</p>
+                      <p className="text-lg font-bold text-teal-900">${fmt(totalKilos * companyPrice)}</p>
+                    </div>
+                  );
+                  if (role === "farmer") return (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-xs text-green-700">Total a cobrar — {totalKilos.toLocaleString("es-MX")} kg</p>
+                      <p className="text-lg font-bold text-green-900">${fmt(totalKilos * farmerPrice)}</p>
+                    </div>
+                  );
+                  return null;
+                })()}
+
                 {isTerminatedView ? (
                   <div className="space-y-2">
                     <Button
@@ -407,8 +597,7 @@ export function SaleCardsPanel({
                     </Button>
                     {role === "admin" && (
                       <Button
-                        variant="outline"
-                        className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white"
                         onClick={() => {
                           setSelectedSale(sale);
                           setShowFinishDialog(true);
@@ -583,7 +772,7 @@ export function SaleCardsPanel({
                   <Input
                     type="number"
                     readOnly
-                    value={selectedSale.offer.price}
+                    value={Number(selectedSale.offer.price).toFixed(2)}
                   />
                 </div>
               )}
@@ -592,7 +781,7 @@ export function SaleCardsPanel({
                 <Input
                   type="number"
                   readOnly
-                  value={selectedSale.offer.jima_cm}
+                  value={Number(selectedSale.offer.jima_cm).toFixed(2)}
                 />
               </div>
               <div className="space-y-2">
@@ -827,78 +1016,45 @@ export function SaleCardsPanel({
                                 <div className="flex items-center justify-between gap-3 pl-12">
                                   <div className="flex-1 min-w-0">
                                     {trip.weigh_path ? (
-                                      <div className="flex items-center gap-1">
+                                      <div className="flex items-center gap-1 flex-wrap">
                                         <CheckCircle2 className="w-3 h-3 text-blue-500" />
-                                        <span className="text-xs text-blue-600">
-                                          Pesada subida
-                                        </span>
+                                        <span className="text-xs text-blue-600">Pesada subida</span>
+                                        {trip.kilos !== null && trip.kilos !== undefined && (
+                                          <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                                            {Number(trip.kilos).toLocaleString("es-MX")} kg
+                                          </span>
+                                        )}
                                         <button
-                                          className="ml-2 text-xs text-blue-600 underline flex items-center gap-1 hover:text-blue-800"
+                                          className="ml-1 text-xs text-blue-600 underline flex items-center gap-1 hover:text-blue-800"
                                           onClick={async () => {
-                                            const url =
-                                              await jimaTripService.getWeighUrl(
-                                                trip.id,
-                                              );
+                                            const url = await jimaTripService.getWeighUrl(trip.id);
                                             setPreviewUrl(url);
                                             setPreviewTitle("Pesada — Viaje " + trip.trip_number);
                                             setPreviewOpen(true);
                                           }}
                                         >
-                                          <ExternalLink className="w-3 h-3" />{" "}
-                                          Ver
+                                          <ExternalLink className="w-3 h-3" /> Ver
                                         </button>
                                       </div>
                                     ) : (
-                                      <p className="text-xs text-gray-400">
-                                        Sin pesada adjunta
-                                      </p>
+                                      <p className="text-xs text-gray-400">Sin pesada adjunta</p>
                                     )}
                                   </div>
                                   {!isTerminatedView && (
                                     <div className="flex-shrink-0">
-                                      <input
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif"
-                                        className="hidden"
-                                        ref={(el) => {
-                                          weighInputRefs.current[trip.id] = el;
-                                        }}
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file)
-                                            handleUploadWeigh(
-                                              trip.id,
-                                              selectedSale.id,
-                                              file,
-                                            );
-                                          e.target.value = "";
-                                        }}
-                                      />
                                       <Button
                                         size="sm"
-                                        variant={
-                                          trip.weigh_path
-                                            ? "outline"
-                                            : "default"
-                                        }
-                                        className={
-                                          trip.weigh_path
-                                            ? "border-blue-300 text-blue-700 hover:bg-blue-50"
-                                            : "bg-blue-600 hover:bg-blue-700"
-                                        }
+                                        variant={trip.weigh_path ? "outline" : "default"}
+                                        className={trip.weigh_path ? "border-blue-300 text-blue-700 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
                                         disabled={uploadingWeighId === trip.id}
-                                        onClick={() =>
-                                          weighInputRefs.current[
-                                            trip.id
-                                          ]?.click()
-                                        }
+                                        onClick={() => {
+                                          setWeighDialog({ tripId: trip.id, saleId: selectedSale.id });
+                                          setWeighKilos("");
+                                          setWeighFile(null);
+                                        }}
                                       >
                                         <Upload className="w-3 h-3 mr-1" />
-                                        {uploadingWeighId === trip.id
-                                          ? "Subiendo..."
-                                          : trip.weigh_path
-                                            ? "Reemplazar pesada"
-                                            : "Subir pesada de viaje"}
+                                        {uploadingWeighId === trip.id ? "Subiendo..." : trip.weigh_path ? "Reemplazar pesada" : "Subir pesada de viaje"}
                                       </Button>
                                     </div>
                                   )}
@@ -972,6 +1128,35 @@ export function SaleCardsPanel({
         </DialogContent>
       </Dialog>
 
+      {/* ── Dialog Zoom foto carrusel ── */}
+      <Dialog open={photoZoomOpen} onOpenChange={setPhotoZoomOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Foto de la Huerta</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <div className="overflow-auto max-h-[70vh] p-2">
+              <img
+                src={photoZoomUrl}
+                alt="Foto"
+                className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                style={{ width: "100%", height: "auto" }}
+                onClick={(e) => {
+                  const img = e.currentTarget;
+                  if (img.style.width === "100%") {
+                    img.style.width = "200%";
+                    img.style.cursor = "zoom-out";
+                  } else {
+                    img.style.width = "100%";
+                    img.style.cursor = "zoom-in";
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Dialog Preview Guía / Pesada ── */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-3xl">
@@ -985,6 +1170,69 @@ export function SaleCardsPanel({
               className="max-w-full max-h-[70vh] object-contain rounded-lg"
             />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog Subir Pesada (kilos + archivo) ── */}
+      <Dialog open={!!weighDialog} onOpenChange={(open) => { if (!open) setWeighDialog(null); }}>
+        <DialogContent className="max-w-md w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="w-4 h-4 text-blue-600" />
+              Subir pesada de viaje
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Kilos jimados *</Label>
+              <Input
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="Ej. 8500"
+                value={weighKilos}
+                onChange={(e) => setWeighKilos(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Archivo de pesada *</Label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif,application/pdf"
+                className="hidden"
+                ref={weighFileRef}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setWeighFile(f);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => weighFileRef.current?.click()}
+                className="w-full min-h-[56px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-1 px-4 py-3 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              >
+                <Upload className="w-5 h-5 text-gray-400" />
+                {weighFile ? (
+                  <span className="text-sm text-blue-700 font-medium text-center break-all leading-snug">
+                    {weighFile.name}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-500">Seleccionar archivo</span>
+                )}
+              </button>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setWeighDialog(null)}>Cancelar</Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!weighFile || !weighKilos || uploadingWeighId !== null}
+              onClick={handleConfirmWeigh}
+            >
+              {uploadingWeighId !== null ? "Subiendo..." : "Guardar pesada"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

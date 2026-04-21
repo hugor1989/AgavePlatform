@@ -17,6 +17,7 @@ export interface OrchardSale {
   orchard?: {
     id: number
     name: string
+    orchard_number: string | null
     state: string
     municipality: string
     plant_quantity: number

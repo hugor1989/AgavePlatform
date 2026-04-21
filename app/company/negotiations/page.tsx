@@ -36,7 +36,8 @@ export default function CompanyNegotiations() {
       o.orchard?.farmer?.full_name
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      String(o.id).includes(searchTerm),
+      String(o.id).includes(searchTerm) ||
+      (o.orchard?.orchard_number ?? '').includes(searchTerm),
   );
 
   const byStatus = (s: Offer["status"]) =>
@@ -112,13 +113,16 @@ export default function CompanyNegotiations() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
-          <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
-
-          <div className="space-y-2">
-            <Label>Precio por kg. $</Label>
-            <Input type="number" readOnly value={offer.price} />
+        <div className="border border-gray-200 rounded-lg overflow-hidden space-y-0">
+          <div className="bg-green-50 border-b border-gray-200 p-4 text-center">
+            <p className="text-xs font-medium text-green-700 mb-1">Precio por kg. ofertado</p>
+            <p className="text-2xl font-bold text-green-900">
+              ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+            </p>
           </div>
+
+          <div className="p-4 space-y-4">
+          <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
 
           <div className="space-y-2">
             <Label>Cm de Jima</Label>
@@ -165,6 +169,7 @@ export default function CompanyNegotiations() {
               </p>
             </div>
           )}
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -3,6 +3,7 @@ import api from "@/lib/api"
 export interface Orchard {
   id: number
   name: string
+  orchard_number: string | null
   agave_type_id: number
   farmer_id: number
   year: number
@@ -40,6 +41,7 @@ export interface Orchard {
 
 export interface OrchardFormData {
   name: string
+  orchard_number?: string
   agave_type_id: number
   farmer_id: number
   year: number
@@ -108,6 +110,7 @@ export const orchardService = {
     const formData = new FormData()
 
     formData.append('name', orchardData.name)
+    if (orchardData.orchard_number) formData.append('orchard_number', orchardData.orchard_number)
     formData.append('agave_type_id', String(orchardData.agave_type_id))
     formData.append('farmer_id', String(orchardData.farmer_id))
     formData.append('year', String(orchardData.year))
@@ -147,6 +150,7 @@ export const orchardService = {
     formData.append('_method', 'PUT')
 
     if (orchardData.name) formData.append('name', orchardData.name)
+    if (orchardData.orchard_number != null) formData.append('orchard_number', orchardData.orchard_number)
     if (orchardData.agave_type_id != null)
       formData.append('agave_type_id', String(orchardData.agave_type_id))
 

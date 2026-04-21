@@ -138,7 +138,7 @@ export default function AdminOfertasPage() {
       );
       setOffers((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
       toast.success(
-        `Agricultor notificado con el precio $${Number(farmerPrice).toLocaleString("es-MX")}`,
+        `Agricultor notificado con el precio $${Number(farmerPrice).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`,
       );
       setIsNotifyDialogOpen(false);
       setFarmerPrice("");
@@ -295,31 +295,31 @@ export default function AdminOfertasPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  Precio:
+                                  Precio por kg. $:
                                 </span>{" "}
-                                ${Number(offer.price).toLocaleString("es-MX")}
+                                ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  Cm Jima:
+                                  Cm de Jima:
                                 </span>{" "}
-                                {offer.jima_cm} cm
+                                {Number(offer.jima_cm).toFixed(2)} cm
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  Financiamiento:
+                                  Meses financiado:
                                 </span>{" "}
                                 {offer.financing_months} meses
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  Fecha jima:
+                                  Fecha de mes de jima:
                                 </span>{" "}
                                 {offer.harvest_date}
                               </div>
-                              <div>
+                              <div className="sm:col-span-2">
                                 <span className="font-medium text-gray-600">
-                                  Kilos mín.:
+                                  Se jimará a partir de * kilos para arriba * por viaje:
                                 </span>{" "}
                                 {offer.min_kilos?.toLocaleString()}
                               </div>
@@ -327,7 +327,7 @@ export default function AdminOfertasPage() {
                             <div className="mt-3 space-y-2 text-sm">
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  Pagos:
+                                  Cómo serían los pagos de viajes jimados *:
                                 </span>{" "}
                                 <span className="text-gray-700">
                                   {offer.payment_terms}
@@ -335,8 +335,7 @@ export default function AdminOfertasPage() {
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  El Agave sería puesto en fábrica o la fábrica
-                                  se encargaría de toda la logística *:
+                                  El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *:
                                 </span>{" "}
                                 <span className="text-gray-700">
                                   {offer.logistics}
@@ -353,6 +352,7 @@ export default function AdminOfertasPage() {
                                     $
                                     {Number(offer.farmer_price).toLocaleString(
                                       "es-MX",
+                                      { minimumFractionDigits: 2 },
                                     )}
                                   </p>
                                   {offer.admin_notes && (
@@ -473,6 +473,7 @@ export default function AdminOfertasPage() {
                       $
                       {Number(selectedOffer?.price ?? 0).toLocaleString(
                         "es-MX",
+                        { minimumFractionDigits: 2 },
                       )}
                     </span>
                   </div>
@@ -482,6 +483,7 @@ export default function AdminOfertasPage() {
                   <Label>Precio por kg al agricultor (MXN) *</Label>
                   <Input
                     type="number"
+                    step="0.01"
                     value={farmerPrice}
                     onChange={(e) => setFarmerPrice(e.target.value)}
                     placeholder="0.00"

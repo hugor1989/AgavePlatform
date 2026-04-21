@@ -49,7 +49,8 @@ export default function AdminHuertasVendidasPage() {
       s.company?.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.farmer?.unique_identifier?.includes(searchTerm) ||
-      String(s.id).includes(searchTerm),
+      String(s.id).includes(searchTerm) ||
+      (s.orchard?.orchard_number ?? '').includes(searchTerm),
   )
 
   const active         = filtered.filter((s) => s.status !== "jima_terminada")

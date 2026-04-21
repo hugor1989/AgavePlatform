@@ -19,7 +19,7 @@ import {
   FileText,
   Calendar,
   Clock,
-  Scissors,
+  CalendarDays,
   ImageIcon,
   Eye,
   Camera,
@@ -75,10 +75,19 @@ export default function CompanyPurchasesPage() {
   const [editingGroupNewDate, setEditingGroupNewDate] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
+  const [tripsMap, setTripsMap] = useState<Record<number, import("@/services/jimaTripService").JimaTrip[]>>({});
+
   useEffect(() => {
-    saleService
-      .getAll()
-      .then(setSales)
+    Promise.all([saleService.getAll(), jimaTripService.getAll()])
+      .then(([salesData, tripsData]) => {
+        setSales(salesData);
+        const map: Record<number, import("@/services/jimaTripService").JimaTrip[]> = {};
+        tripsData.forEach((t) => {
+          if (!map[t.sale_id]) map[t.sale_id] = [];
+          map[t.sale_id].push(t);
+        });
+        setTripsMap(map);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -87,7 +96,8 @@ export default function CompanyPurchasesPage() {
     (s) =>
       s.orchard?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.farmer?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      String(s.id).includes(searchTerm),
+      String(s.id).includes(searchTerm) ||
+      (s.orchard?.orchard_number ?? '').includes(searchTerm),
   );
 
   const formatDate = (d: string) =>
@@ -384,6 +394,9 @@ export default function CompanyPurchasesPage() {
                       {sale.orchard?.name ?? `Huerta #${sale.orchard_id}`}
                     </h3>
                     <p className="text-sm text-gray-500">Compra #{sale.id}</p>
+                    {sale.orchard?.orchard_number && (
+                      <p className="text-sm text-blue-600 font-mono font-medium">Id Huerta: {sale.orchard.orchard_number}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
@@ -477,6 +490,21 @@ export default function CompanyPurchasesPage() {
                     </div>
                   )}
 
+                  {sale.status === "jima_terminada" && (() => {
+                    const trips = tripsMap[sale.id] ?? [];
+                    const totalKilos = trips.reduce((sum, t) => sum + (t.kilos ? Number(t.kilos) : 0), 0);
+                    if (totalKilos === 0) return null;
+                    const companyPrice = Number(sale.offer?.price ?? sale.company_price);
+                    return (
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                        <p className="text-xs text-teal-700 font-medium">Total a pagar — {totalKilos.toLocaleString("es-MX")} kg</p>
+                        <p className="text-xl font-bold text-teal-900">
+                          ${(totalKilos * companyPrice).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
                   <div className="space-y-2 pt-1">
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700"
@@ -496,11 +524,12 @@ export default function CompanyPurchasesPage() {
                     </Button>
 
                     <Button
-                      className="w-full bg-orange-600 hover:bg-orange-700"
+                      className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50"
+                      disabled={sale.status === "jima_terminada"}
                       onClick={() => openJimaDialog(sale)}
                     >
-                      <Scissors className="w-4 h-4 mr-2" />
-                      Programar Jimas
+                      <CalendarDays className="w-4 h-4 mr-2" />
+                      {sale.status === "jima_terminada" ? "Jima terminada" : "Programar Jimas"}
                     </Button>
 
                     <Button
@@ -595,6 +624,13 @@ export default function CompanyPurchasesPage() {
             </DialogHeader>
             {selectedSale?.offer && (
               <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <p className="text-xs font-medium text-green-700 mb-1">Precio por kg. ofertado</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    ${Number(selectedSale.offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+
                 <div className="bg-blue-50 rounded-lg p-4 text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fecha de compra:</span>
@@ -745,17 +781,20 @@ export default function CompanyPurchasesPage() {
 
                         {/* Pesada */}
                         <div className="flex items-center justify-between pl-11">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap">
                             <CheckCircle2
                               className={`w-3 h-3 ${trip.weigh_path ? "text-blue-500" : "text-gray-300"}`}
                             />
                             <span
                               className={`text-xs ${trip.weigh_path ? "text-blue-600" : "text-gray-400"}`}
                             >
-                              {trip.weigh_path
-                                ? "Pesada adjunta"
-                                : "Sin pesada"}
+                              {trip.weigh_path ? "Pesada adjunta" : "Sin pesada"}
                             </span>
+                            {trip.weigh_path && trip.kilos !== null && trip.kilos !== undefined && (
+                              <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                                {Number(trip.kilos).toLocaleString("es-MX")} kg
+                              </span>
+                            )}
                           </div>
                           {trip.weigh_path && (
                             <Button
@@ -763,13 +802,9 @@ export default function CompanyPurchasesPage() {
                               variant="outline"
                               className="border-blue-300 text-blue-700 hover:bg-blue-50 flex-shrink-0"
                               onClick={async () => {
-                                const url = await jimaTripService.getWeighUrl(
-                                  trip.id,
-                                );
+                                const url = await jimaTripService.getWeighUrl(trip.id);
                                 setPreviewUrl(url);
-                                setPreviewTitle(
-                                  "Pesada — Viaje " + trip.trip_number,
-                                );
+                                setPreviewTitle("Pesada — Viaje " + trip.trip_number);
                                 setPreviewOpen(true);
                               }}
                             >
@@ -924,7 +959,7 @@ export default function CompanyPurchasesPage() {
                                   <div className="flex items-center gap-2">
                                     {!groupHasPhotos && (
                                       <button
-                                        className="text-gray-400 hover:text-teal-600 transition-colors"
+                                        className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800 font-semibold transition-colors"
                                         title="Editar fecha"
                                         onClick={() => {
                                           setEditingTripGroup(date);
@@ -934,6 +969,7 @@ export default function CompanyPurchasesPage() {
                                         }}
                                       >
                                         <Pencil className="w-3.5 h-3.5" />
+                                        Editar
                                       </button>
                                     )}
                                     <Badge className="bg-orange-100 text-orange-800">
@@ -957,7 +993,7 @@ export default function CompanyPurchasesPage() {
                                     </span>
                                     {!hasPhoto && !isEditingThis && (
                                       <button
-                                        className="text-gray-300 hover:text-red-500 transition-colors"
+                                        className="text-red-500 hover:text-red-700 transition-colors"
                                         title="Eliminar viaje"
                                         onClick={() => handleDeleteTrip(t.id)}
                                       >

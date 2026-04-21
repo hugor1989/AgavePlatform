@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ import {
   ExternalLink,
   AlertCircle,
   Truck,
+  Camera,
+  Scissors,
 } from "lucide-react";
 import Image from "next/image";
 import { AppLayout } from "@/components/layouts/app-layout";
@@ -38,9 +40,25 @@ export default function FarmerSoldPage() {
   const [selectedSale, setSelectedSale] = useState<OrchardSale | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [showTripsDialog, setShowTripsDialog] = useState(false);
+  const [showJimaScheduleDialog, setShowJimaScheduleDialog] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
+  const [photoZoomUrl, setPhotoZoomUrl] = useState("");
+  const [photoZoomOpen, setPhotoZoomOpen] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState<Record<number, number>>({});
+  const touchStartX = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, saleId: number) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      setActiveImageIndex((prev) => ({ ...prev, [saleId]: diff > 0 ? 1 : 0 }));
+    }
+  };
 
   useEffect(() => {
     Promise.all([saleService.getAll(), jimaTripService.getAll()])
@@ -63,7 +81,8 @@ export default function FarmerSoldPage() {
       s.company?.business_name
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      String(s.id).includes(searchTerm),
+      String(s.id).includes(searchTerm) ||
+      (s.orchard?.orchard_number ?? '').includes(searchTerm),
   );
 
   const formatDate = (d: string) =>
@@ -113,18 +132,67 @@ export default function FarmerSoldPage() {
                 key={sale.id}
                 className="overflow-hidden hover:shadow-lg transition-shadow bg-orange-50 border-orange-200"
               >
-                <div className="relative">
-                  <Image
-                    src={
-                      orchardService.getPhotoUrl(
-                        sale.orchard?.cover_photo ?? null,
-                      ) || "/agave-field-plantation.png"
-                    }
-                    alt={sale.orchard?.name ?? "Huerta"}
-                    width={400}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                  />
+                <div className="relative group">
+                  {sale.orchard?.extra_photo && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 0 })); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 1 })); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                  <div
+                    className="relative w-full h-48 overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={(e) => handleTouchEnd(e, sale.id)}
+                  >
+                    <button
+                      className="block w-full h-full cursor-zoom-in"
+                      onClick={() => {
+                        const photo = (activeImageIndex[sale.id] || 0) === 0
+                          ? sale.orchard?.cover_photo ?? null
+                          : sale.orchard?.extra_photo ?? null;
+                        setPhotoZoomUrl(orchardService.getPhotoUrl(photo) || "/agave-field-plantation.png");
+                        setPhotoZoomOpen(true);
+                      }}
+                    >
+                      <Image
+                        src={
+                          (activeImageIndex[sale.id] || 0) === 0
+                            ? orchardService.getPhotoUrl(sale.orchard?.cover_photo ?? null) || "/agave-field-plantation.png"
+                            : orchardService.getPhotoUrl(sale.orchard?.extra_photo ?? null) || "/agave-field-plantation.png"
+                        }
+                        alt={sale.orchard?.name ?? "Huerta"}
+                        width={400}
+                        height={200}
+                        className="w-full h-48 object-cover"
+                      />
+                    </button>
+                  </div>
+                  {sale.orchard?.extra_photo && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 0 ? "bg-white" : "bg-white/50"}`} />
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 1 ? "bg-white" : "bg-white/50"}`} />
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
+                      <Camera className="w-3 h-3 mr-1" />
+                      {sale.orchard?.extra_photo ? "2" : "1"} foto{sale.orchard?.extra_photo ? "s" : ""}
+                    </Badge>
+                  </div>
                   <div className="absolute top-3 right-3">
                     <Badge className="bg-green-600 text-white">Vendida</Badge>
                   </div>
@@ -202,18 +270,28 @@ export default function FarmerSoldPage() {
                   </div>
 
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-green-700">Tu precio de venta</p>
+                    <p className="text-xs text-green-700">Tu precio de venta por kg</p>
                     <p className="text-xl font-bold text-green-800">
-                      $
-                      {Number(sale.farmer_price).toLocaleString("es-MX", {
-                        minimumFractionDigits: 2,
-                      })}
+                      ${Number(sale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                      Vendida a {sale.company?.business_name} ·{" "}
-                      {formatDate(sale.sold_at)}
+                      Vendida a {sale.company?.business_name} · {formatDate(sale.sold_at)}
                     </p>
                   </div>
+
+                  {sale.status === "jima_terminada" && (() => {
+                    const trips = tripsMap[sale.id] ?? [];
+                    const totalKilos = trips.reduce((sum, t) => sum + (t.kilos ? Number(t.kilos) : 0), 0);
+                    if (totalKilos === 0) return null;
+                    return (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-xs text-blue-700 font-medium">Total a cobrar — {totalKilos.toLocaleString("es-MX")} kg</p>
+                        <p className="text-xl font-bold text-blue-900">
+                          ${(totalKilos * Number(sale.farmer_price)).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   <Button
                     className="w-full bg-teal-600 hover:bg-teal-700"
@@ -224,6 +302,16 @@ export default function FarmerSoldPage() {
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     Ver Detalles de Oferta
+                  </Button>
+                  <Button
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                    onClick={() => {
+                      setSelectedSale(sale);
+                      setShowJimaScheduleDialog(true);
+                    }}
+                  >
+                    <Scissors className="w-4 h-4 mr-2" />
+                    Ver programa de jimas
                   </Button>
                   <Button
                     variant="outline"
@@ -241,6 +329,156 @@ export default function FarmerSoldPage() {
             ))}
           </div>
         )}
+
+        {/* ── Dialog Zoom foto carrusel ── */}
+        <Dialog open={photoZoomOpen} onOpenChange={setPhotoZoomOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Foto de la Huerta</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <div className="overflow-auto max-h-[70vh] p-2">
+                <img
+                  src={photoZoomUrl}
+                  alt="Foto"
+                  className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                  style={{ width: "100%", height: "auto" }}
+                  onClick={(e) => {
+                    const img = e.currentTarget;
+                    if (img.style.width === "100%") {
+                      img.style.width = "200%";
+                      img.style.cursor = "zoom-out";
+                    } else {
+                      img.style.width = "100%";
+                      img.style.cursor = "zoom-in";
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Dialog Programa de Jimas ── */}
+        <Dialog open={showJimaScheduleDialog} onOpenChange={setShowJimaScheduleDialog}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Scissors className="w-5 h-5 text-orange-500" />
+                Programa de Jimas — {selectedSale?.orchard?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedSale && (() => {
+              const trips = (tripsMap[selectedSale.id] ?? []).sort(
+                (a, b) => a.scheduled_date.localeCompare(b.scheduled_date) || a.trip_number - b.trip_number
+              );
+
+              if (trips.length === 0)
+                return (
+                  <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
+                    <Calendar className="w-12 h-12 text-gray-200" />
+                    <p className="text-sm">No hay jimas programadas aún.</p>
+                  </div>
+                );
+
+              const byDate: Record<string, JimaTrip[]> = {};
+              trips.forEach((t) => {
+                const key = t.scheduled_date.substring(0, 10);
+                if (!byDate[key]) byDate[key] = [];
+                byDate[key].push(t);
+              });
+
+              const totalTrips = trips.length;
+              const completados = trips.filter((t) => t.status === "completado").length;
+              const conGuia = trips.filter((t) => t.guide_path && !t.weigh_path).length;
+              const programados = trips.filter((t) => !t.guide_path).length;
+
+              return (
+                <div className="space-y-4">
+                  {/* Resumen */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                      <p className="text-lg font-bold text-orange-600">{programados}</p>
+                      <p className="text-xs text-orange-700">Programados</p>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                      <p className="text-lg font-bold text-blue-600">{conGuia}</p>
+                      <p className="text-xs text-blue-700">Con guía</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                      <p className="text-lg font-bold text-green-600">{completados}</p>
+                      <p className="text-xs text-green-700">Completados</p>
+                    </div>
+                  </div>
+
+                  {/* Lista por fecha */}
+                  <div className="space-y-3">
+                    {Object.entries(byDate)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([date, dayTrips]) => {
+                        const [y, m, d] = date.split("-").map(Number);
+                        const dayDate = new Date(y, m - 1, d);
+                        const isPast = dayDate < new Date();
+                        return (
+                          <div key={date} className="border border-gray-200 rounded-xl overflow-hidden">
+                            {/* Cabecera de fecha */}
+                            <div className={`px-4 py-3 flex items-center gap-3 ${isPast ? "bg-gray-50" : "bg-orange-50"}`}>
+                              <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0 ${isPast ? "bg-gray-200 text-gray-600" : "bg-orange-500 text-white"}`}>
+                                <span className="text-xs font-bold leading-none">
+                                  {dayDate.toLocaleDateString("es-MX", { month: "short" }).toUpperCase()}
+                                </span>
+                                <span className="text-lg font-bold leading-none">
+                                  {dayDate.getDate()}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-800">
+                                  {dayDate.toLocaleDateString("es-MX", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                                </p>
+                                <p className="text-xs text-gray-500">{dayTrips.length} viaje{dayTrips.length !== 1 ? "s" : ""}</p>
+                              </div>
+                            </div>
+
+                            {/* Viajes del día */}
+                            <div className="divide-y divide-gray-100">
+                              {dayTrips.map((trip) => {
+                                const hasGuide = !!trip.guide_path;
+                                const hasWeigh = !!trip.weigh_path;
+                                const isComplete = trip.status === "completado";
+
+                                let statusLabel = "Programado";
+                                let statusClass = "bg-orange-100 text-orange-700";
+                                if (isComplete) { statusLabel = "Completado"; statusClass = "bg-green-100 text-green-700"; }
+                                else if (hasGuide) { statusLabel = "Guía entregada"; statusClass = "bg-blue-100 text-blue-700"; }
+
+                                return (
+                                  <div key={trip.id} className="px-4 py-3 flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-xs font-bold text-gray-600">{trip.trip_number}</span>
+                                    </div>
+                                    <span className="text-sm text-gray-700 flex-1">Viaje {trip.trip_number}</span>
+                                    <div className="flex items-center gap-1.5">
+                                      {hasGuide && <span title="Guía ✓" className="text-blue-500 text-xs">📄</span>}
+                                      {hasWeigh && <span title="Pesada ✓" className="text-green-500 text-xs">⚖️</span>}
+                                      <Badge className={`text-xs ${statusClass}`}>{statusLabel}</Badge>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  <p className="text-xs text-center text-gray-400">
+                    {totalTrips} viaje{totalTrips !== 1 ? "s" : ""} en total
+                  </p>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
         {/* ── Dialog guías y pesadas ── */}
         <Dialog open={showTripsDialog} onOpenChange={setShowTripsDialog}>
@@ -355,9 +593,12 @@ export default function FarmerSoldPage() {
                                   {trip.weigh_path ? (
                                     <>
                                       <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                                      <span className="text-xs text-blue-700">
-                                        Pesada disponible
-                                      </span>
+                                      <span className="text-xs text-blue-700">Pesada disponible</span>
+                                      {trip.kilos !== null && trip.kilos !== undefined && (
+                                        <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                                          {Number(trip.kilos).toLocaleString("es-MX")} kg
+                                        </span>
+                                      )}
                                       <button
                                         className="ml-2 text-xs text-blue-600 underline flex items-center gap-1 hover:text-blue-800"
                                         onClick={async () => {
@@ -400,6 +641,16 @@ export default function FarmerSoldPage() {
             </DialogHeader>
             {selectedSale?.offer && (
               <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <p className="text-xs font-medium text-green-700 mb-1">Tu precio de venta</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    ${Number(selectedSale.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                  </p>
+                  {selectedSale.offer.admin_notes && (
+                    <p className="text-xs text-green-600 mt-1">{selectedSale.offer.admin_notes}</p>
+                  )}
+                </div>
+
                 <div className="bg-blue-50 rounded-lg p-4 text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Empresa:</span>
@@ -420,7 +671,7 @@ export default function FarmerSoldPage() {
                   <Input
                     type="number"
                     readOnly
-                    value={selectedSale.offer.jima_cm}
+                    value={Number(selectedSale.offer.jima_cm).toFixed(2)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -471,22 +722,6 @@ export default function FarmerSoldPage() {
                   />
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-green-800 mb-1">
-                    Tu precio de venta
-                  </p>
-                  <p className="text-2xl font-bold text-green-900">
-                    $
-                    {Number(selectedSale.farmer_price).toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
-                  {selectedSale.offer.admin_notes && (
-                    <p className="text-xs text-green-600 mt-2">
-                      {selectedSale.offer.admin_notes}
-                    </p>
-                  )}
-                </div>
               </div>
             )}
           </DialogContent>

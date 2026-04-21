@@ -20,12 +20,14 @@ export interface Offer {
   orchard?: {
     id: number
     name: string
+    orchard_number?: string | null
     state: string
     municipality: string
     plant_quantity: number
     year: number
     age: number
     cover_photo: string | null
+    extra_photo: string | null
     agave_type?: { id: number; name: string }
     farmer?: { id: number; full_name: string; unique_identifier: string; email: string; phone: string }
   }

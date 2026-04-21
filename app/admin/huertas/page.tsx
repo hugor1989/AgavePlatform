@@ -73,6 +73,7 @@ export default function AdminHuertasPage() {
   // Formulario para nueva huerta
   const [newHuerta, setNewHuerta] = useState({
     name: "",
+    orchardNumber: "",
     type: "",
     year: "",
     age: "",
@@ -85,7 +86,7 @@ export default function AdminHuertasPage() {
     location_url: "",
     photoId: null as File | null,
     coverPhoto: null as File | null,
-    extraPhoto: null as File | null, 
+    extraPhoto: null as File | null,
   })
 
 
@@ -94,7 +95,8 @@ export default function AdminHuertasPage() {
     const matchesSearch =
       orchard.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (orchard.farmer?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (orchard.farmer?.unique_identifier || '').includes(searchTerm)
+      (orchard.farmer?.unique_identifier || '').includes(searchTerm) ||
+      (orchard.orchard_number || '').includes(searchTerm)
     
     const matchesYear = selectedYear === "all" || orchard.year.toString() === selectedYear
     
@@ -122,6 +124,7 @@ export default function AdminHuertasPage() {
       // Preparar datos para el backend
       const orchardData: OrchardFormData = {
         name: newHuerta.name,
+        orchard_number: newHuerta.orchardNumber || undefined,
         agave_type_id: Number(newHuerta.type),
         farmer_id: Number(newHuerta.farmerId),
         year: Number(newHuerta.year),
@@ -151,6 +154,7 @@ export default function AdminHuertasPage() {
         // Resetear formulario
         setNewHuerta({
           name: "",
+          orchardNumber: "",
           type: "",
           year: "",
           age: "",
@@ -186,6 +190,7 @@ export default function AdminHuertasPage() {
     try {
       const orchardData: Partial<OrchardFormData> = {
         name: selectedHuerta.name,
+        orchard_number: selectedHuerta.orchard_number || undefined,
         agave_type_id: selectedHuerta.agave_type_id,
         farmer_id: selectedHuerta.farmer_id,
         year: selectedHuerta.year,
@@ -393,6 +398,17 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  {/* ID de Huerta */}
+                  <div className="space-y-2">
+                    <Label htmlFor="orchard-number">ID de Huerta</Label>
+                    <Input
+                      id="orchard-number"
+                      value={newHuerta.orchardNumber}
+                      onChange={(e) => setNewHuerta({ ...newHuerta, orchardNumber: e.target.value })}
+                      placeholder="Ej: 12345"
+                    />
                   </div>
 
                   {/* Año, Edad y Cantidad de Plantas */}
@@ -765,6 +781,9 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         <div>
                           <h3 className="font-semibold text-lg text-gray-900">{orchard.name}</h3>
                           <p className="text-sm text-gray-500">#{orchard.id}</p>
+                          {orchard.orchard_number && (
+                            <p className="text-sm text-blue-600 font-mono font-medium">Id Huerta: {orchard.orchard_number}</p>
+                          )}
                         </div>
                         <Badge className={getStatusColor(orchard.status)}>{formatStatus(orchard.status)}</Badge>
                       </div>
@@ -957,6 +976,16 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             </DialogHeader>
             {selectedHuerta && (
               <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-orchard-number">ID de Huerta</Label>
+                  <Input
+                    id="edit-orchard-number"
+                    value={selectedHuerta.orchard_number || ''}
+                    onChange={(e) => setSelectedHuerta({ ...selectedHuerta, orchard_number: e.target.value })}
+                    placeholder="Ej: 12345"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-name">Nombre</Label>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,9 @@ import {
   Building2,
   CheckCircle,
   XCircle,
+  Camera,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import Image from "next/image";
 import { AppLayout } from "@/components/layouts/app-layout";
@@ -32,7 +35,9 @@ interface OrchardGroup {
   municipality: string;
   plantQuantity: number;
   year: number;
+  age: number;
   coverPhoto: string | null;
+  extraPhoto: string | null;
   agaveType: string;
   offers: Offer[];
 }
@@ -48,6 +53,21 @@ export default function FarmerOffersPage() {
     id: number;
     action: "aceptada" | "rechazada";
   } | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState<Record<number, number>>({});
+  const [photoZoomUrl, setPhotoZoomUrl] = useState("");
+  const [photoZoomOpen, setPhotoZoomOpen] = useState(false);
+  const touchStartX = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, orchardId: number) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      setActiveImageIndex((prev) => ({ ...prev, [orchardId]: diff > 0 ? 1 : 0 }));
+    }
+  };
 
   const fetchOffers = async () => {
     try {
@@ -65,7 +85,9 @@ export default function FarmerOffersPage() {
             municipality: offer.orchard?.municipality ?? "",
             plantQuantity: offer.orchard?.plant_quantity ?? 0,
             year: offer.orchard?.year ?? 0,
+            age: offer.orchard?.age ?? 0,
             coverPhoto: offer.orchard?.cover_photo ?? null,
+            extraPhoto: offer.orchard?.extra_photo ?? null,
             agaveType: offer.orchard?.agave_type?.name ?? "",
             offers: [],
           });
@@ -173,22 +195,69 @@ export default function FarmerOffersPage() {
                 key={group.orchardId}
                 className="overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="relative">
-                  <Image
-                    src={
-                      orchardService.getPhotoUrl(group.coverPhoto) ||
-                      "/agave-field-plantation.png"
-                    }
-                    alt={group.orchardName}
-                    width={400}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-orange-600 text-white"
+                <div className="relative group">
+                  {group.extraPhoto && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((prev) => ({ ...prev, [group.orchardId]: 0 })); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((prev) => ({ ...prev, [group.orchardId]: 1 })); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                  <div
+                    className="relative w-full h-48 overflow-hidden"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={(e) => handleTouchEnd(e, group.orchardId)}
+                  >
+                    <button
+                      className="block w-full h-full cursor-zoom-in"
+                      onClick={() => {
+                        const photo = (activeImageIndex[group.orchardId] || 0) === 0
+                          ? group.coverPhoto
+                          : group.extraPhoto;
+                        setPhotoZoomUrl(orchardService.getPhotoUrl(photo) || "/agave-field-plantation.png");
+                        setPhotoZoomOpen(true);
+                      }}
                     >
+                      <Image
+                        src={
+                          (activeImageIndex[group.orchardId] || 0) === 0
+                            ? orchardService.getPhotoUrl(group.coverPhoto) || "/agave-field-plantation.png"
+                            : orchardService.getPhotoUrl(group.extraPhoto) || "/agave-field-plantation.png"
+                        }
+                        alt={group.orchardName}
+                        width={400}
+                        height={200}
+                        className="w-full h-48 object-cover"
+                      />
+                    </button>
+                  </div>
+                  {group.extraPhoto && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[group.orchardId] || 0) === 0 ? "bg-white" : "bg-white/50"}`} />
+                      <div className={`w-2 h-2 rounded-full ${(activeImageIndex[group.orchardId] || 0) === 1 ? "bg-white" : "bg-white/50"}`} />
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
+                      <Camera className="w-3 h-3 mr-1" />
+                      {group.extraPhoto ? "2" : "1"} foto{group.extraPhoto ? "s" : ""}
+                    </Badge>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <Badge variant="secondary" className="bg-orange-600 text-white">
                       {group.offers.length}{" "}
                       {group.offers.length === 1 ? "oferta" : "ofertas"}
                     </Badge>
@@ -241,6 +310,23 @@ export default function FarmerOffersPage() {
                         <p className="text-sm font-medium text-gray-900">
                           {group.municipality}
                         </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Año</p>
+                        <p className="text-sm font-medium text-gray-900">{group.year}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm text-gray-500">Edad</p>
+                        <p className="text-sm font-medium text-gray-900">{group.age} años</p>
                       </div>
                     </div>
                   </div>
@@ -310,6 +396,35 @@ export default function FarmerOffersPage() {
           </div>
         )}
 
+        {/* ── Dialog Zoom foto carrusel ── */}
+        <Dialog open={photoZoomOpen} onOpenChange={setPhotoZoomOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Foto de la Huerta</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center">
+              <div className="overflow-auto max-h-[70vh] p-2">
+                <img
+                  src={photoZoomUrl}
+                  alt="Foto"
+                  className="max-w-none object-contain rounded-lg cursor-zoom-in"
+                  style={{ width: "100%", height: "auto" }}
+                  onClick={(e) => {
+                    const img = e.currentTarget;
+                    if (img.style.width === "100%") {
+                      img.style.width = "200%";
+                      img.style.cursor = "zoom-out";
+                    } else {
+                      img.style.width = "100%";
+                      img.style.cursor = "zoom-in";
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Dialog detalle de ofertas */}
         <Dialog open={showOffersDialog} onOpenChange={setShowOffersDialog}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -330,8 +445,19 @@ export default function FarmerOffersPage() {
                 {selectedGroup.offers.map((offer) => (
                   <div
                     key={offer.id}
-                    className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm"
+                    className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm"
                   >
+                    {/* ── Precio final al tope (solo visible tras revisión del admin) ── */}
+                    {offer.status !== "pendiente" && offer.farmer_price !== null && (
+                      <div className="bg-blue-50 border-b border-blue-200 p-4 text-center">
+                        <p className="text-xs font-medium text-blue-700 mb-1">Tu precio de venta</p>
+                        <p className="text-2xl font-bold text-blue-900">
+                          ${Number(offer.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
@@ -377,27 +503,14 @@ export default function FarmerOffersPage() {
                     ) : (
                       /* ── Oferta revisada o con resolución: detalles completos ── */
                       <div className="space-y-4">
-                        {offer.farmer_price !== null && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <p className="text-sm font-semibold text-blue-800 mb-1">
-                              Tu precio de venta
-                            </p>
-                            <p className="text-2xl font-bold text-blue-900">
-                              $
-                              {Number(offer.farmer_price).toLocaleString(
-                                "es-MX",
-                              )}
-                            </p>
-                            {offer.admin_notes && (
-                              <p className="text-xs text-blue-600 mt-2">
-                                {offer.admin_notes}
-                              </p>
-                            )}
+                        {offer.admin_notes && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                            <p className="text-xs text-blue-600">{offer.admin_notes}</p>
                           </div>
                         )}
                         <div className="space-y-2">
                           <Label>Cm de Jima</Label>
-                          <Input type="number" readOnly value={offer.jima_cm} />
+                          <Input type="number" readOnly value={Number(offer.jima_cm).toFixed(2)} />
                         </div>
                         <div className="space-y-2">
                           <Label>Meses financiado</Label>
@@ -538,6 +651,7 @@ export default function FarmerOffersPage() {
                         )}
                       </div>
                     )}
+                    </div>
                   </div>
                 ))}
               </div>
