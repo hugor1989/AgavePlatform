@@ -74,6 +74,8 @@ export default function CompanyDashboard() {
                       daysRemaining: getDaysRemaining(story.expires_at),
                       createdAt: formatDate(story.created_at),
                       expired: story.is_expired,
+                      companyName: story.company?.business_name ?? null,
+                      plantQuantity: story.plant_quantity ?? null,
                     }}
                     onPlay={() => handlePlay(story)}
                   />

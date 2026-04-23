@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Play, MapPin, User, Clock, Video } from "lucide-react"
+import { Play, MapPin, User, Clock, Video, Building2, Sprout } from "lucide-react"
 import Image from "next/image"
 
 interface StoryCardData {
@@ -15,6 +15,8 @@ interface StoryCardData {
   daysRemaining: number
   createdAt: string
   expired: boolean
+  companyName?: string | null
+  plantQuantity?: number | null
 }
 
 interface HuertaVideoCardProps {
@@ -73,6 +75,22 @@ export default function HuertaVideoCard({ huerta, thumbnailUrl, onPlay }: Huerta
           <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs text-gray-600 truncate">{huerta.state}, {huerta.municipality}</span>
         </div>
+
+        {/* Empresa */}
+        {huerta.companyName && (
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <span className="text-xs text-gray-600 truncate">{huerta.companyName}</span>
+          </div>
+        )}
+
+        {/* Cantidad de plantas */}
+        {huerta.plantQuantity != null && (
+          <div className="flex items-center gap-1.5">
+            <Sprout className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <span className="text-xs text-gray-600">{huerta.plantQuantity.toLocaleString()} plantas</span>
+          </div>
+        )}
 
         {/* Fecha */}
         <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100">

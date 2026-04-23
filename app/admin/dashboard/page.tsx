@@ -130,7 +130,7 @@ export default function AdminDashboard() {
       const story = await jimaStoryService.create(
         Number(selectedOrchardId),
         videoFile,
-        selectedCompanyId ? Number(selectedCompanyId) : null,
+        selectedCompanyId && selectedCompanyId !== "none" ? Number(selectedCompanyId) : null,
         plantQuantity ? Number(plantQuantity) : null,
       )
       setStories(prev => [story, ...prev])
@@ -276,10 +276,10 @@ export default function AdminDashboard() {
                       <SelectValue placeholder="Selecciona una empresa" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sin empresa</SelectItem>
+                      <SelectItem value="none">Sin empresa</SelectItem>
                       {companies.map((c) => (
                         <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name}
+                          {c.business_name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -359,6 +359,8 @@ export default function AdminDashboard() {
                         daysRemaining: getDaysRemaining(story.expires_at),
                         createdAt: formatDate(story.created_at),
                         expired: false,
+                        companyName: story.company?.business_name ?? null,
+                        plantQuantity: story.plant_quantity ?? null,
                       }}
                     />
                   </div>
@@ -391,6 +393,8 @@ export default function AdminDashboard() {
                           daysRemaining: 0,
                           createdAt: formatDate(story.created_at),
                           expired: true,
+                          companyName: story.company?.business_name ?? null,
+                          plantQuantity: story.plant_quantity ?? null,
                         }}
                       />
                     </div>

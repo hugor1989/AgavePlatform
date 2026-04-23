@@ -24,7 +24,7 @@ export interface JimaStory {
   }
   company?: {
     id: number
-    name: string
+    business_name: string
   }
 }
 
