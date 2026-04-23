@@ -4,6 +4,8 @@ export interface JimaStory {
   id: number
   orchard_id: number
   farmer_id: number
+  company_id: number | null
+  plant_quantity: number | null
   video_path: string
   expires_at: string
   is_expired: boolean
@@ -20,6 +22,10 @@ export interface JimaStory {
     full_name: string
     unique_identifier: string
   }
+  company?: {
+    id: number
+    name: string
+  }
 }
 
 export const jimaStoryService = {
@@ -28,13 +34,18 @@ export const jimaStoryService = {
     return Array.isArray(data?.data) ? data.data : []
   },
 
-  create: async (orchardId: number, videoFile: File): Promise<JimaStory> => {
+  create: async (
+    orchardId: number,
+    videoFile: File,
+    companyId?: number | null,
+    plantQuantity?: number | null,
+  ): Promise<JimaStory> => {
     const form = new FormData()
     form.append("orchard_id", String(orchardId))
     form.append("video", videoFile)
-    const { data } = await api.post("/jima-stories", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    if (companyId) form.append("company_id", String(companyId))
+    if (plantQuantity) form.append("plant_quantity", String(plantQuantity))
+    const { data } = await api.post("/jima-stories", form)
     return data.data
   },
 

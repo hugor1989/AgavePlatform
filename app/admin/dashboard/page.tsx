@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { jimaStoryService, JimaStory } from "@/services/jimaStoryService"
 import { farmerService } from "@/services/farmerService"
 import { orchardService, Orchard } from "@/services/orchardService"
+import { companiService } from "@/services/companiService"
 import { toast } from "sonner"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
 
@@ -31,12 +32,15 @@ export default function AdminDashboard() {
   const [stories, setStories]           = useState<JimaStory[]>([])
   const [farmers, setFarmers]           = useState<any[]>([])
   const [allOrchards, setAllOrchards]   = useState<Orchard[]>([])
+  const [companies, setCompanies]       = useState<any[]>([])
   const [loadingData, setLoadingData]   = useState(true)
 
   // Dialog upload
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [selectedFarmerId, setSelectedFarmerId]     = useState("")
   const [selectedOrchardId, setSelectedOrchardId]   = useState("")
+  const [selectedCompanyId, setSelectedCompanyId]   = useState("")
+  const [plantQuantity, setPlantQuantity]           = useState("")
   const [videoFile, setVideoFile]                   = useState<File | null>(null)
   const [isUploading, setIsUploading]               = useState(false)
   const fileInputRef                                = useRef<HTMLInputElement>(null)
@@ -54,11 +58,13 @@ export default function AdminDashboard() {
       jimaStoryService.getAll(),
       farmerService.getActive(),
       orchardService.getAll({ per_page: 1000 }),
-    ]).then(([storiesData, farmersData, orchardsData]) => {
+      companiService.getAll(),
+    ]).then(([storiesData, farmersData, orchardsData, companiesData]) => {
       setStories(storiesData)
       setFarmers(farmersData)
       const list = Array.isArray(orchardsData) ? orchardsData : (orchardsData as any)?.data ?? []
       setAllOrchards(list)
+      setCompanies(Array.isArray(companiesData) ? companiesData : [])
     }).catch(console.error)
       .finally(() => setLoadingData(false))
   }, [])
@@ -111,6 +117,8 @@ export default function AdminDashboard() {
   const resetDialog = () => {
     setSelectedFarmerId("")
     setSelectedOrchardId("")
+    setSelectedCompanyId("")
+    setPlantQuantity("")
     setVideoFile(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
@@ -119,7 +127,12 @@ export default function AdminDashboard() {
     if (!selectedOrchardId || !videoFile) return
     setIsUploading(true)
     try {
-      const story = await jimaStoryService.create(Number(selectedOrchardId), videoFile)
+      const story = await jimaStoryService.create(
+        Number(selectedOrchardId),
+        videoFile,
+        selectedCompanyId ? Number(selectedCompanyId) : null,
+        plantQuantity ? Number(plantQuantity) : null,
+      )
       setStories(prev => [story, ...prev])
       toast.success("Historia subida. Expira en 7 días.")
       setIsUploadDialogOpen(false)
@@ -253,6 +266,36 @@ export default function AdminDashboard() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Selector empresa (opcional) */}
+                <div className="space-y-2">
+                  <Label>Empresa <span className="text-gray-400 text-xs">(opcional)</span></Label>
+                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona una empresa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin empresa</SelectItem>
+                      {companies.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Cantidad de plantas (opcional) */}
+                <div className="space-y-2">
+                  <Label>Cantidad de plantas <span className="text-gray-400 text-xs">(opcional)</span></Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    placeholder="Ej. 500"
+                    value={plantQuantity}
+                    onChange={(e) => setPlantQuantity(e.target.value)}
+                  />
                 </div>
 
                 {/* Upload video */}

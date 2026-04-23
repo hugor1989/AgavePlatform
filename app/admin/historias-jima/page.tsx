@@ -7,26 +7,31 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { jimaStoryService, JimaStory } from "@/services/jimaStoryService"
 import { farmerService } from "@/services/farmerService"
 import { orchardService, Orchard } from "@/services/orchardService"
+import { companiService } from "@/services/companiService"
 import { toast } from "sonner"
-import { Plus, Trash2, Play, Clock, Video, Upload } from "lucide-react"
+import { Plus, Trash2, Play, Clock, Video, Upload, Building2 } from "lucide-react"
 import Image from "next/image"
 
 export default function AdminHistoriasJimaPage() {
   const [stories, setStories]             = useState<JimaStory[]>([])
   const [farmers, setFarmers]             = useState<any[]>([])
   const [allOrchards, setAllOrchards]     = useState<Orchard[]>([])
+  const [companies, setCompanies]         = useState<any[]>([])
   const [loading, setLoading]             = useState(true)
 
   // Form
-  const [selectedFarmerId, setSelectedFarmerId] = useState<string>("")
+  const [selectedFarmerId, setSelectedFarmerId]   = useState<string>("")
   const [selectedOrchardId, setSelectedOrchardId] = useState<string>("")
-  const [videoFile, setVideoFile]         = useState<File | null>(null)
-  const [videoPreview, setVideoPreview]   = useState<string | null>(null)
-  const [isCreating, setIsCreating]       = useState(false)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("")
+  const [plantQuantity, setPlantQuantity]         = useState<string>("")
+  const [videoFile, setVideoFile]                 = useState<File | null>(null)
+  const [videoPreview, setVideoPreview]           = useState<string | null>(null)
+  const [isCreating, setIsCreating]               = useState(false)
 
   // Video dialog
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
@@ -41,12 +46,13 @@ export default function AdminHistoriasJimaPage() {
       jimaStoryService.getAll(),
       farmerService.getActive(),
       orchardService.getAll({ per_page: 1000 }),
-    ]).then(([storiesData, farmersData, orchardsData]) => {
+      companiService.getAll(),
+    ]).then(([storiesData, farmersData, orchardsData, companiesData]) => {
       setStories(storiesData)
       setFarmers(farmersData)
-      // getAll devuelve el paginador de Laravel; el array real está en .data
       const list = Array.isArray(orchardsData) ? orchardsData : (orchardsData as any)?.data ?? []
       setAllOrchards(list)
+      setCompanies(Array.isArray(companiesData) ? companiesData : [])
     }).catch(console.error)
       .finally(() => setLoading(false))
   }, [])
@@ -66,10 +72,17 @@ export default function AdminHistoriasJimaPage() {
     if (!selectedOrchardId || !videoFile) return
     setIsCreating(true)
     try {
-      const story = await jimaStoryService.create(Number(selectedOrchardId), videoFile)
+      const story = await jimaStoryService.create(
+        Number(selectedOrchardId),
+        videoFile,
+        selectedCompanyId ? Number(selectedCompanyId) : null,
+        plantQuantity ? Number(plantQuantity) : null,
+      )
       setStories(prev => [story, ...prev])
       setSelectedFarmerId("")
       setSelectedOrchardId("")
+      setSelectedCompanyId("")
+      setPlantQuantity("")
       setVideoFile(null)
       setVideoPreview(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -205,6 +218,36 @@ export default function AdminHistoriasJimaPage() {
                     )}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Seleccionar empresa (opcional) */}
+              <div className="space-y-2">
+                <Label>Empresa <span className="text-gray-400 text-xs">(opcional)</span></Label>
+                <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin empresa</SelectItem>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Cantidad de plantas (opcional) */}
+              <div className="space-y-2">
+                <Label>Cantidad de plantas <span className="text-gray-400 text-xs">(opcional)</span></Label>
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="Ej. 500"
+                  value={plantQuantity}
+                  onChange={(e) => setPlantQuantity(e.target.value)}
+                />
               </div>
             </div>
 
@@ -375,6 +418,19 @@ function StoryCard({
         <p className="text-sm text-gray-600">
           <span className="font-medium">Agricultor:</span> {story.farmer?.full_name ?? "—"}
         </p>
+
+        {story.company && (
+          <p className="text-sm text-gray-600 flex items-center gap-1">
+            <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            {story.company.name}
+          </p>
+        )}
+
+        {story.plant_quantity != null && (
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Plantas:</span> {story.plant_quantity.toLocaleString()}
+          </p>
+        )}
 
         <div className="flex items-center gap-2 text-sm">
           <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
