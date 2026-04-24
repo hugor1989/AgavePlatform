@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { AppLayout } from "@/components/layouts/app-layout"
+import { ZoomableImage } from "@/components/ui/ZoomableImage"
 import {
   Search,
   MapPin,
@@ -461,21 +462,7 @@ export default function CompanyCatalogPage() {
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader><DialogTitle>Foto de la Huerta</DialogTitle></DialogHeader>
-            <div className="flex justify-center">
-              <div className="overflow-auto max-h-[70vh] p-2">
-                <img
-                  src={selectedPhoto || "/placeholder.svg"}
-                  alt="Foto"
-                  className="max-w-none object-contain rounded-lg cursor-zoom-in"
-                  style={{ width: "100%", height: "auto" }}
-                  onClick={(e) => {
-                    const img = e.currentTarget
-                    if (img.style.width === "100%") { img.style.width = "200%"; img.style.cursor = "zoom-out" }
-                    else { img.style.width = "100%"; img.style.cursor = "zoom-in" }
-                  }}
-                />
-              </div>
-            </div>
+            <ZoomableImage src={selectedPhoto || "/placeholder.svg"} alt="Foto" />
           </DialogContent>
         </Dialog>
       </div>

@@ -41,6 +41,8 @@ export interface OrchardSale {
     unique_identifier: string
     email: string
     phone: string
+    rfc?: string
+    clabe?: string
   }
 }
 

@@ -10,6 +10,7 @@ import { Search, Calendar, MapPin, Camera, Eye, Clock, Share2, Award as IdCard, 
 import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { orchardService } from "@/services/orchardService"
+import { ZoomableImage } from "@/components/ui/ZoomableImage"
 
 export default function FarmerHuertasPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -431,26 +432,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             <DialogHeader>
               <DialogTitle>Foto de la Huerta</DialogTitle>
             </DialogHeader>
-            <div className="flex justify-center">
-              <div className="overflow-auto max-h-[70vh] p-2">
-                  <img
-                    src={selectedPhoto || "/placeholder.svg"}
-                    alt="Foto"
-                    className="max-w-none object-contain rounded-lg cursor-zoom-in"
-                    style={{ width: "100%", height: "auto" }}
-                    onClick={(e) => {
-                      const img = e.currentTarget;
-                      if (img.style.width === "100%") {
-                        img.style.width = "200%";
-                        img.style.cursor = "zoom-out";
-                      } else {
-                        img.style.width = "100%";
-                        img.style.cursor = "zoom-in";
-                      }
-                    }}
-                  />
-                </div>
-            </div>
+            <ZoomableImage src={selectedPhoto || "/placeholder.svg"} alt="Foto" />
           </DialogContent>
         </Dialog>
 

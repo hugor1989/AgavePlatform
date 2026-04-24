@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { AppLayout } from "@/components/layouts/app-layout"
+import { ZoomableImage } from "@/components/ui/ZoomableImage"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -944,26 +945,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             <DialogHeader>
               <DialogTitle>Foto de la Huerta</DialogTitle>
             </DialogHeader>
-            <div className="flex justify-center">
-              <div className="overflow-auto max-h-[70vh] p-2">
-                  <img
-                    src={selectedPhoto || "/placeholder.svg"}
-                    alt="Foto"
-                    className="max-w-none object-contain rounded-lg cursor-zoom-in"
-                    style={{ width: "100%", height: "auto" }}
-                    onClick={(e) => {
-                      const img = e.currentTarget;
-                      if (img.style.width === "100%") {
-                        img.style.width = "200%";
-                        img.style.cursor = "zoom-out";
-                      } else {
-                        img.style.width = "100%";
-                        img.style.cursor = "zoom-in";
-                      }
-                    }}
-                  />
-                </div>
-            </div>
+            <ZoomableImage src={selectedPhoto || "/placeholder.svg"} alt="Foto" />
           </DialogContent>
         </Dialog>
 

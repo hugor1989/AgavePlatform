@@ -297,7 +297,10 @@ export default function AdminOfertasPage() {
                                 <span className="font-medium text-gray-600">
                                   Precio por kg. $:
                                 </span>{" "}
-                                ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                                $
+                                {Number(offer.price).toLocaleString("es-MX", {
+                                  minimumFractionDigits: 2,
+                                })}
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
@@ -319,7 +322,7 @@ export default function AdminOfertasPage() {
                               </div>
                               <div className="sm:col-span-2">
                                 <span className="font-medium text-gray-600">
-                                  Se jimará a partir de * kilos para arriba * por viaje:
+                                  Se jimará a partir de * kilos para arriba *:
                                 </span>{" "}
                                 {offer.min_kilos?.toLocaleString()}
                               </div>
@@ -335,7 +338,8 @@ export default function AdminOfertasPage() {
                               </div>
                               <div>
                                 <span className="font-medium text-gray-600">
-                                  El Agave sería puesto en fábrica o la fábrica se encargaría de toda la logística *:
+                                  El Agave sería puesto en fábrica o la fábrica
+                                  se encargaría de toda la logística *:
                                 </span>{" "}
                                 <span className="text-gray-700">
                                   {offer.logistics}

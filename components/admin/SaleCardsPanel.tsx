@@ -69,12 +69,17 @@ export function SaleCardsPanel({
   const [previewTitle, setPreviewTitle] = useState("");
   const [photoZoomUrl, setPhotoZoomUrl] = useState("");
   const [photoZoomOpen, setPhotoZoomOpen] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState<Record<number, number>>({});
+  const [activeImageIndex, setActiveImageIndex] = useState<
+    Record<number, number>
+  >({});
   const touchStartX = useRef<number>(0);
   const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   // Estado para el diálogo de pesada (kilos + archivo)
-  const [weighDialog, setWeighDialog] = useState<{ tripId: number; saleId: number } | null>(null);
+  const [weighDialog, setWeighDialog] = useState<{
+    tripId: number;
+    saleId: number;
+  } | null>(null);
   const [weighKilos, setWeighKilos] = useState("");
   const [weighFile, setWeighFile] = useState<File | null>(null);
   const weighFileRef = useRef<HTMLInputElement | null>(null);
@@ -95,7 +100,10 @@ export function SaleCardsPanel({
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       let finalUrl = url;
       if (isIOS && url.includes("google.com/maps")) {
-        finalUrl = url.replace("https://www.google.com/maps", "https://maps.apple.com");
+        finalUrl = url.replace(
+          "https://www.google.com/maps",
+          "https://maps.apple.com",
+        );
       }
       window.open(finalUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
@@ -145,7 +153,12 @@ export function SaleCardsPanel({
     }
   };
 
-  const handleUploadWeigh = async (tripId: number, saleId: number, file: File, kilos: number) => {
+  const handleUploadWeigh = async (
+    tripId: number,
+    saleId: number,
+    file: File,
+    kilos: number,
+  ) => {
     setUploadingWeighId(tripId);
     try {
       const updated = await jimaTripService.uploadWeigh(tripId, file, kilos);
@@ -162,8 +175,16 @@ export function SaleCardsPanel({
   const handleConfirmWeigh = async () => {
     if (!weighDialog || !weighFile || !weighKilos) return;
     const kilos = parseFloat(weighKilos);
-    if (isNaN(kilos) || kilos <= 0) { toast.error("Ingresa una cantidad de kilos válida."); return; }
-    await handleUploadWeigh(weighDialog.tripId, weighDialog.saleId, weighFile, kilos);
+    if (isNaN(kilos) || kilos <= 0) {
+      toast.error("Ingresa una cantidad de kilos válida.");
+      return;
+    }
+    await handleUploadWeigh(
+      weighDialog.tripId,
+      weighDialog.saleId,
+      weighFile,
+      kilos,
+    );
     setWeighDialog(null);
     setWeighKilos("");
     setWeighFile(null);
@@ -215,23 +236,49 @@ export function SaleCardsPanel({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 0 }));
+                        setActiveImageIndex((prev) => ({
+                          ...prev,
+                          [sale.id]: 0,
+                        }));
                       }}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
                       </svg>
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveImageIndex((prev) => ({ ...prev, [sale.id]: 1 }));
+                        setActiveImageIndex((prev) => ({
+                          ...prev,
+                          [sale.id]: 1,
+                        }));
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </button>
                   </>
@@ -246,18 +293,26 @@ export function SaleCardsPanel({
                   <button
                     className="block w-full h-full cursor-zoom-in"
                     onClick={() => {
-                      const photo = (activeImageIndex[sale.id] || 0) === 0
-                        ? sale.orchard?.cover_photo ?? null
-                        : sale.orchard?.extra_photo ?? null;
-                      setPhotoZoomUrl(orchardService.getPhotoUrl(photo) || "/agave-field-plantation.png");
+                      const photo =
+                        (activeImageIndex[sale.id] || 0) === 0
+                          ? (sale.orchard?.cover_photo ?? null)
+                          : (sale.orchard?.extra_photo ?? null);
+                      setPhotoZoomUrl(
+                        orchardService.getPhotoUrl(photo) ||
+                          "/agave-field-plantation.png",
+                      );
                       setPhotoZoomOpen(true);
                     }}
                   >
                     <Image
                       src={
                         (activeImageIndex[sale.id] || 0) === 0
-                          ? orchardService.getPhotoUrl(sale.orchard?.cover_photo ?? null) || "/agave-field-plantation.png"
-                          : orchardService.getPhotoUrl(sale.orchard?.extra_photo ?? null) || "/agave-field-plantation.png"
+                          ? orchardService.getPhotoUrl(
+                              sale.orchard?.cover_photo ?? null,
+                            ) || "/agave-field-plantation.png"
+                          : orchardService.getPhotoUrl(
+                              sale.orchard?.extra_photo ?? null,
+                            ) || "/agave-field-plantation.png"
                       }
                       alt={sale.orchard?.name ?? "Huerta"}
                       width={400}
@@ -270,16 +325,24 @@ export function SaleCardsPanel({
                 {/* Indicadores de posición */}
                 {sale.orchard?.extra_photo && (
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                    <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 0 ? "bg-white" : "bg-white/50"}`} />
-                    <div className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 1 ? "bg-white" : "bg-white/50"}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 0 ? "bg-white" : "bg-white/50"}`}
+                    />
+                    <div
+                      className={`w-2 h-2 rounded-full ${(activeImageIndex[sale.id] || 0) === 1 ? "bg-white" : "bg-white/50"}`}
+                    />
                   </div>
                 )}
 
                 {/* Contador de fotos */}
                 <div className="absolute top-3 left-3">
-                  <Badge variant="secondary" className="bg-black/70 text-white hover:bg-black/80">
+                  <Badge
+                    variant="secondary"
+                    className="bg-black/70 text-white hover:bg-black/80"
+                  >
                     <Camera className="w-3 h-3 mr-1" />
-                    {sale.orchard?.extra_photo ? "2" : "1"} foto{sale.orchard?.extra_photo ? "s" : ""}
+                    {sale.orchard?.extra_photo ? "2" : "1"} foto
+                    {sale.orchard?.extra_photo ? "s" : ""}
                   </Badge>
                 </div>
 
@@ -375,14 +438,18 @@ export function SaleCardsPanel({
 
                 {sale.orchard?.location_url && (
                   <div
-                    onClick={() => handleOpenLocation(sale.orchard!.location_url!)}
+                    onClick={() =>
+                      handleOpenLocation(sale.orchard!.location_url!)
+                    }
                     className="bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:bg-green-100 active:scale-[0.98] transition"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center h-9 w-9 rounded-full bg-green-200 shrink-0">
                         <MapPin className="h-5 w-5 text-green-700" />
                       </div>
-                      <p className="text-sm font-medium text-green-800">Ver ubicación</p>
+                      <p className="text-sm font-medium text-green-800">
+                        Ver ubicación
+                      </p>
                     </div>
                     <button
                       onClick={(e) => {
@@ -480,47 +547,78 @@ export function SaleCardsPanel({
                   </div>
                 )}
 
-                {isTerminatedView && (() => {
-                  const totalKilos = trips.reduce((sum, t) => sum + (t.kilos ? Number(t.kilos) : 0), 0);
-                  if (totalKilos === 0) return null;
-                  const fmt = (n: number) => n.toLocaleString("es-MX", { minimumFractionDigits: 2 });
-                  const companyPrice  = Number(sale.company_price);
-                  const farmerPrice   = Number(sale.farmer_price);
-                  const commission    = companyPrice - farmerPrice;
+                {isTerminatedView &&
+                  (() => {
+                    const totalKilos = trips.reduce(
+                      (sum, t) => sum + (t.kilos ? Number(t.kilos) : 0),
+                      0,
+                    );
+                    if (totalKilos === 0) return null;
+                    const fmt = (n: number) =>
+                      n.toLocaleString("es-MX", { minimumFractionDigits: 2 });
+                    const companyPrice = Number(sale.company_price);
+                    const farmerPrice = Number(sale.farmer_price);
+                    const commission = companyPrice - farmerPrice;
 
-                  if (role === "admin") return (
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        Totales finales — {totalKilos.toLocaleString("es-MX")} kg
-                      </p>
-                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                        <p className="text-xs text-teal-700">Total a cobrar a la empresa</p>
-                        <p className="text-lg font-bold text-teal-900">${fmt(totalKilos * companyPrice)}</p>
-                      </div>
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <p className="text-xs text-green-700">Total a pagar al agricultor</p>
-                        <p className="text-lg font-bold text-green-900">${fmt(totalKilos * farmerPrice)}</p>
-                      </div>
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                        <p className="text-xs text-purple-700">Comisión total plataforma</p>
-                        <p className="text-lg font-bold text-purple-900">${fmt(totalKilos * commission)}</p>
-                      </div>
-                    </div>
-                  );
-                  if (role === "company") return (
-                    <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                      <p className="text-xs text-teal-700">Total a pagar — {totalKilos.toLocaleString("es-MX")} kg</p>
-                      <p className="text-lg font-bold text-teal-900">${fmt(totalKilos * companyPrice)}</p>
-                    </div>
-                  );
-                  if (role === "farmer") return (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-xs text-green-700">Total a cobrar — {totalKilos.toLocaleString("es-MX")} kg</p>
-                      <p className="text-lg font-bold text-green-900">${fmt(totalKilos * farmerPrice)}</p>
-                    </div>
-                  );
-                  return null;
-                })()}
+                    if (role === "admin")
+                      return (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            Totales finales —{" "}
+                            {totalKilos.toLocaleString("es-MX")} kg
+                          </p>
+                          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                            <p className="text-xs text-teal-700">
+                              Total a cobrar a la empresa
+                            </p>
+                            <p className="text-lg font-bold text-teal-900">
+                              ${fmt(totalKilos * companyPrice)}
+                            </p>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <p className="text-xs text-green-700">
+                              Total a pagar al agricultor
+                            </p>
+                            <p className="text-lg font-bold text-green-900">
+                              ${fmt(totalKilos * farmerPrice)}
+                            </p>
+                          </div>
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                            <p className="text-xs text-purple-700">
+                              Comisión total plataforma
+                            </p>
+                            <p className="text-lg font-bold text-purple-900">
+                              ${fmt(totalKilos * commission)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    if (role === "company")
+                      return (
+                        <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                          <p className="text-xs text-teal-700">
+                            Total a pagar — {totalKilos.toLocaleString("es-MX")}{" "}
+                            kg
+                          </p>
+                          <p className="text-lg font-bold text-teal-900">
+                            ${fmt(totalKilos * companyPrice)}
+                          </p>
+                        </div>
+                      );
+                    if (role === "farmer")
+                      return (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <p className="text-xs text-green-700">
+                            Total a cobrar —{" "}
+                            {totalKilos.toLocaleString("es-MX")} kg
+                          </p>
+                          <p className="text-lg font-bold text-green-900">
+                            ${fmt(totalKilos * farmerPrice)}
+                          </p>
+                        </div>
+                      );
+                    return null;
+                  })()}
 
                 {isTerminatedView ? (
                   <div className="space-y-2">
@@ -676,6 +774,26 @@ export function SaleCardsPanel({
                       </p>
                     </div>
                   )}
+                  {role === "admin" && (selectedSale.farmer?.clabe || selectedSale.farmer?.rfc) && (
+                    <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
+                      {selectedSale.farmer?.clabe && (
+                        <div>
+                          <p className="text-xs text-gray-400 font-medium">CLABE</p>
+                          <p className="text-xs font-mono font-semibold text-gray-800 tracking-wide">
+                            {selectedSale.farmer.clabe}
+                          </p>
+                        </div>
+                      )}
+                      {selectedSale.farmer?.rfc && (
+                        <div>
+                          <p className="text-xs text-gray-400 font-medium">RFC</p>
+                          <p className="text-xs font-mono font-semibold text-gray-800 tracking-wide">
+                            {selectedSale.farmer.rfc}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-gray-500 font-medium mb-1">Empresa</p>
@@ -801,9 +919,7 @@ export function SaleCardsPanel({
                 />
               </div>
               <div className="space-y-2">
-                <Label>
-                  Se jimará a partir de * kilos para arriba * por viaje
-                </Label>
+                <Label>Se jimará a partir de * kilos para arriba *</Label>
                 <Input
                   type="number"
                   readOnly
@@ -948,7 +1064,10 @@ export function SaleCardsPanel({
                                                 trip.id,
                                               );
                                             setPreviewUrl(url);
-                                            setPreviewTitle("Guía — Viaje " + trip.trip_number);
+                                            setPreviewTitle(
+                                              "Guía — Viaje " +
+                                                trip.trip_number,
+                                            );
                                             setPreviewOpen(true);
                                           }}
                                         >
@@ -1018,43 +1137,73 @@ export function SaleCardsPanel({
                                     {trip.weigh_path ? (
                                       <div className="flex items-center gap-1 flex-wrap">
                                         <CheckCircle2 className="w-3 h-3 text-blue-500" />
-                                        <span className="text-xs text-blue-600">Pesada subida</span>
-                                        {trip.kilos !== null && trip.kilos !== undefined && (
-                                          <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
-                                            {Number(trip.kilos).toLocaleString("es-MX")} kg
-                                          </span>
-                                        )}
+                                        <span className="text-xs text-blue-600">
+                                          Pesada subida
+                                        </span>
+                                        {trip.kilos !== null &&
+                                          trip.kilos !== undefined && (
+                                            <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                                              {Number(
+                                                trip.kilos,
+                                              ).toLocaleString("es-MX")}{" "}
+                                              kg
+                                            </span>
+                                          )}
                                         <button
                                           className="ml-1 text-xs text-blue-600 underline flex items-center gap-1 hover:text-blue-800"
                                           onClick={async () => {
-                                            const url = await jimaTripService.getWeighUrl(trip.id);
+                                            const url =
+                                              await jimaTripService.getWeighUrl(
+                                                trip.id,
+                                              );
                                             setPreviewUrl(url);
-                                            setPreviewTitle("Pesada — Viaje " + trip.trip_number);
+                                            setPreviewTitle(
+                                              "Pesada — Viaje " +
+                                                trip.trip_number,
+                                            );
                                             setPreviewOpen(true);
                                           }}
                                         >
-                                          <ExternalLink className="w-3 h-3" /> Ver
+                                          <ExternalLink className="w-3 h-3" />{" "}
+                                          Ver
                                         </button>
                                       </div>
                                     ) : (
-                                      <p className="text-xs text-gray-400">Sin pesada adjunta</p>
+                                      <p className="text-xs text-gray-400">
+                                        Sin pesada adjunta
+                                      </p>
                                     )}
                                   </div>
                                   {!isTerminatedView && (
                                     <div className="flex-shrink-0">
                                       <Button
                                         size="sm"
-                                        variant={trip.weigh_path ? "outline" : "default"}
-                                        className={trip.weigh_path ? "border-blue-300 text-blue-700 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700"}
+                                        variant={
+                                          trip.weigh_path
+                                            ? "outline"
+                                            : "default"
+                                        }
+                                        className={
+                                          trip.weigh_path
+                                            ? "border-blue-300 text-blue-700 hover:bg-blue-50"
+                                            : "bg-blue-600 hover:bg-blue-700"
+                                        }
                                         disabled={uploadingWeighId === trip.id}
                                         onClick={() => {
-                                          setWeighDialog({ tripId: trip.id, saleId: selectedSale.id });
+                                          setWeighDialog({
+                                            tripId: trip.id,
+                                            saleId: selectedSale.id,
+                                          });
                                           setWeighKilos("");
                                           setWeighFile(null);
                                         }}
                                       >
                                         <Upload className="w-3 h-3 mr-1" />
-                                        {uploadingWeighId === trip.id ? "Subiendo..." : trip.weigh_path ? "Reemplazar pesada" : "Subir pesada de viaje"}
+                                        {uploadingWeighId === trip.id
+                                          ? "Subiendo..."
+                                          : trip.weigh_path
+                                            ? "Reemplazar pesada"
+                                            : "Subir pesada de viaje"}
                                       </Button>
                                     </div>
                                   )}
@@ -1174,7 +1323,12 @@ export function SaleCardsPanel({
       </Dialog>
 
       {/* ── Dialog Subir Pesada (kilos + archivo) ── */}
-      <Dialog open={!!weighDialog} onOpenChange={(open) => { if (!open) setWeighDialog(null); }}>
+      <Dialog
+        open={!!weighDialog}
+        onOpenChange={(open) => {
+          if (!open) setWeighDialog(null);
+        }}
+      >
         <DialogContent className="max-w-md w-full">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1218,13 +1372,17 @@ export function SaleCardsPanel({
                     {weighFile.name}
                   </span>
                 ) : (
-                  <span className="text-sm text-gray-500">Seleccionar archivo</span>
+                  <span className="text-sm text-gray-500">
+                    Seleccionar archivo
+                  </span>
                 )}
               </button>
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setWeighDialog(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setWeighDialog(null)}>
+              Cancelar
+            </Button>
             <Button
               className="bg-blue-600 hover:bg-blue-700"
               disabled={!weighFile || !weighKilos || uploadingWeighId !== null}

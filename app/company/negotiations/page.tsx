@@ -37,7 +37,7 @@ export default function CompanyNegotiations() {
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       String(o.id).includes(searchTerm) ||
-      (o.orchard?.orchard_number ?? '').includes(searchTerm),
+      (o.orchard?.orchard_number ?? "").includes(searchTerm),
   );
 
   const byStatus = (s: Offer["status"]) =>
@@ -115,60 +115,65 @@ export default function CompanyNegotiations() {
       <CardContent className="space-y-4">
         <div className="border border-gray-200 rounded-lg overflow-hidden space-y-0">
           <div className="bg-green-50 border-b border-gray-200 p-4 text-center">
-            <p className="text-xs font-medium text-green-700 mb-1">Precio por kg. ofertado</p>
+            <p className="text-xs font-medium text-green-700 mb-1">
+              Precio por kg. ofertado
+            </p>
             <p className="text-2xl font-bold text-green-900">
-              ${Number(offer.price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+              $
+              {Number(offer.price).toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+              })}
             </p>
           </div>
 
           <div className="p-4 space-y-4">
-          <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
+            <h4 className="font-medium text-gray-900">Detalles de la Oferta</h4>
 
-          <div className="space-y-2">
-            <Label>Cm de Jima</Label>
-            <Input type="number" readOnly value={offer.jima_cm} />
-          </div>
-          <div className="space-y-2">
-            <Label>Meses financiado</Label>
-            <Input type="number" readOnly value={offer.financing_months} />
-          </div>
-          <div className="space-y-2">
-            <Label>Fecha de mes de jima</Label>
-            <Input type="date" readOnly value={offer.harvest_date} />
-          </div>
-          <div className="space-y-2">
-            <Label>Se jimará a partir de * kilos para arriba * por viaje</Label>
-            <Input type="number" readOnly value={offer.min_kilos} />
-          </div>
-          <div className="space-y-2">
-            <Label>Cómo serían los pagos de viajes jimados *</Label>
-            <textarea
-              readOnly
-              value={offer.payment_terms}
-              rows={2}
-              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>
-              El Agave sería puesto en fábrica o la fábrica se encargaría de
-              toda la logística *
-            </Label>
-            <textarea
-              readOnly
-              value={offer.logistics}
-              rows={2}
-              className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
-            />
-          </div>
-
-          {offer.farmer_notified && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm font-medium text-blue-800">
-                Oferta enviada al agricultor para su aprobación
-              </p>
+            <div className="space-y-2">
+              <Label>Cm de Jima</Label>
+              <Input type="number" readOnly value={offer.jima_cm} />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label>Meses financiado</Label>
+              <Input type="number" readOnly value={offer.financing_months} />
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha de mes de jima</Label>
+              <Input type="date" readOnly value={offer.harvest_date} />
+            </div>
+            <div className="space-y-2">
+              <Label>Se jimará a partir de * kilos para arriba *</Label>
+              <Input type="number" readOnly value={offer.min_kilos} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cómo serían los pagos de viajes jimados *</Label>
+              <textarea
+                readOnly
+                value={offer.payment_terms}
+                rows={2}
+                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                El Agave sería puesto en fábrica o la fábrica se encargaría de
+                toda la logística *
+              </Label>
+              <textarea
+                readOnly
+                value={offer.logistics}
+                rows={2}
+                className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
+              />
+            </div>
+
+            {offer.farmer_notified && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-blue-800">
+                  Oferta enviada al agricultor para su aprobación
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
