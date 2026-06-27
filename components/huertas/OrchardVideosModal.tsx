@@ -102,6 +102,7 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
             <Video360Player
               src={videoService.streamUrl(selected.id)}
               autoPlay
+              className="h-full"
             />
           </div>
         </div>

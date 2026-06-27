@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
-import { Play, Pause, Volume2, VolumeX, Maximize2, RotateCcw } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 
 interface Video360PlayerProps {
   src: string
   autoPlay?: boolean
+  className?: string
 }
 
-export function Video360Player({ src, autoPlay = false }: Video360PlayerProps) {
+export function Video360Player({ src, autoPlay = false, className }: Video360PlayerProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -198,10 +199,31 @@ export function Video360Player({ src, autoPlay = false }: Video360PlayerProps) {
     v.currentTime = (val[0] / 100) * v.duration
   }
 
+  const skip = (seconds: number) => {
+    const v = videoRef.current
+    if (!v) return
+    v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + seconds))
+  }
+
+  // Flecha izquierda/derecha: pausa el video y mueve ~4 frames a 30fps
+  useEffect(() => {
+    const FRAME = 1 / 30 * 4
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
+      e.preventDefault()
+      const v = videoRef.current
+      if (!v) return
+      if (!v.paused) { v.pause(); setIsPlaying(false) }
+      skip(e.key === "ArrowLeft" ? -FRAME : FRAME)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
   return (
     <div
-      className="relative w-full bg-black select-none"
-      style={{ height: "65vh", cursor: isDragging.current ? "grabbing" : "grab" }}
+      className={`relative w-full bg-black select-none ${className ?? "h-[65vh]"}`}
+      style={{ cursor: isDragging.current ? "grabbing" : "grab" }}
       onMouseMove={showControlsTemporarily}
       onClick={showControlsTemporarily}
     >
@@ -248,6 +270,8 @@ export function Video360Player({ src, autoPlay = false }: Video360PlayerProps) {
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
+
+            <span className="text-white/50 text-xs hidden sm:inline">← → cuadro a cuadro</span>
 
             <span className="text-white text-xs tabular-nums">
               {fmtTime((progress / 100) * duration)} / {fmtTime(duration)}
