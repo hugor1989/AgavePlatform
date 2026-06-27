@@ -100,8 +100,6 @@ export default function AdminHuertasPage() {
   
   // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
-    console.log('🔵 [INICIO] handleAddHuerta llamado')
-    
     // Validar campos requeridos
     if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
       toast.error("Por favor completa todos los campos requeridos")
@@ -128,8 +126,6 @@ export default function AdminHuertasPage() {
         status: 'disponible',
       }
 
-      console.log(orchardData)
-      console.log('🚀 [API CALL] Llamando a createOrchard...')
       const result = await createOrchard(orchardData)
       
       setIsLoading(false)
@@ -167,7 +163,6 @@ export default function AdminHuertasPage() {
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
-    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.id)
     setIsLoading(true)
 
     try {
@@ -186,22 +181,17 @@ export default function AdminHuertasPage() {
 
       // Si hay una nueva foto, agregarla
       if (selectedHuerta.photo_id instanceof File) {
-        console.log('📸 [EDIT] Nueva foto detectada')
         orchardData.photo_id = selectedHuerta.photo_id
       }
 
-      console.log('🚀 [EDIT] Enviando actualización...')
       const result = await updateOrchard(selectedHuerta.id, orchardData)
-      console.log('📥 [EDIT] Resultado:', result)
 
       setIsLoading(false)
 
       if (result.success) {
-        console.log('✅ [EDIT] Actualización exitosa')
         toast.success('Huerta actualizada exitosamente')
         setIsEditDialogOpen(false)
       } else {
-        console.log('⚠️ [EDIT] Error en actualización')
         toast.error(result.error || 'Error al actualizar')
       }
     } catch (error: any) {
@@ -412,7 +402,6 @@ export default function AdminHuertasPage() {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null;
-                          console.log("📸 [PHOTO_ID] Seleccionado:", file?.name);
                           setNewHuerta((prev) => ({ ...prev, photoId: file }));
                         }}
                       />
@@ -448,7 +437,6 @@ export default function AdminHuertasPage() {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null;
-                          console.log("📸 [COVER_PHOTO] Seleccionado:", file?.name);
                           setNewHuerta((prev) => ({ ...prev, coverPhoto: file }));
                         }}
                       />
@@ -844,7 +832,6 @@ export default function AdminHuertasPage() {
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
-                      console.log('📸 [EDIT] Nueva foto seleccionada:', file?.name)
                       setSelectedHuerta({ ...selectedHuerta, photo_id: file })
                     }}
                     className="hidden"

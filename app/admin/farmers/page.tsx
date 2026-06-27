@@ -179,10 +179,7 @@ const handleChangePassword = async () => {
       new_password: newPassword,
     }
 
-    console.log(payload);
     const res = await farmerService.resetPassword(payload)
-
-    console.log(res);
     await alert.success("Contraseña actualizada correctamente", "El usuario podrá iniciar sesión con la nueva contraseña.")
 
     setIsPasswordDialogOpen(false)
@@ -408,9 +405,7 @@ const handleChangePassword = async () => {
                         user_id: otpTargetId,
                         code: otpCode.trim()
                       }
-                      console.log(confirmotp);
                       const res = await farmerService.verifyCode(confirmotp)
-                      console.log(res);
                       await alert.success("Código verificado correctamente", "El agricultor ha sido validado con éxito.")
                       setIsOtpDialogOpen(false)
                       await fetchFarmers()

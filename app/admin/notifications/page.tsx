@@ -94,12 +94,10 @@ export default function NotificationsPage() {
 
   const markAsRead = (id: number) => {
     // Lógica para marcar como leída
-    console.log(`Marking notification ${id} as read`)
   }
 
   const markAllAsRead = () => {
     // Lógica para marcar todas como leídas
-    console.log("Marking all notifications as read")
   }
 
   return (

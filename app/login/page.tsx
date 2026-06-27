@@ -32,8 +32,6 @@ export default function LoginPage() {
 
   try {
     const response = await login(formData)
-    console.log("Respuesta del login:", response)
-
     if (response.success) {
       const role = response.data?.role ?? 'admin'
 

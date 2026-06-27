@@ -121,8 +121,6 @@ export default function UsersPage() {
   }
 
   const handleCreateUser = () => {
-    // Lógica para crear usuario
-    console.log("Creating user:", newUser)
     setIsCreateDialogOpen(false)
     setNewUser({ name: "", email: "", role: "", status: "Activo" })
   }

@@ -54,13 +54,6 @@ api.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json'
     }
     
-    console.log('🚀 Axios Request Config:', {
-      url: config.url,
-      method: config.method,
-      hasFormData: config.data instanceof FormData,
-      headers: config.headers
-    })
-    
     return config
   },
   (error) => Promise.reject(error)
@@ -68,10 +61,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ Axios Response:', {
-      status: response.status,
-      url: response.config.url
-    })
     return response
   },
   (error) => {

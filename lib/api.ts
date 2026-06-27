@@ -64,13 +64,6 @@ api.interceptors.request.use(
       }
     }
 
-    console.log('🚀 Axios Request Config:', {
-      url: config.url,
-      method: config.method,
-      isFormData,
-      headers: config.headers
-    })
-
     return config
   },
   (error) => Promise.reject(error)
@@ -81,10 +74,6 @@ api.interceptors.request.use(
 // ----------------------------
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ Axios Response:', {
-      status: response.status,
-      url: response.config.url
-    })
     return response
   },
   (error) => {

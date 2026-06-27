@@ -7,7 +7,6 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    console.log("🔴 Redirigiendo a /login")
     const timer = setTimeout(() => {
       router.push("/login")
     }, 100)

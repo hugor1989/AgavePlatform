@@ -41,7 +41,6 @@ export default function AdminProfilePage() {
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsLoading(false)
-    console.log("Perfil actualizado")
   }
 
   const handlePasswordChange = async () => {
@@ -58,7 +57,6 @@ export default function AdminProfilePage() {
       newPassword: "",
       confirmPassword: "",
     })
-    console.log("Contraseña actualizada")
   }
 
   const handleInputChange = (field: string, value: string) => {

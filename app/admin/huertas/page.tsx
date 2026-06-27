@@ -111,8 +111,6 @@ export default function AdminHuertasPage() {
 
   // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
-    console.log('🔵 [INICIO] handleAddHuerta llamado')
-    
     // Validar campos requeridos
     if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
       toast.error("Por favor completa todos los campos requeridos")
@@ -143,7 +141,6 @@ export default function AdminHuertasPage() {
         is_featured: false,
       }
 
-      console.log('🚀 [API CALL] Llamando a createOrchard...')
       const result = await createOrchard(orchardData)
       
       setIsLoading(false)
@@ -184,7 +181,6 @@ export default function AdminHuertasPage() {
   const handleEditHuerta = async () => {
     if (!selectedHuerta) return
 
-    console.log('🔵 [EDIT] Iniciando edición de huerta:', selectedHuerta.location_url)
     setIsLoading(true)
 
     
@@ -217,18 +213,14 @@ export default function AdminHuertasPage() {
         orchardData.extra_photo = selectedHuerta.extra_photo; 
       }
 
-      console.log('🚀 [EDIT] Enviando actualización...')
       const result = await updateOrchard(selectedHuerta.id, orchardData)
-      console.log('📥 [EDIT] Resultado:', result)
 
       setIsLoading(false)
 
       if (result.success) {
-        console.log('✅ [EDIT] Actualización exitosa')
         toast.success('Huerta actualizada exitosamente')
         setIsEditDialogOpen(false)
       } else {
-        console.log('⚠️ [EDIT] Error en actualización')
         toast.error(result.error || 'Error al actualizar')
       }
     } catch (error: any) {
@@ -526,7 +518,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
-                          console.log('📸 [PHOTO_ID] Archivo seleccionado:', file?.name || 'ninguno')
                           setNewHuerta({ ...newHuerta, photoId: file })
                         }}
                         className="hidden"
@@ -559,7 +550,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
-                          console.log('📸 [COVER_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
                           setNewHuerta({ ...newHuerta, coverPhoto: file })
                         }}
                         className="hidden"
@@ -592,7 +582,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         accept="image/*,.heic,.heif"
                         onChange={(e) => {
                           const file = e.target.files?.[0] || null
-                          console.log('📸 [EXTRA_PHOTO] Archivo seleccionado:', file?.name || 'ninguno')
                           setNewHuerta({ ...newHuerta, extraPhoto: file })
                         }}
                         className="hidden"
@@ -1145,7 +1134,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             accept="image/*,.heic,.heif"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              console.log("Nueva foto ID:", file?.name);
               setSelectedHuerta({ ...selectedHuerta, photo_id: file });
             }}
             className="hidden"
@@ -1192,7 +1180,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             accept="image/*,.heic,.heif"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              console.log("Nueva foto portada:", file?.name);
               setSelectedHuerta({ ...selectedHuerta, cover_photo: file });
             }}
             className="hidden"
@@ -1239,7 +1226,6 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
           accept="image/*,.heic,.heif"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            console.log("Nueva foto extra:", file?.name);
             setSelectedHuerta({ ...selectedHuerta, extra_photo: file });
           }}
           className="hidden"

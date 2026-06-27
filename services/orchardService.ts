@@ -90,7 +90,6 @@ export const orchardService = {
 
     const { data } = await api.get(`/orchards/get-all?${params.toString()}`)
 
-    console.log('📦 [orchardService] getAll response data:', data)
     return data.data
   },
 

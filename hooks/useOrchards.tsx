@@ -27,16 +27,12 @@ export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult 
       setIsLoading(true)
       setError(null)
       
-      console.log('🔄 [useOrchards] Cargando huertas con filtros:', filters)
       const response = await orchardService.getAll(filters)
-      
-      console.log('✅ [useOrchards] Huertas cargadas:', response.data.length)
       setOrchards(response.data)
-      
+
       // 🆕 Calcular años únicos localmente desde los datos
       const uniqueYears = [...new Set(response.data.map(o => o.year))]
       const sortedYears = uniqueYears.sort((a, b) => b - a) // Más reciente primero
-      console.log('📅 [useOrchards] Años únicos:', sortedYears)
       setYears(sortedYears)
       
       setIsLoading(false)
@@ -56,9 +52,7 @@ export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult 
   // Crear huerta
   const createOrchard = async (data: OrchardFormData): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log('🆕 [useOrchards] Creando huerta...')
       const newOrchard = await orchardService.create(data)
-      console.log('✅ [useOrchards] Huerta creada:', newOrchard.id)
       
       // Recargar lista
       await loadOrchards()
@@ -76,9 +70,7 @@ export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult 
   // Actualizar huerta
   const updateOrchard = async (id: number, data: Partial<OrchardFormData>): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log('✏️ [useOrchards] Actualizando huerta:', id)
       await orchardService.update(id, data)
-      console.log('✅ [useOrchards] Huerta actualizada')
       
       // Recargar lista
       await loadOrchards()
@@ -96,9 +88,7 @@ export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult 
   // Eliminar huerta
   const deleteOrchard = async (id: number): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log('🗑️ [useOrchards] Eliminando huerta:', id)
       await orchardService.delete(id)
-      console.log('✅ [useOrchards] Huerta eliminada')
       
       // Recargar lista
       await loadOrchards()
@@ -115,13 +105,11 @@ export function useOrchards(initialFilters?: OrchardFilters): UseOrchardsResult 
 
   // Actualizar filtros
   const updateFilters = (newFilters: OrchardFilters) => {
-    console.log('🔧 [useOrchards] Actualizando filtros:', newFilters)
     setFilters({ ...filters, ...newFilters })
   }
 
   // Refrescar datos
   const refresh = () => {
-    console.log('🔄 [useOrchards] Refrescando datos...')
     loadOrchards()
   }
 

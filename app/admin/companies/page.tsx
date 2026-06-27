@@ -555,9 +555,7 @@ const handleStatusChange = async (companyId: number, newStatus: string) => {
                         user_id: otpTargetId,
                         code: otpCode.trim()
                       }
-                      console.log(confirmotp);
                       const res = await companiService.verifyCode(confirmotp)
-                      console.log(res);
                       await alert.success("Código verificado correctamente", "La empresa ha sido validado con éxito.")
                       setIsOtpDialogOpen(false)
                       await fetchCompanies()

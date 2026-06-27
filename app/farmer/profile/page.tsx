@@ -54,7 +54,6 @@ export default function FarmerProfilePage() {
       newPassword: "",
       confirmPassword: "",
     })
-    console.log("Contraseña actualizada")
   }
 
   const handlePasswordInputChange = (field: string, value: string) => {

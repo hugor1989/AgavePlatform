@@ -53,7 +53,6 @@ export default function CompanyProfilePage() {
       newPassword: "",
       confirmPassword: "",
     })
-    console.log("Contraseña actualizada")
   }
 
   const handlePasswordInputChange = (field: string, value: string) => {

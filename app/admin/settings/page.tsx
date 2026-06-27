@@ -30,8 +30,6 @@ export default function AdminSettingsPage() {
 
   const handleSave = (section: string) => {
     // Here you would typically save to your backend
-    console.log(`Saving ${section} settings:`, settings)
-    // Show success message
   }
 
   return (

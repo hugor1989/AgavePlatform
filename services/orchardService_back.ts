@@ -115,8 +115,6 @@ export const orchardService = {
    * Crear nueva huerta - USANDO FORMDATA (Corrección para iOS)
    */
   create: async (orchardData: OrchardFormData) => {
-    console.log('🔵 [orchardService.create] Iniciando con FormData...')
-    
     try {
       const formData = new FormData()
 
@@ -141,12 +139,10 @@ export const orchardService = {
 
       // 📸 Agregar archivos DIRECTAMENTE (Tu backend ya sabe leer esto)
       if (orchardData.photo_id instanceof File) {
-        console.log('📸 Agregando photo_id al FormData:', orchardData.photo_id.name)
         formData.append('photo_id', orchardData.photo_id)
       }
 
       if (orchardData.cover_photo instanceof File) {
-        console.log('📸 Agregando cover_photo al FormData:', orchardData.cover_photo.name)
         formData.append('cover_photo', orchardData.cover_photo)
       }
 
@@ -154,7 +150,6 @@ export const orchardService = {
       const { data } = await api.post('/orchards/create-orchards', formData)
 
 
-      console.log('✅ [orchardService] Respuesta recibida:', data)
       return data.data as Orchard
 
     } catch (error: any) {
@@ -167,8 +162,6 @@ export const orchardService = {
    * Actualizar huerta - USANDO METHOD SPOOFING (_method: PUT)
    */
   update: async (id: number | string, orchardData: Partial<OrchardFormData>) => {
-    console.log('🔵 [orchardService.update] Iniciando con FormData...')
-    
     try {
       const formData = new FormData()
 
