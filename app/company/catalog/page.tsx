@@ -27,6 +27,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { orchardService } from "@/services/orchardService"
+import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
 import { offerService } from "@/services/offerService"
 import { alert } from "@/lib/alert"
 import { toast } from "sonner"
@@ -55,6 +56,7 @@ export default function CompanyCatalogPage() {
   const [offerDialogOpen, setOfferDialogOpen] = useState(false)
   const [offerForm, setOfferForm] = useState(emptyForm)
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false)
+  const [videosOrchard, setVideosOrchard] = useState<{ id: number; name: string } | null>(null)
 
   const touchStartX = useRef<number | null>(null)
 
@@ -369,7 +371,10 @@ export default function CompanyCatalogPage() {
                     </button>
                   </div>
 
-                  <Button className="w-full bg-teal-600 hover:bg-teal-700">Ver Huerta</Button>
+                  <Button
+                    className="w-full bg-teal-600 hover:bg-teal-700"
+                    onClick={() => setVideosOrchard({ id: huerta.id, name: huerta.name })}
+                  >Ver Huerta</Button>
 
                   {/* Botón Hacer Oferta */}
                   {huerta.status === "vendida" ? (
@@ -457,6 +462,14 @@ export default function CompanyCatalogPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Modal videos 360 */}
+        <OrchardVideosModal
+          orchardId={videosOrchard?.id ?? null}
+          orchardName={videosOrchard?.name ?? ""}
+          isOpen={!!videosOrchard}
+          onClose={() => setVideosOrchard(null)}
+        />
 
         {/* Modal foto */}
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>

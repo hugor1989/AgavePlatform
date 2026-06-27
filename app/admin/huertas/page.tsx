@@ -28,6 +28,7 @@ import { useOrchards } from "@/hooks/useOrchards"
 import { orchardService, OrchardFormData } from "@/services/orchardService"
 import { useFarmers } from "@/hooks/useFarmers"
 import { useAgaveTypes } from "@/hooks/useAgaveTypes"
+import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
 
 
 export default function AdminHuertasPage() {
@@ -70,6 +71,7 @@ export default function AdminHuertasPage() {
   const [selectedHuerta, setSelectedHuerta] = useState<any>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
+  const [videosOrchard, setVideosOrchard] = useState<{ id: number; name: string } | null>(null)
 
   // Formulario para nueva huerta
   const [newHuerta, setNewHuerta] = useState({
@@ -907,6 +909,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                           variant="default"
                           size="sm"
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
+                          onClick={() => setVideosOrchard({ id: orchard.id, name: orchard.name })}
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           Ver Huerta
@@ -931,6 +934,14 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Modal videos 360 */}
+        <OrchardVideosModal
+          orchardId={videosOrchard?.id ?? null}
+          orchardName={videosOrchard?.name ?? ""}
+          isOpen={!!videosOrchard}
+          onClose={() => setVideosOrchard(null)}
+        />
 
         {/* Modal para ver foto */}
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>

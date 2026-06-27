@@ -10,6 +10,7 @@ import Image from "next/image"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { orchardService } from "@/services/orchardService"
 import { ZoomableImage } from "@/components/ui/ZoomableImage"
+import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
 
 export default function FarmerCatalogPage() {
   const [huertas, setHuertas] = useState<any[]>([])
@@ -18,6 +19,7 @@ export default function FarmerCatalogPage() {
   const [activeImageIndex, setActiveImageIndex] = useState<{[key: number]: number}>({})
   const [selectedPhoto, setSelectedPhoto] = useState<string>("")
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false)
+  const [videosOrchard, setVideosOrchard] = useState<{ id: number; name: string } | null>(null)
 
   const touchStartX = useRef<number | null>(null)
   
@@ -377,13 +379,24 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                             <Share2 className="h-4 w-4 text-green-700" />
                           </button>
                        </div>
-                <Button className="w-full bg-teal-600 hover:bg-teal-700">
+                <Button
+                  className="w-full bg-teal-600 hover:bg-teal-700"
+                  onClick={() => setVideosOrchard({ id: huerta.id, name: huerta.name })}
+                >
                   Ver Huerta
                 </Button>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* Modal videos 360 */}
+        <OrchardVideosModal
+          orchardId={videosOrchard?.id ?? null}
+          orchardName={videosOrchard?.name ?? ""}
+          isOpen={!!videosOrchard}
+          onClose={() => setVideosOrchard(null)}
+        />
 
         {/* Modal para ver foto */}
         <Dialog open={isPhotoDialogOpen} onOpenChange={setIsPhotoDialogOpen}>
