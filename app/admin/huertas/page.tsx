@@ -112,8 +112,8 @@ export default function AdminHuertasPage() {
   // 🆕 CREAR HUERTA
   const handleAddHuerta = async () => {
     // Validar campos requeridos
-    if (!newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
-      toast.error("Por favor completa todos los campos requeridos")
+    if (!newHuerta.orchardNumber || !newHuerta.name || !newHuerta.type || !newHuerta.year || !newHuerta.farmerId || !newHuerta.plants) {
+      toast.error("Por favor completa todos los campos requeridos (incluido el ID de huerta)")
       return
     }
 
@@ -123,7 +123,7 @@ export default function AdminHuertasPage() {
       // Preparar datos para el backend
       const orchardData: OrchardFormData = {
         name: newHuerta.name,
-        orchard_number: newHuerta.orchardNumber || undefined,
+        orchard_number: newHuerta.orchardNumber,
         agave_type_id: Number(newHuerta.type),
         farmer_id: Number(newHuerta.farmerId),
         year: Number(newHuerta.year),
@@ -395,13 +395,17 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
 
                   {/* ID de Huerta */}
                   <div className="space-y-2">
-                    <Label htmlFor="orchard-number">ID de Huerta</Label>
+                    <Label htmlFor="orchard-number">
+                      ID de Huerta <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="orchard-number"
                       value={newHuerta.orchardNumber}
                       onChange={(e) => setNewHuerta({ ...newHuerta, orchardNumber: e.target.value })}
-                      placeholder="Ej: 12345"
+                      placeholder="Ej: HRT-001"
+                      required
                     />
+                    <p className="text-xs text-gray-500">Este ID se usa en la nomenclatura de los videos 360°</p>
                   </div>
 
                   {/* Año, Edad y Cantidad de Plantas */}

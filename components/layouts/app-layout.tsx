@@ -68,6 +68,7 @@ const NAVIGATION: Record<
       href: "/admin/jimas-terminadas",
       icon: CheckCircle,
     },
+    { name: "Videos 360°", href: "/admin/videos", icon: Video },
     { name: "Configuración", href: "/admin/settings", icon: Settings },
   ],
   company: [
