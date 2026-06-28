@@ -28,10 +28,17 @@ export const videoService = {
     return data.data as OrchardVideo[]
   },
 
-  upload: async (file: File) => {
+  upload: async (file: File, onProgress?: (pct: number) => void) => {
     const formData = new FormData()
     formData.append('video', file)
-    const { data } = await api.post('/orchard-videos', formData)
+    const { data } = await api.post('/orchard-videos', formData, {
+      onUploadProgress: (event) => {
+        if (event.total && onProgress) {
+          onProgress(Math.round((event.loaded * 100) / event.total))
+        }
+      },
+      timeout: 3600000, // 1 hora — FFmpeg puede tardar varios minutos en el servidor
+    })
     return data.data as OrchardVideo
   },
 

@@ -205,16 +205,15 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
     v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + seconds))
   }
 
-  // Flecha izquierda/derecha: pausa el video y mueve ~4 frames a 30fps
+  // Flecha izquierda/derecha: pausa el video y avanza o retrocede 0.5 s
   useEffect(() => {
-    const FRAME = 1 / 30 * 4
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
       e.preventDefault()
       const v = videoRef.current
       if (!v) return
       if (!v.paused) { v.pause(); setIsPlaying(false) }
-      skip(e.key === "ArrowLeft" ? -FRAME : FRAME)
+      skip(e.key === "ArrowLeft" ? -0.5 : 0.5)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
@@ -271,7 +270,7 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
 
-            <span className="text-white/50 text-xs hidden sm:inline">← → cuadro a cuadro</span>
+            <span className="text-white/50 text-xs hidden sm:inline">← → 0.5 s</span>
 
             <span className="text-white text-xs tabular-nums">
               {fmtTime((progress / 100) * duration)} / {fmtTime(duration)}

@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { Upload, Trash2, Play, Search, Video, Info, CheckCircle2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { videoService, OrchardVideo } from "@/services/videoService"
@@ -44,6 +45,8 @@ export default function VideosPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'processing'>('idle')
   const [deleteTarget, setDeleteTarget] = useState<OrchardVideo | null>(null)
   const [playTarget, setPlayTarget] = useState<OrchardVideo | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -70,8 +73,13 @@ export default function VideosPage() {
   const handleUpload = async () => {
     if (!selectedFile || !fileValid) return
     setIsUploading(true)
+    setUploadProgress(0)
+    setUploadPhase('uploading')
     try {
-      await videoService.upload(selectedFile)
+      await videoService.upload(selectedFile, (pct) => {
+        setUploadProgress(pct)
+        if (pct === 100) setUploadPhase('processing')
+      })
       toast.success("Video subido correctamente")
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -81,6 +89,8 @@ export default function VideosPage() {
       toast.error(msg)
     } finally {
       setIsUploading(false)
+      setUploadProgress(0)
+      setUploadPhase('idle')
     }
   }
 
@@ -180,6 +190,7 @@ export default function VideosPage() {
                   accept="video/mp4,video/quicktime,video/webm"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   className="flex-1"
+                  disabled={isUploading}
                 />
                 <Button
                   onClick={handleUpload}
@@ -187,9 +198,26 @@ export default function VideosPage() {
                   className="bg-green-600 hover:bg-green-700 shrink-0"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? "Subiendo..." : "Subir"}
+                  {isUploading ? (uploadPhase === 'processing' ? "Procesando..." : "Subiendo...") : "Subir"}
                 </Button>
               </div>
+
+            {isUploading && (
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>
+                    {uploadPhase === 'processing'
+                      ? "Comprimiendo video en el servidor..."
+                      : `Subiendo archivo... ${uploadProgress}%`}
+                  </span>
+                  {uploadPhase === 'uploading' && <span>{uploadProgress}%</span>}
+                </div>
+                <Progress
+                  value={uploadPhase === 'processing' ? 100 : uploadProgress}
+                  className={uploadPhase === 'processing' ? "animate-pulse" : ""}
+                />
+              </div>
+            )}
             </div>
 
             {/* Validación del nombre en tiempo real */}
