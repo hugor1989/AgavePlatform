@@ -208,7 +208,7 @@ export const orchardService = {
 
   getPhotoUrl: (photoPath: string | null) => {
     if (!photoPath) return null
-    const baseURL = api.defaults.baseURL?.replace('/api', '') || ''
+    const baseURL = api.defaults.baseURL?.replace(/\/api\/?$/, '') || ''
     return `${baseURL}/storage/${photoPath}`
   }
 }
