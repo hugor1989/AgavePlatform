@@ -344,6 +344,7 @@ export default function VideosPage() {
             <div className="space-y-2">
               <Video360Player
                 src={videoService.streamUrl(playTarget.id)}
+                hlsSrc={playTarget.hls_path ? videoService.hlsUrl(playTarget.id) : null}
                 autoPlay
               />
               <div className="flex gap-4 text-sm text-gray-600 px-4 pb-2 pt-1">

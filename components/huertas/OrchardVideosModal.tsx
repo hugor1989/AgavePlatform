@@ -101,6 +101,7 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
           <div className="flex-1 min-h-0">
             <Video360Player
               src={videoService.streamUrl(selected.id)}
+              hlsSrc={selected.hls_path ? videoService.hlsUrl(selected.id) : null}
               autoPlay
               className="h-full"
             />

@@ -7,6 +7,7 @@ export interface OrchardVideo {
   heading_number: number
   line_number: number
   video_path: string
+  hls_path: string | null
   original_filename: string
   uploaded_by: number
   video_url: string
@@ -51,5 +52,11 @@ export const videoService = {
     const baseURL = api.defaults.baseURL || ''
     // Ruta pública — el <video> no puede enviar headers de auth
     return `${baseURL}/orchard-videos/${id}/stream`
+  },
+
+  // Master playlist HLS (adaptativo por calidad); solo válido si video.hls_path existe
+  hlsUrl: (id: number) => {
+    const baseURL = api.defaults.baseURL || ''
+    return `${baseURL}/orchard-videos/${id}/hls/master.m3u8`
   },
 }

@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
+import type HlsType from "hls.js"
 import { Play, Pause, Volume2, VolumeX, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 
 interface Video360PlayerProps {
+  /** MP4 progresivo — usado si no hay hlsSrc o el navegador no soporta HLS. */
   src: string
+  /** Master playlist HLS (adaptativo por calidad de conexión); opcional. */
+  hlsSrc?: string | null
   autoPlay?: boolean
   className?: string
 }
 
-export function Video360Player({ src, autoPlay = false, className }: Video360PlayerProps) {
+export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Video360PlayerProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
@@ -51,11 +55,22 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
 
     // ── Video element ──────────────────────────────────────────
     const video = document.createElement("video")
-    video.src = src
     video.crossOrigin = "anonymous"
     video.loop = false
     video.muted = true
     video.playsInline = true
+    video.setAttribute("playsinline", "") // iOS Safari legacy attribute
+    video.setAttribute("webkit-playsinline", "")
+    video.disablePictureInPicture = true
+    // iOS Safari sometimes refuses to decode frames into a WebGL texture
+    // when the source <video> is never attached to the document, resulting
+    // in a black sphere. Keep it in the DOM but visually hidden.
+    video.style.position = "absolute"
+    video.style.width = "1px"
+    video.style.height = "1px"
+    video.style.opacity = "0"
+    video.style.pointerEvents = "none"
+    mount.appendChild(video)
     videoRef.current = video
 
     video.addEventListener("loadedmetadata", () => setDuration(video.duration))
@@ -64,8 +79,36 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
     )
     video.addEventListener("ended", () => setIsPlaying(false))
 
-    if (autoPlay) {
-      video.play().then(() => setIsPlaying(true)).catch(() => {})
+    const startPlayback = () => {
+      if (autoPlay) video.play().then(() => setIsPlaying(true)).catch(() => {})
+    }
+
+    // ── Fuente: HLS adaptativo si está disponible, si no MP4 progresivo ──
+    let hls: HlsType | null = null
+    let cancelled = false
+
+    if (hlsSrc && video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari/iOS soporta HLS nativo en el <video> — el propio navegador
+      // adapta la calidad según el ancho de banda medido.
+      video.src = hlsSrc
+      startPlayback()
+    } else if (hlsSrc) {
+      import("hls.js").then(({ default: Hls }) => {
+        if (cancelled) return
+        if (Hls.isSupported()) {
+          hls = new Hls()
+          hls.loadSource(hlsSrc)
+          hls.attachMedia(video)
+          hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
+        } else {
+          // Sin MSE ni HLS nativo: último recurso, MP4 progresivo fijo
+          video.src = src
+          startPlayback()
+        }
+      })
+    } else {
+      video.src = src
+      startPlayback()
     }
 
     // ── Three.js setup ─────────────────────────────────────────
@@ -163,6 +206,8 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
     showControlsTemporarily()
 
     return () => {
+      cancelled = true
+      if (hls) hls.destroy()
       cancelAnimationFrame(frameRef.current)
       ro.disconnect()
       mount.removeEventListener("mousedown", onMouseDown)
@@ -175,9 +220,10 @@ export function Video360Player({ src, autoPlay = false, className }: Video360Pla
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
       video.pause()
       video.src = ""
+      if (mount.contains(video)) mount.removeChild(video)
       if (hideTimer.current) clearTimeout(hideTimer.current)
     }
-  }, [src])
+  }, [src, hlsSrc])
 
   const togglePlay = () => {
     const v = videoRef.current
