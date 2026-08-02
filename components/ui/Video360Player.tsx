@@ -132,6 +132,12 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
           hls.on(Hls.Events.LEVEL_SWITCHED, (_evt, data) => {
             setActiveLevel(data.level)
           })
+          hls.on(Hls.Events.ERROR, (_evt, data) => {
+            // hls.js no loguea sus propios errores por defecto; sin esto,
+            // un manifest/segmento que falla (404, CORS, red) queda mudo
+            // en consola y el selector de calidad simplemente no aparece.
+            console.error("hls.js error", data.type, data.details, data.fatal, data)
+          })
         } else {
           // Sin MSE ni HLS nativo: último recurso, MP4 progresivo fijo
           video.src = src
