@@ -105,16 +105,16 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
       if (autoPlay) video.play().then(() => setIsPlaying(true)).catch(() => {})
     }
 
-    // ── Fuente: HLS adaptativo si está disponible, si no MP4 progresivo ──
+    // ── Fuente: hls.js (MSE) si el navegador lo soporta —da control real de
+    // calidad—, si no HLS nativo del <video> (Safari/iOS viejo sin MSE
+    // utilizable), si no MP4 progresivo. canPlayType('application/vnd.apple.mpegurl')
+    // no es exclusivo de Safari — algunos Edge/Windows también lo reportan
+    // verdadero sin exponer control de niveles por JS, por eso se prueba
+    // Hls.isSupported() primero en vez de canPlayType.
     let hls: HlsType | null = null
     let cancelled = false
 
-    if (hlsSrc && video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari/iOS soporta HLS nativo en el <video> — el propio navegador
-      // adapta la calidad según el ancho de banda medido.
-      video.src = hlsSrc
-      startPlayback()
-    } else if (hlsSrc) {
+    if (hlsSrc) {
       import("hls.js").then(({ default: Hls }) => {
         if (cancelled) return
         if (Hls.isSupported()) {
@@ -138,6 +138,11 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
             // en consola y el selector de calidad simplemente no aparece.
             console.error("hls.js error", data.type, data.details, data.fatal, data)
           })
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          // Sin MSE utilizable: HLS nativo del navegador (Safari/iOS viejo).
+          // El navegador adapta la calidad solo, sin selector manual.
+          video.src = hlsSrc
+          startPlayback()
         } else {
           // Sin MSE ni HLS nativo: último recurso, MP4 progresivo fijo
           video.src = src
