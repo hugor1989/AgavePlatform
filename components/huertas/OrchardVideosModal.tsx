@@ -1,12 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Video360Player } from "@/components/ui/Video360Player"
 import { videoService, OrchardVideo } from "@/services/videoService"
-import { Play, X, ArrowLeft, Video } from "lucide-react"
+import { X, Video, Check, Loader2 } from "lucide-react"
 
 interface OrchardVideosModalProps {
   orchardId: number | null
@@ -15,33 +14,73 @@ interface OrchardVideosModalProps {
   onClose: () => void
 }
 
+const WATCHED_STORAGE_KEY = "agave_watched_orchard_videos"
+
+function getWatchedIds(): Set<number> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const raw = window.localStorage.getItem(WATCHED_STORAGE_KEY)
+    return new Set(raw ? (JSON.parse(raw) as number[]) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function sortByHeadingAndLine(videos: OrchardVideo[]) {
+  return [...videos].sort((a, b) =>
+    a.heading_number - b.heading_number || a.line_number - b.line_number
+  )
+}
+
 export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: OrchardVideosModalProps) {
   const [videos, setVideos] = useState<OrchardVideo[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<OrchardVideo | null>(null)
-  const fullscreenRef = useRef<HTMLDivElement>(null)
+  const [watchedIds, setWatchedIds] = useState<Set<number>>(new Set())
+  const fullscreenRef = useRef<HTMLDivElement | null>(null)
+  // Estado (no solo ref) para que el Select re-renderice con el contenedor real:
+  // el dropdown se porta a este nodo en vez de document.body, porque cuando el
+  // reproductor está en pantalla completa nativa el navegador solo pinta el
+  // subárbol del elemento fullscreen — un portal a document.body quedaría oculto.
+  const [fullscreenNode, setFullscreenNode] = useState<HTMLDivElement | null>(null)
+  const setFullscreenRef = (node: HTMLDivElement | null) => {
+    fullscreenRef.current = node
+    setFullscreenNode(node)
+  }
 
   useEffect(() => {
     if (!isOpen || !orchardId) return
     setSelected(null)
+    setWatchedIds(getWatchedIds())
     setLoading(true)
     videoService.getAll({ orchard_id: orchardId })
-      .then(setVideos)
+      .then((data) => {
+        const sorted = sortByHeadingAndLine(data)
+        setVideos(sorted)
+        // Abrir directamente el primer video en orden (cabecera, luego línea)
+        if (sorted.length > 0) handleSelect(sorted[0])
+      })
       .catch(() => setVideos([]))
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, orchardId])
 
   const handleSelect = (video: OrchardVideo) => {
     setSelected(video)
+    setWatchedIds((prev) => {
+      if (prev.has(video.id)) return prev
+      const next = new Set(prev).add(video.id)
+      try {
+        window.localStorage.setItem(WATCHED_STORAGE_KEY, JSON.stringify(Array.from(next)))
+      } catch {
+        // localStorage no disponible (modo privado, etc.) — se ignora
+      }
+      return next
+    })
     // Fullscreen after render
     setTimeout(() => {
       fullscreenRef.current?.requestFullscreen?.().catch(() => {})
     }, 100)
-  }
-
-  const handleBack = () => {
-    if (document.fullscreenElement) document.exitFullscreen()
-    setSelected(null)
   }
 
   const handleClose = () => {
@@ -50,43 +89,56 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
     onClose()
   }
 
-  // Salir de pantalla completa cuando se presiona ESC desde el fullscreen nativo
+  // Cerrar todo cuando se sale de pantalla completa (ESC, gesto del navegador, etc.)
   useEffect(() => {
     const onFsChange = () => {
-      if (!document.fullscreenElement && selected) setSelected(null)
+      if (!document.fullscreenElement && selected) handleClose()
     }
     document.addEventListener("fullscreenchange", onFsChange)
     return () => document.removeEventListener("fullscreenchange", onFsChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected])
 
+  if (!isOpen || !orchardId) return null
+
   return (
-    <>
-      {/* ── Fullscreen player ──────────────────────────────── */}
-      {selected && (
-        <div
-          ref={fullscreenRef}
-          className="fixed inset-0 z-[200] bg-black flex flex-col"
-        >
+    <div ref={setFullscreenRef} className="fixed inset-0 z-[200] bg-black flex flex-col">
+      {selected ? (
+        <>
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-black/80 text-white shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 gap-1"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Volver
-            </Button>
             <span className="text-sm font-medium truncate">{orchardName}</span>
-            <div className="flex gap-2 ml-auto">
-              <Badge variant="secondary" className="text-xs">
-                Cabecera {selected.heading_number}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                Línea {selected.line_number}
-              </Badge>
-            </div>
+
+            {/* Selector de video: navega a cualquier video de la huerta */}
+            <Select
+              value={String(selected.id)}
+              onValueChange={(value) => {
+                const video = videos.find((v) => v.id === Number(value))
+                if (video) handleSelect(video)
+              }}
+            >
+              <SelectTrigger className="ml-auto w-52 h-8 bg-white/10 border-white/20 text-white text-xs focus:ring-white/40 focus:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent container={fullscreenNode}>
+                {videos.map((video) => {
+                  const watched = watchedIds.has(video.id)
+                  return (
+                    <SelectItem
+                      key={video.id}
+                      value={String(video.id)}
+                      className={watched ? "text-purple-600 font-medium" : ""}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        Cabecera {video.heading_number} · Línea {video.line_number}
+                        {watched && <Check className="h-3 w-3 text-purple-600" />}
+                      </span>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+
             <Button
               variant="ghost"
               size="sm"
@@ -106,62 +158,30 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
               className="h-full"
             />
           </div>
-        </div>
-      )}
-
-      {/* ── Video list dialog ──────────────────────────────── */}
-      <Dialog open={isOpen && !selected} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-teal-600" />
-              Videos 360° — {orchardName}
-            </DialogTitle>
-          </DialogHeader>
-
-          {loading && (
-            <div className="flex items-center justify-center py-16 text-gray-400">
-              <span className="text-sm">Cargando videos...</span>
-            </div>
-          )}
-
-          {!loading && videos.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+        </>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-3 right-3 text-white hover:bg-white/20 h-8 w-8 p-0"
+            onClick={handleClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          {loading ? (
+            <>
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="text-sm">Cargando videos...</p>
+            </>
+          ) : (
+            <>
               <Video className="h-12 w-12 opacity-30" />
               <p className="text-sm">No hay videos 360° disponibles para esta huerta.</p>
-            </div>
+            </>
           )}
-
-          {!loading && videos.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-              {videos.map((video) => (
-                <button
-                  key={video.id}
-                  onClick={() => handleSelect(video)}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 text-left hover:border-teal-500 hover:bg-teal-50 transition-colors group"
-                >
-                  {/* Play icon */}
-                  <div className="shrink-0 h-12 w-12 rounded-lg bg-gray-100 group-hover:bg-teal-100 flex items-center justify-center transition-colors">
-                    <Play className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition-colors" />
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex gap-1.5">
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                        Cabecera {video.heading_number}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                        Línea {video.line_number}
-                      </Badge>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   )
 }
