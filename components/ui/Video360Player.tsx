@@ -3,9 +3,20 @@
 import { useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import type HlsType from "hls.js"
-import { Play, Pause, Volume2, VolumeX, RotateCcw } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX, RotateCcw, Settings, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+interface QualityLevel {
+  index: number
+  height: number
+}
 
 interface Video360PlayerProps {
   /** MP4 progresivo — usado si no hay hlsSrc o el navegador no soporta HLS. */
@@ -22,6 +33,7 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const frameRef = useRef<number>(0)
+  const hlsRef = useRef<HlsType | null>(null)
 
   // Drag state
   const isDragging = useRef(false)
@@ -36,8 +48,18 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
   const [showControls, setShowControls] = useState(true)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Selector de calidad (solo disponible cuando se reproduce vía hls.js)
+  const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([])
+  const [selectedLevel, setSelectedLevel] = useState(-1) // -1 = Auto
+  const [activeLevel, setActiveLevel] = useState(-1) // nivel que realmente se está reproduciendo
+
   const fmtTime = (s: number) =>
     `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`
+
+  // El backend solo genera una rendition > 1080p cuando es la resolución
+  // original de la fuente (4K/5.7K/8K), así que cualquier altura > 1080
+  // identifica de forma inequívoca la calidad "Original".
+  const qualityLabel = (height: number) => (height > 1080 ? `Original (${height}p)` : `${height}p`)
 
   const resetView = () => {
     spherical.current = { phi: Math.PI / 2, theta: 0 }
@@ -97,9 +119,19 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
         if (cancelled) return
         if (Hls.isSupported()) {
           hls = new Hls()
+          hlsRef.current = hls
           hls.loadSource(hlsSrc)
           hls.attachMedia(video)
-          hls.on(Hls.Events.MANIFEST_PARSED, startPlayback)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const levels: QualityLevel[] = hls!.levels
+              .map((lvl, index) => ({ index, height: lvl.height }))
+              .sort((a, b) => b.height - a.height)
+            setQualityLevels(levels)
+            startPlayback()
+          })
+          hls.on(Hls.Events.LEVEL_SWITCHED, (_evt, data) => {
+            setActiveLevel(data.level)
+          })
         } else {
           // Sin MSE ni HLS nativo: último recurso, MP4 progresivo fijo
           video.src = src
@@ -208,6 +240,10 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
     return () => {
       cancelled = true
       if (hls) hls.destroy()
+      hlsRef.current = null
+      setQualityLevels([])
+      setSelectedLevel(-1)
+      setActiveLevel(-1)
       cancelAnimationFrame(frameRef.current)
       ro.disconnect()
       mount.removeEventListener("mousedown", onMouseDown)
@@ -243,6 +279,12 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
     const v = videoRef.current
     if (!v || !v.duration) return
     v.currentTime = (val[0] / 100) * v.duration
+  }
+
+  const selectQuality = (level: number) => {
+    if (!hlsRef.current) return
+    hlsRef.current.currentLevel = level
+    setSelectedLevel(level)
   }
 
   const skip = (seconds: number) => {
@@ -323,15 +365,51 @@ export function Video360Player({ src, hlsSrc, autoPlay = false, className }: Vid
             </span>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:text-white hover:bg-white/20 h-8 w-8 p-0"
-            title="Restablecer vista"
-            onClick={resetView}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {qualityLevels.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:text-white hover:bg-white/20 h-8 gap-1 px-2 text-xs"
+                    title="Calidad"
+                  >
+                    <Settings className="h-4 w-4" />
+                    {selectedLevel === -1
+                      ? `Auto${activeLevel >= 0 ? ` (${qualityLabel(qualityLevels.find((q) => q.index === activeLevel)?.height ?? 0)})` : ""}`
+                      : qualityLabel(qualityLevels.find((q) => q.index === selectedLevel)?.height ?? 0)}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[8rem]">
+                  <DropdownMenuItem onClick={() => selectQuality(-1)} className="justify-between">
+                    Auto
+                    {selectedLevel === -1 && <Check className="h-4 w-4" />}
+                  </DropdownMenuItem>
+                  {qualityLevels.map((q) => (
+                    <DropdownMenuItem
+                      key={q.index}
+                      onClick={() => selectQuality(q.index)}
+                      className="justify-between"
+                    >
+                      {qualityLabel(q.height)}
+                      {selectedLevel === q.index && <Check className="h-4 w-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:text-white hover:bg-white/20 h-8 w-8 p-0"
+              title="Restablecer vista"
+              onClick={resetView}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
