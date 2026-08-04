@@ -79,36 +79,22 @@ export default function VideosPage() {
     return () => clearInterval(interval)
   }, [videos])
 
-  const POLL_INTERVAL_MS = 4000
-
-  const pollUntilDone = async (id: number): Promise<OrchardVideo> => {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
-      const video = await videoService.getById(id)
-      if (video.status !== 'processing') return video
-    }
-  }
-
+  // No espera a que termine de comprimirse/generar HLS — solo a que el
+  // archivo quede subido y encolado (202). El estado de procesamiento de
+  // cada video se refleja solo en la tabla, vía el refresco periódico de
+  // más arriba, así el admin puede seguir subiendo videos mientras los
+  // anteriores se procesan en background.
   const handleUpload = async () => {
     if (!selectedFile || !fileValid) return
     setIsUploading(true)
     setUploadProgress(0)
     setUploadPhase('uploading')
     try {
-      const uploaded = await videoService.upload(selectedFile, (pct) => {
+      await videoService.upload(selectedFile, (pct) => {
         setUploadProgress(pct)
         if (pct === 100) setUploadPhase('processing')
       })
-      await loadVideos()
-
-      const finished = await pollUntilDone(uploaded.id)
-      if (finished.status === 'ready') {
-        toast.success("Video procesado correctamente")
-      } else {
-        toast.error(finished.error_message || "Error al procesar el video")
-      }
-
+      toast.success("Video subido — procesándose en el servidor")
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
       await loadVideos()
