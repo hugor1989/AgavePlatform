@@ -55,7 +55,10 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
     setLoading(true)
     videoService.getAll({ orchard_id: orchardId })
       .then((data) => {
-        const sorted = sortByHeadingAndLine(data)
+        // Ocultar videos que aún se están comprimiendo/procesando en el
+        // servidor o que fallaron — solo mostrar los reproducibles.
+        const ready = data.filter((v) => v.status === 'ready')
+        const sorted = sortByHeadingAndLine(ready)
         setVideos(sorted)
         // Abrir directamente el primer video en orden (cabecera, luego línea)
         if (sorted.length > 0) handleSelect(sorted[0])

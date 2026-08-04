@@ -1,5 +1,7 @@
 import api from "@/lib/api"
 
+export type OrchardVideoStatus = 'processing' | 'ready' | 'failed'
+
 export interface OrchardVideo {
   id: number
   orchard_id: number
@@ -8,6 +10,8 @@ export interface OrchardVideo {
   line_number: number
   video_path: string
   hls_path: string | null
+  status: OrchardVideoStatus
+  error_message: string | null
   original_filename: string
   uploaded_by: number
   video_url: string
@@ -29,6 +33,9 @@ export const videoService = {
     return data.data as OrchardVideo[]
   },
 
+  // El endpoint responde en cuanto el archivo queda guardado (202): la
+  // compresión/generación HLS corre en background (cola). El video vuelve
+  // con status "processing" — usar getById() para hacer polling del estado.
   upload: async (file: File, onProgress?: (pct: number) => void) => {
     const formData = new FormData()
     formData.append('video', file)
@@ -38,8 +45,13 @@ export const videoService = {
           onProgress(Math.round((event.loaded * 100) / event.total))
         }
       },
-      timeout: 3600000, // 1 hora — FFmpeg puede tardar varios minutos en el servidor
+      timeout: 1200000, // 20 min — solo cubre la transferencia del archivo
     })
+    return data.data as OrchardVideo
+  },
+
+  getById: async (id: number) => {
+    const { data } = await api.get(`/orchard-videos/${id}`)
     return data.data as OrchardVideo
   },
 

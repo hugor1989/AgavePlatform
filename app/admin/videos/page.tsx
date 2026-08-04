@@ -70,17 +70,45 @@ export default function VideosPage() {
     loadVideos()
   }, [])
 
+  // Mantiene la lista al día mientras haya videos comprimiéndose en el
+  // servidor (subidos por este admin u otro), sin depender de que el
+  // navegador que disparó la subida siga abierto.
+  useEffect(() => {
+    if (!videos.some((v) => v.status === 'processing')) return
+    const interval = setInterval(loadVideos, 5000)
+    return () => clearInterval(interval)
+  }, [videos])
+
+  const POLL_INTERVAL_MS = 4000
+
+  const pollUntilDone = async (id: number): Promise<OrchardVideo> => {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
+      const video = await videoService.getById(id)
+      if (video.status !== 'processing') return video
+    }
+  }
+
   const handleUpload = async () => {
     if (!selectedFile || !fileValid) return
     setIsUploading(true)
     setUploadProgress(0)
     setUploadPhase('uploading')
     try {
-      await videoService.upload(selectedFile, (pct) => {
+      const uploaded = await videoService.upload(selectedFile, (pct) => {
         setUploadProgress(pct)
         if (pct === 100) setUploadPhase('processing')
       })
-      toast.success("Video subido correctamente")
+      await loadVideos()
+
+      const finished = await pollUntilDone(uploaded.id)
+      if (finished.status === 'ready') {
+        toast.success("Video procesado correctamente")
+      } else {
+        toast.error(finished.error_message || "Error al procesar el video")
+      }
+
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
       await loadVideos()
@@ -278,6 +306,7 @@ export default function VideosPage() {
                       <th className="pb-3 font-medium">Huerta</th>
                       <th className="pb-3 font-medium text-center">Cabecera</th>
                       <th className="pb-3 font-medium text-center">Línea</th>
+                      <th className="pb-3 font-medium text-center">Estado</th>
                       <th className="pb-3 font-medium">Subido</th>
                       <th className="pb-3 font-medium text-right">Acciones</th>
                     </tr>
@@ -299,6 +328,25 @@ export default function VideosPage() {
                         </td>
                         <td className="py-3 text-center font-semibold">{v.heading_number}</td>
                         <td className="py-3 text-center font-semibold">{v.line_number}</td>
+                        <td className="py-3 text-center">
+                          {v.status === 'ready' && (
+                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Listo</Badge>
+                          )}
+                          {v.status === 'processing' && (
+                            <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">
+                              Procesando
+                            </Badge>
+                          )}
+                          {v.status === 'failed' && (
+                            <Badge
+                              variant="outline"
+                              className="text-red-700 border-red-300 bg-red-50"
+                              title={v.error_message || undefined}
+                            >
+                              Error
+                            </Badge>
+                          )}
+                        </td>
                         <td className="py-3 pr-4 text-gray-500 text-xs">
                           {new Date(v.created_at).toLocaleDateString("es-MX", {
                             day: "2-digit", month: "short", year: "numeric"
@@ -309,6 +357,7 @@ export default function VideosPage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={v.status !== 'ready'}
                               onClick={() => setPlayTarget(v)}
                             >
                               <Play className="h-3.5 w-3.5 mr-1" />
