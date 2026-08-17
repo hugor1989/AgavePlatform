@@ -32,11 +32,11 @@ import {
   X,
   LayoutDashboard,
   MessageSquare,
-  Search,
   ShoppingCart,
   Video,
 } from "lucide-react";
 import { AgaveIcon } from "@/components/icons/AgaveIcon";
+import { SearchDollarIcon } from "@/components/icons/SearchDollarIcon";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -77,7 +77,7 @@ const NAVIGATION: Record<
       href: "/company/dashboard",
       icon: LayoutDashboard,
     },
-    { name: "Comprar Huertas", href: "/company/catalog", icon: Search },
+    { name: "Comprar Huertas", href: "/company/catalog", icon: SearchDollarIcon },
     { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare },
     { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
     {
@@ -88,7 +88,7 @@ const NAVIGATION: Record<
   ],
   farmer: [
     { name: "Historias de Jima", href: "/farmer/dashboard", icon: Home },
-    { name: "Catálogo Huertas", href: "/farmer/catalog", icon: Search },
+    { name: "Catálogo Huertas", href: "/farmer/catalog", icon: SearchDollarIcon },
     { name: "Mis Huertas", href: "/farmer/huertas", icon: AgaveIcon },
     { name: "Ofertas", href: "/farmer/offers", icon: DollarSign },
     { name: "Huertas Vendidas", href: "/farmer/sold", icon: ShoppingCart },
