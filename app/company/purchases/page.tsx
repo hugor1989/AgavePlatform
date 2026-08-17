@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { AppLayout } from "@/components/layouts/app-layout";
+import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal";
 import { saleService, OrchardSale } from "@/services/saleService";
 import { orchardService } from "@/services/orchardService";
 import { jimaTripService, JimaTrip } from "@/services/jimaTripService";
@@ -41,6 +42,7 @@ export default function CompanyPurchasesPage() {
   const [sales, setSales] = useState<OrchardSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSale, setSelectedSale] = useState<OrchardSale | null>(null);
+  const [videosOrchard, setVideosOrchard] = useState<{ id: number; name: string } | null>(null);
 
   // Dialogs
   const [showOfferDialog, setShowOfferDialog] = useState(false);
@@ -538,7 +540,15 @@ export default function CompanyPurchasesPage() {
                       Ver Foto ID
                     </Button>
 
-                    <Button className="w-full bg-green-600 hover:bg-green-700">
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={() =>
+                        setVideosOrchard({
+                          id: sale.orchard_id,
+                          name: sale.orchard?.name ?? `Huerta #${sale.orchard_id}`,
+                        })
+                      }
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Huerta
                     </Button>
@@ -579,6 +589,14 @@ export default function CompanyPurchasesPage() {
             ))}
           </div>
         )}
+
+        {/* ── Modal videos 360 ── */}
+        <OrchardVideosModal
+          orchardId={videosOrchard?.id ?? null}
+          orchardName={videosOrchard?.name ?? ""}
+          isOpen={!!videosOrchard}
+          onClose={() => setVideosOrchard(null)}
+        />
 
         {/* ── Dialog Foto ID ── */}
         <Dialog open={showPhotoIdDialog} onOpenChange={setShowPhotoIdDialog}>
