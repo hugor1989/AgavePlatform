@@ -554,9 +554,21 @@ export default function AdminOfertasPage() {
                     El Agave sería puesto en fábrica o la fábrica se
                     encargaría de toda la logística *
                   </Label>
-                  <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded p-2">
-                    Lo que envió la empresa: &quot;{selectedOffer?.logistics}
-                    &quot;
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Building2 className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                      <p className="text-xs font-semibold text-blue-700">
+                        Texto enviado por la empresa
+                      </p>
+                    </div>
+                    <p className="text-sm text-blue-900 italic leading-snug">
+                      &quot;{selectedOffer?.logistics}&quot;
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-gray-500 pt-1">
+                    ¿Qué verá el agricultor?
                   </p>
                   <div className="flex flex-col gap-2">
                     <button
@@ -568,7 +580,9 @@ export default function AdminOfertasPage() {
                           : "border-gray-200 text-gray-600 hover:bg-gray-50"
                       }`}
                     >
-                      Dejar tal cual llegó de la empresa
+                      <span className="block font-medium">
+                        Dejar tal cual llegó de la empresa
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -579,7 +593,12 @@ export default function AdminOfertasPage() {
                           : "border-gray-200 text-gray-600 hover:bg-gray-50"
                       }`}
                     >
-                      {PLATFORM_LOGISTICS_TEXT}
+                      <span className="block font-medium">
+                        Usar texto de la plataforma
+                      </span>
+                      <span className="block text-xs mt-0.5 opacity-80">
+                        {PLATFORM_LOGISTICS_TEXT}
+                      </span>
                     </button>
                   </div>
                 </div>
