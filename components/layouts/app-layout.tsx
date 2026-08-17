@@ -79,12 +79,12 @@ const NAVIGATION: Record<
     },
     { name: "Comprar Huertas", href: "/company/catalog", icon: Search },
     { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare },
+    { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
     {
       name: "Jimas Terminadas",
       href: "/company/jimas-terminadas",
       icon: CheckCircle,
     },
-    { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
   ],
   farmer: [
     { name: "Historias de Jima", href: "/farmer/dashboard", icon: Home },
