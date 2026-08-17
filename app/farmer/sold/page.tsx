@@ -867,7 +867,10 @@ export default function FarmerSoldPage() {
                   </Label>
                   <textarea
                     readOnly
-                    value={selectedSale.offer.logistics}
+                    value={
+                      selectedSale.offer.farmer_logistics ??
+                      selectedSale.offer.logistics
+                    }
                     rows={2}
                     className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
                   />

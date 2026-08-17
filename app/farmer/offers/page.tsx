@@ -557,7 +557,7 @@ export default function FarmerOffersPage() {
                           </Label>
                           <textarea
                             readOnly
-                            value={offer.logistics}
+                            value={offer.farmer_logistics ?? offer.logistics}
                             rows={2}
                             className="w-full min-h-[60px] px-3 py-2 border border-gray-300 rounded-md resize-none bg-gray-50"
                           />

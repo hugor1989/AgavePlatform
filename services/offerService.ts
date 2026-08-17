@@ -11,6 +11,7 @@ export interface Offer {
   min_kilos: number
   payment_terms: string
   logistics: string
+  farmer_logistics: string | null
   farmer_price: number | null
   farmer_notified: boolean
   admin_notes: string | null
@@ -72,10 +73,16 @@ export const offerService = {
     return data.data
   },
 
-  notifyFarmer: async (id: number | string, farmerPrice: number, adminNotes?: string): Promise<Offer> => {
+  notifyFarmer: async (
+    id: number | string,
+    farmerPrice: number,
+    adminNotes?: string,
+    farmerLogistics?: string,
+  ): Promise<Offer> => {
     const { data } = await api.post(`/offers/${id}/notify-farmer`, {
       farmer_price: farmerPrice,
       admin_notes: adminNotes,
+      farmer_logistics: farmerLogistics,
     })
     return data.data
   },

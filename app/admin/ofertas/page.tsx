@@ -42,6 +42,9 @@ import {
 import { toast } from "sonner";
 import { offerService, Offer } from "@/services/offerService";
 
+const PLATFORM_LOGISTICS_TEXT =
+  "La plataforma Productores Agave se encargara de la jima y flete";
+
 export default function AdminOfertasPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +56,9 @@ export default function AdminOfertasPage() {
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const [farmerPrice, setFarmerPrice] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [logisticsOption, setLogisticsOption] = useState<
+    "original" | "platform"
+  >("original");
 
   const fetchOffers = async () => {
     try {
@@ -135,6 +141,7 @@ export default function AdminOfertasPage() {
         selectedOffer.id,
         parseFloat(farmerPrice),
         adminNotes,
+        logisticsOption === "platform" ? PLATFORM_LOGISTICS_TEXT : undefined,
       );
       setOffers((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
       toast.success(
@@ -143,6 +150,7 @@ export default function AdminOfertasPage() {
       setIsNotifyDialogOpen(false);
       setFarmerPrice("");
       setAdminNotes("");
+      setLogisticsOption("original");
     } catch {
       toast.error("No se pudo notificar al agricultor.");
     } finally {
@@ -359,6 +367,11 @@ export default function AdminOfertasPage() {
                                       { minimumFractionDigits: 2 },
                                     )}
                                   </p>
+                                  {offer.farmer_logistics && (
+                                    <p className="text-xs text-orange-700 mt-1">
+                                      Logística comunicada: {offer.farmer_logistics}
+                                    </p>
+                                  )}
                                   {offer.admin_notes && (
                                     <p className="text-xs text-orange-700 mt-1">
                                       {offer.admin_notes}
@@ -415,6 +428,7 @@ export default function AdminOfertasPage() {
                                   setSelectedOffer(offer);
                                   setFarmerPrice("");
                                   setAdminNotes("");
+                                  setLogisticsOption("original");
                                   setIsNotifyDialogOpen(true);
                                 }}
                                 className="text-orange-600 border-orange-600 hover:bg-orange-50 w-full sm:w-auto"
@@ -534,6 +548,41 @@ export default function AdminOfertasPage() {
                     </div>
                   </div>
                 )}
+
+                <div className="space-y-2">
+                  <Label>
+                    El Agave sería puesto en fábrica o la fábrica se
+                    encargaría de toda la logística *
+                  </Label>
+                  <p className="text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded p-2">
+                    Lo que envió la empresa: &quot;{selectedOffer?.logistics}
+                    &quot;
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLogisticsOption("original")}
+                      className={`text-left text-sm border rounded-lg p-3 transition-colors ${
+                        logisticsOption === "original"
+                          ? "border-orange-600 bg-orange-50 text-orange-900"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Dejar tal cual llegó de la empresa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLogisticsOption("platform")}
+                      className={`text-left text-sm border rounded-lg p-3 transition-colors ${
+                        logisticsOption === "platform"
+                          ? "border-orange-600 bg-orange-50 text-orange-900"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {PLATFORM_LOGISTICS_TEXT}
+                    </button>
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <Label>Notas (opcional)</Label>
