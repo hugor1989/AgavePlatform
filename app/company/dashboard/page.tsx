@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
 import { AppLayout } from "@/components/layouts/app-layout"
@@ -13,6 +13,8 @@ export default function CompanyDashboard() {
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [loadingVideo, setLoadingVideo] = useState(false)
+  const [thumbnails, setThumbnails] = useState<Record<number, string>>({})
+  const blobUrlCache = useRef<Record<number, string>>({})
 
   useEffect(() => {
     jimaStoryService.getAll()
@@ -21,12 +23,63 @@ export default function CompanyDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Genera el frame de preview de un video y lo guarda en thumbnails
+  const generateThumbnail = async (story: JimaStory) => {
+    if (thumbnails[story.id]) return
+    try {
+      const blobUrl = await jimaStoryService.getVideoUrl(story.id)
+      blobUrlCache.current[story.id] = blobUrl
+
+      await new Promise<void>((resolve) => {
+        const video = document.createElement("video")
+        video.muted = true
+        video.preload = "metadata"
+        video.src = blobUrl
+        video.currentTime = 1
+
+        const capture = () => {
+          const canvas = document.createElement("canvas")
+          canvas.width  = video.videoWidth  || 640
+          canvas.height = video.videoHeight || 360
+          canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height)
+          setThumbnails(prev => ({ ...prev, [story.id]: canvas.toDataURL("image/jpeg", 0.8) }))
+          resolve()
+        }
+
+        video.addEventListener("seeked", capture, { once: true })
+        video.addEventListener("error",  () => resolve(), { once: true })
+      })
+    } catch { /* sin thumbnail */ }
+  }
+
+  // Genera thumbnails en secuencia cuando llegan las historias
+  useEffect(() => {
+    if (stories.length === 0) return
+    const queue = [...stories]
+    const next = async () => {
+      const story = queue.shift()
+      if (!story) return
+      await generateThumbnail(story)
+      next()
+    }
+    next()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stories])
+
   const handlePlay = async (story: JimaStory) => {
     setVideoUrl(null)
     setVideoDialogOpen(true)
     setLoadingVideo(true)
+    // Reutiliza el blob URL ya cacheado por el thumbnail
+    const cached = blobUrlCache.current[story.id]
+    if (cached) {
+      setVideoUrl(cached)
+      setLoadingVideo(false)
+      return
+    }
     try {
       const url = await jimaStoryService.getVideoUrl(story.id)
+      blobUrlCache.current[story.id] = url
       setVideoUrl(url)
     } catch {
       toast.error("No se pudo cargar el video.")
@@ -64,6 +117,7 @@ export default function CompanyDashboard() {
                 {active.map((story) => (
                   <HuertaVideoCard
                     key={story.id}
+                    thumbnailUrl={thumbnails[story.id]}
                     huerta={{
                       id: story.id,
                       orchardName: story.orchard?.name ?? `Huerta #${story.orchard_id}`,
