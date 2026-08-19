@@ -76,6 +76,9 @@ export default function AdminJimasTerminadasPage() {
           sales={filtered}
           tripsMap={tripsMap}
           isTerminatedView
+          onOrchardDeactivated={(orchardId) =>
+            setSales((prev) => prev.filter((s) => s.orchard_id !== orchardId))
+          }
         />
       </div>
     </AppLayout>

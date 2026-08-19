@@ -206,6 +206,14 @@ export const orchardService = {
     return data
   },
 
+  // Desactiva la huerta (no la borra: sus ventas/viajes/ofertas cuelgan de
+  // orchard_id con cascade y se perderían) y borra los videos 360 pesados.
+  // Solo admin.
+  deactivate: async (id: number | string) => {
+    const { data } = await api.post(`/orchards/status/${id}/deactivate`)
+    return data
+  },
+
   getPhotoUrl: (photoPath: string | null) => {
     if (!photoPath) return null
     const baseURL = api.defaults.baseURL?.replace(/\/api\/?$/, '') || ''

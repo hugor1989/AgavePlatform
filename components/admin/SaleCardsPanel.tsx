@@ -31,6 +31,7 @@ import {
   Eye,
   Camera,
   Share2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -46,6 +47,7 @@ interface SaleCardsPanelProps {
   role?: "admin" | "farmer" | "company";
   onTripsUpdate?: (saleId: number, updatedTrip: JimaTrip) => void;
   onSaleFinished?: (updatedSale: OrchardSale) => void;
+  onOrchardDeactivated?: (orchardId: number) => void;
 }
 
 export function SaleCardsPanel({
@@ -55,13 +57,16 @@ export function SaleCardsPanel({
   role = "admin",
   onTripsUpdate,
   onSaleFinished,
+  onOrchardDeactivated,
 }: SaleCardsPanelProps) {
   const [selectedSale, setSelectedSale] = useState<OrchardSale | null>(null);
   const [showOfferDialog, setShowOfferDialog] = useState(false);
   const [showTripsDialog, setShowTripsDialog] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [showPhotoIdDialog, setShowPhotoIdDialog] = useState(false);
+  const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [finishingId, setFinishingId] = useState<number | null>(null);
+  const [deactivatingId, setDeactivatingId] = useState<number | null>(null);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [uploadingWeighId, setUploadingWeighId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -201,6 +206,22 @@ export function SaleCardsPanel({
       console.error(err);
     } finally {
       setFinishingId(null);
+    }
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!selectedSale?.orchard_id) return;
+    setDeactivatingId(selectedSale.id);
+    try {
+      await orchardService.deactivate(selectedSale.orchard_id);
+      onOrchardDeactivated?.(selectedSale.orchard_id);
+      toast.success("Huerta desactivada y videos 360 eliminados.");
+      setShowDeactivateDialog(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("No se pudo desactivar la huerta.");
+    } finally {
+      setDeactivatingId(null);
     }
   };
 
@@ -655,6 +676,19 @@ export function SaleCardsPanel({
                       <IdCard className="w-4 h-4 mr-2" />
                       Ver foto ID
                     </Button>
+                    {role === "admin" && (
+                      <Button
+                        variant="outline"
+                        className="w-full border-red-300 text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          setSelectedSale(sale);
+                          setShowDeactivateDialog(true);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar huerta
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -1272,6 +1306,62 @@ export function SaleCardsPanel({
               {finishingId === selectedSale?.id
                 ? "Procesando..."
                 : "Sí, terminar jima"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Deactivate Orchard Dialog ── */}
+      <Dialog open={showDeactivateDialog} onOpenChange={setShowDeactivateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              Eliminar huerta — {selectedSale?.orchard?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-800 space-y-1">
+                <p>Esta acción:</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>
+                    Marca la huerta como <strong>inactiva</strong> (deja de
+                    aparecer en catálogos y listados).
+                  </li>
+                  <li>
+                    Borra permanentemente sus{" "}
+                    <strong>videos 360° y sus archivos HLS</strong> del
+                    servidor para liberar espacio.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">
+              El registro de la huerta y su historial de venta/jima{" "}
+              <strong>no se borran</strong> — solo se archiva. Esto no puede
+              revertirse desde la plataforma.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeactivateDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deactivatingId === selectedSale?.id}
+              onClick={handleConfirmDeactivate}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {deactivatingId === selectedSale?.id
+                ? "Eliminando..."
+                : "Sí, eliminar huerta"}
             </Button>
           </DialogFooter>
         </DialogContent>

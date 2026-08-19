@@ -159,6 +159,15 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
               hlsSrc={selected.hls_path ? videoService.hlsUrl(selected.id) : null}
               autoPlay
               className="h-full"
+              headingNumber={selected.heading_number}
+              lineNumber={selected.line_number}
+              hasPrev={videos.findIndex((v) => v.id === selected.id) > 0}
+              hasNext={videos.findIndex((v) => v.id === selected.id) < videos.length - 1}
+              onNavigate={(direction) => {
+                const currentIndex = videos.findIndex((v) => v.id === selected.id)
+                const target = videos[currentIndex + (direction === "next" ? 1 : -1)]
+                if (target) handleSelect(target)
+              }}
             />
           </div>
         </>
