@@ -27,8 +27,8 @@ interface Video360PlayerProps {
   className?: string
   /** Número de cabecera del video actual — se muestra en el óvalo naranja superior. */
   headingNumber?: number
-  /** Número de línea del video actual — se muestra en el círculo azul de navegación. */
-  lineNumber?: number
+  /** Línea del video actual (número, opcionalmente con letra, ej. "15A") — se muestra en el círculo azul de navegación. Videos de solo cabecera no tienen línea. */
+  lineNumber?: number | string
   /** Navegar al video anterior/siguiente (orden cabecera → línea). Omitir oculta los controles. */
   onNavigate?: (direction: "prev" | "next") => void
   hasPrev?: boolean
@@ -57,6 +57,10 @@ export function Video360Player({
   const isDragging = useRef(false)
   const lastMouse = useRef({ x: 0, y: 0 })
   const spherical = useRef({ phi: Math.PI / 2, theta: 0 })
+  // Distancia acumulada durante el gesto actual — por debajo del umbral se
+  // trata como un tap/click (pausa o reanuda) en vez de un arrastre de cámara.
+  const dragDistance = useRef(0)
+  const TAP_THRESHOLD = 6
 
   // Controls state
   const [isPlaying, setIsPlaying] = useState(false)
@@ -65,6 +69,17 @@ export function Video360Player({
   const [duration, setDuration] = useState(0)
   const [showControls, setShowControls] = useState(true)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Icono grande de play/pausa que aparece brevemente al hacer tap/click
+  // en el centro del video, igual que en YouTube.
+  const [centerIcon, setCenterIcon] = useState<{ icon: "play" | "pause"; key: number } | null>(null)
+  const centerIconTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const flashCenterIcon = (icon: "play" | "pause") => {
+    if (centerIconTimer.current) clearTimeout(centerIconTimer.current)
+    setCenterIcon({ icon, key: Date.now() })
+    centerIconTimer.current = setTimeout(() => setCenterIcon(null), 500)
+  }
 
   // Selector de calidad (solo disponible cuando se reproduce vía hls.js)
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([])
@@ -227,6 +242,7 @@ export function Video360Player({
     // ── Mouse drag ─────────────────────────────────────────────
     const onMouseDown = (e: MouseEvent) => {
       isDragging.current = true
+      dragDistance.current = 0
       lastMouse.current = { x: e.clientX, y: e.clientY }
       showControlsTemporarily()
     }
@@ -235,14 +251,20 @@ export function Video360Player({
       const dx = e.clientX - lastMouse.current.x
       const dy = e.clientY - lastMouse.current.y
       lastMouse.current = { x: e.clientX, y: e.clientY }
+      dragDistance.current += Math.abs(dx) + Math.abs(dy)
       spherical.current.theta -= dx * 0.005
       spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi - dy * 0.005))
     }
-    const onMouseUp = () => { isDragging.current = false }
+    const onMouseUp = () => {
+      isDragging.current = false
+      // Sin apenas movimiento: fue un click, no un arrastre de cámara.
+      if (dragDistance.current < TAP_THRESHOLD) togglePlay()
+    }
 
     // ── Touch drag ─────────────────────────────────────────────
     const onTouchStart = (e: TouchEvent) => {
       isDragging.current = true
+      dragDistance.current = 0
       lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
       showControlsTemporarily()
     }
@@ -251,10 +273,14 @@ export function Video360Player({
       const dx = e.touches[0].clientX - lastMouse.current.x
       const dy = e.touches[0].clientY - lastMouse.current.y
       lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      dragDistance.current += Math.abs(dx) + Math.abs(dy)
       spherical.current.theta -= dx * 0.005
       spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi - dy * 0.005))
     }
-    const onTouchEnd = () => { isDragging.current = false }
+    const onTouchEnd = () => {
+      isDragging.current = false
+      if (dragDistance.current < TAP_THRESHOLD) togglePlay()
+    }
 
     mount.addEventListener("mousedown", onMouseDown)
     window.addEventListener("mousemove", onMouseMove)
@@ -293,8 +319,8 @@ export function Video360Player({
   const togglePlay = () => {
     const v = videoRef.current
     if (!v) return
-    if (v.paused) { v.play(); setIsPlaying(true) }
-    else { v.pause(); setIsPlaying(false) }
+    if (v.paused) { v.play(); setIsPlaying(true); flashCenterIcon("play") }
+    else { v.pause(); setIsPlaying(false); flashCenterIcon("pause") }
   }
 
   const toggleMute = () => {
@@ -346,6 +372,20 @@ export function Video360Player({
       {/* Three.js canvas */}
       <div ref={mountRef} className="absolute inset-0" />
 
+      {/* Ícono grande de play/pausa: aparece un instante al hacer tap/click
+          (sin arrastrar) en el centro del video, como en YouTube. */}
+      {centerIcon && (
+        <div key={centerIcon.key} className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-black/50 rounded-full p-5 animate-in fade-in zoom-in-75 duration-200">
+            {centerIcon.icon === "play" ? (
+              <Play className="h-10 w-10 text-white fill-white" />
+            ) : (
+              <Pause className="h-10 w-10 text-white fill-white" />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Óvalo de cabecera (centrado, arriba) */}
       {showControls && headingNumber != null && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-sm font-semibold px-5 py-1.5 rounded-full shadow-md pointer-events-none">
@@ -363,15 +403,15 @@ export function Video360Player({
       {/* Navegación entre videos por línea (centrada, a la derecha): cada
           flecha en su propio recuadro negro, el círculo de línea flota
           libre entre ambos, sin fondo propio. */}
-      {showControls && lineNumber != null && onNavigate && (
+      {lineNumber != null && onNavigate && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
             className="text-white hover:text-white hover:bg-white/20 bg-black/50 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
-            disabled={!hasPrev}
-            onClick={() => onNavigate("prev")}
-            title="Video anterior"
+            disabled={!hasNext}
+            onClick={() => onNavigate("next")}
+            title="Video siguiente"
           >
             <ChevronUp className="h-5 w-5" />
           </Button>
@@ -387,9 +427,9 @@ export function Video360Player({
             variant="ghost"
             size="sm"
             className="text-white hover:text-white hover:bg-white/20 bg-black/50 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
-            disabled={!hasNext}
-            onClick={() => onNavigate("next")}
-            title="Video siguiente"
+            disabled={!hasPrev}
+            onClick={() => onNavigate("prev")}
+            title="Video anterior"
           >
             <ChevronDown className="h-5 w-5" />
           </Button>

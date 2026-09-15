@@ -7,7 +7,8 @@ export interface OrchardVideo {
   orchard_id: number
   orchard_number: string
   heading_number: number
-  line_number: number
+  line_number: number | null
+  line_letter: string | null
   video_path: string
   hls_path: string | null
   status: OrchardVideoStatus

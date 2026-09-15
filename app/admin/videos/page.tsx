@@ -30,13 +30,25 @@ import { toast } from "sonner"
 import { videoService, OrchardVideo } from "@/services/videoService"
 import { Video360Player } from "@/components/ui/Video360Player"
 
-const NOMENCLATURE_EXAMPLE = "HRT-001_2_15.mp4"
-const NOMENCLATURE_PATTERN = /^(.+)_(\d+)_(\d+)\.(mp4|mov|webm)$/i
+const NOMENCLATURE_EXAMPLES = ["HRT-001_2.mp4", "HRT-001_2_15.mp4", "HRT-001_2_15_A.mp4"]
+
+// Mismo orden que el backend (más específico primero): con letra, con línea,
+// solo cabecera. {orchard_number} puede contener guiones bajos.
+const PATTERN_WITH_LETTER = /^(.+)_(\d+)_(\d+)_([A-Za-z])\.(mp4|mov|webm)$/i
+const PATTERN_WITH_LINE = /^(.+)_(\d+)_(\d+)\.(mp4|mov|webm)$/i
+const PATTERN_HEADING_ONLY = /^(.+)_(\d+)\.(mp4|mov|webm)$/i
 
 function parseFilename(name: string) {
-  const m = name.match(NOMENCLATURE_PATTERN)
-  if (!m) return null
-  return { orchardNumber: m[1], heading: m[2], line: m[3] }
+  let m = name.match(PATTERN_WITH_LETTER)
+  if (m) return { orchardNumber: m[1], heading: m[2], line: m[3], letter: m[4].toUpperCase() }
+
+  m = name.match(PATTERN_WITH_LINE)
+  if (m) return { orchardNumber: m[1], heading: m[2], line: m[3], letter: undefined as string | undefined }
+
+  m = name.match(PATTERN_HEADING_ONLY)
+  if (m) return { orchardNumber: m[1], heading: m[2], line: undefined as string | undefined, letter: undefined as string | undefined }
+
+  return null
 }
 
 export default function VideosPage() {
@@ -148,12 +160,20 @@ export default function VideosPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-blue-900">
             <p>
-              El nombre del archivo debe seguir exactamente este formato:
+              El nombre del archivo debe seguir uno de estos tres formatos:
             </p>
-            <code className="block bg-white border border-blue-200 rounded px-3 py-2 font-mono text-base text-blue-800">
-              {"{id_huerta}"}_{"{cabecera}"}_{"{linea}"}.mp4
-            </code>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+            <div className="space-y-1.5">
+              <code className="block bg-white border border-blue-200 rounded px-3 py-2 font-mono text-sm text-blue-800">
+                {"{id_huerta}"}_{"{cabecera}"}.mp4
+              </code>
+              <code className="block bg-white border border-blue-200 rounded px-3 py-2 font-mono text-sm text-blue-800">
+                {"{id_huerta}"}_{"{cabecera}"}_{"{linea}"}.mp4
+              </code>
+              <code className="block bg-white border border-blue-200 rounded px-3 py-2 font-mono text-sm text-blue-800">
+                {"{id_huerta}"}_{"{cabecera}"}_{"{linea}"}_{"{letra}"}.mp4
+              </code>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-2">
               <div className="bg-white rounded p-3 border border-blue-200">
                 <p className="font-semibold text-blue-700">ID de Huerta</p>
                 <p className="text-gray-600 mt-1">
@@ -169,19 +189,34 @@ export default function VideosPage() {
                 <p className="text-gray-500 mt-1 text-xs">Ej: <code>1</code>, <code>2</code>, <code>3</code></p>
               </div>
               <div className="bg-white rounded p-3 border border-blue-200">
-                <p className="font-semibold text-blue-700">Número de Línea</p>
+                <p className="font-semibold text-blue-700">Número de Línea (opcional)</p>
                 <p className="text-gray-600 mt-1">
-                  Número entero que identifica la línea dentro de la cabecera.
+                  Número entero que identifica la línea dentro de la cabecera. Si se omite, el video se registra como de solo cabecera.
                 </p>
                 <p className="text-gray-500 mt-1 text-xs">Ej: <code>1</code>, <code>42</code>, <code>423</code></p>
               </div>
+              <div className="bg-white rounded p-3 border border-blue-200">
+                <p className="font-semibold text-blue-700">Letra (opcional)</p>
+                <p className="text-gray-600 mt-1">
+                  Solo aplica si la línea tiene tramos identificados por letra.
+                </p>
+                <p className="text-gray-500 mt-1 text-xs">Ej: <code>A</code>, <code>B</code>, <code>C</code></p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <p className="font-medium">Ejemplo válido:</p>
-              <code className="bg-white border border-blue-200 rounded px-2 py-1 font-mono text-blue-800">
-                {NOMENCLATURE_EXAMPLE}
-              </code>
-              <span className="text-gray-500 text-xs">→ Huerta HRT-001, Cabecera 2, Línea 15</span>
+            <div className="flex flex-col gap-1 mt-2">
+              <p className="font-medium">Ejemplos válidos:</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="bg-white border border-blue-200 rounded px-2 py-1 font-mono text-blue-800">{NOMENCLATURE_EXAMPLES[0]}</code>
+                <span className="text-gray-500 text-xs">→ Huerta HRT-001, Cabecera 2</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="bg-white border border-blue-200 rounded px-2 py-1 font-mono text-blue-800">{NOMENCLATURE_EXAMPLES[1]}</code>
+                <span className="text-gray-500 text-xs">→ Huerta HRT-001, Cabecera 2, Línea 15</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="bg-white border border-blue-200 rounded px-2 py-1 font-mono text-blue-800">{NOMENCLATURE_EXAMPLES[2]}</code>
+                <span className="text-gray-500 text-xs">→ Huerta HRT-001, Cabecera 2, Línea 15A</span>
+              </div>
             </div>
             <p className="text-xs text-blue-700 mt-1">
               Formatos aceptados: <strong>MP4, MOV, WEBM</strong>. Tamaño máximo: <strong>2 GB</strong>.
@@ -248,11 +283,14 @@ export default function VideosPage() {
                   </p>
                   {fileValid && filePreview ? (
                     <p className="text-green-700 mt-0.5">
-                      Huerta: <strong>{filePreview.orchardNumber}</strong> · Cabecera: <strong>{filePreview.heading}</strong> · Línea: <strong>{filePreview.line}</strong>
+                      Huerta: <strong>{filePreview.orchardNumber}</strong> · Cabecera: <strong>{filePreview.heading}</strong>
+                      {filePreview.line != null && (
+                        <> · Línea: <strong>{filePreview.line}{filePreview.letter ?? ""}</strong></>
+                      )}
                     </p>
                   ) : (
                     <p className="text-red-700 mt-0.5">
-                      El nombre no sigue la nomenclatura. Formato esperado: <code className="font-mono">{"{id_huerta}_{cabecera}_{linea}.mp4"}</code>
+                      El nombre no sigue la nomenclatura. Formatos esperados: <code className="font-mono">{"{id_huerta}_{cabecera}.mp4"}</code>, <code className="font-mono">{"{id_huerta}_{cabecera}_{linea}.mp4"}</code> o <code className="font-mono">{"{id_huerta}_{cabecera}_{linea}_{letra}.mp4"}</code>
                     </p>
                   )}
                 </div>
@@ -313,7 +351,9 @@ export default function VideosPage() {
                           </div>
                         </td>
                         <td className="py-3 text-center font-semibold">{v.heading_number}</td>
-                        <td className="py-3 text-center font-semibold">{v.line_number}</td>
+                        <td className="py-3 text-center font-semibold">
+                          {v.line_number != null ? `${v.line_number}${v.line_letter ?? ""}` : "—"}
+                        </td>
                         <td className="py-3 text-center">
                           {v.status === 'ready' && (
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Listo</Badge>
@@ -385,7 +425,9 @@ export default function VideosPage() {
               <div className="flex gap-4 text-sm text-gray-600 px-4 pb-2 pt-1">
                 <span>Huerta: <strong>{playTarget.orchard?.name || playTarget.orchard_number}</strong></span>
                 <span>Cabecera: <strong>{playTarget.heading_number}</strong></span>
-                <span>Línea: <strong>{playTarget.line_number}</strong></span>
+                {playTarget.line_number != null && (
+                  <span>Línea: <strong>{playTarget.line_number}{playTarget.line_letter ?? ""}</strong></span>
+                )}
                 <Button variant="outline" size="sm" className="ml-auto" onClick={() => setPlayTarget(null)}>Cerrar</Button>
               </div>
             </div>

@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { JimaStoryVideoModal } from "@/components/huertas/JimaStoryVideoModal"
 import { Input } from "@/components/ui/input"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { jimaStoryService, JimaStory } from "@/services/jimaStoryService"
@@ -348,24 +348,13 @@ export default function AdminHistoriasJimaPage() {
         )}
       </div>
 
-      {/* ── Dialog reproducir video ── */}
-      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Video de Jima</DialogTitle>
-          </DialogHeader>
-          {loadingVideo ? (
-            <p className="text-center text-gray-500 py-8">Cargando video...</p>
-          ) : videoUrl ? (
-            <video
-              src={videoUrl}
-              className="w-full rounded-lg"
-              controls
-              autoPlay
-            />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      {/* ── Reproducir video ── */}
+      <JimaStoryVideoModal
+        open={videoDialogOpen}
+        videoUrl={videoUrl}
+        loading={loadingVideo}
+        onClose={() => setVideoDialogOpen(false)}
+      />
     </AppLayout>
   )
 }

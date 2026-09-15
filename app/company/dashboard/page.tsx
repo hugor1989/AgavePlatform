@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
+import { JimaStoryVideoModal } from "@/components/huertas/JimaStoryVideoModal"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { jimaStoryService, JimaStory } from "@/services/jimaStoryService"
 import { toast } from "sonner"
@@ -143,18 +143,12 @@ export default function CompanyDashboard() {
         </div>
       </div>
 
-      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Video de Jima</DialogTitle>
-          </DialogHeader>
-          {loadingVideo ? (
-            <p className="text-center text-gray-500 py-8">Cargando video...</p>
-          ) : videoUrl ? (
-            <video src={videoUrl} className="w-full rounded-lg" controls autoPlay />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <JimaStoryVideoModal
+        open={videoDialogOpen}
+        videoUrl={videoUrl}
+        loading={loadingVideo}
+        onClose={() => setVideoDialogOpen(false)}
+      />
     </AppLayout>
   )
 }

@@ -26,10 +26,19 @@ function getWatchedIds(): Set<number> {
   }
 }
 
+// Videos de solo cabecera (line_number null) se ordenan antes que sus líneas.
 function sortByHeadingAndLine(videos: OrchardVideo[]) {
   return [...videos].sort((a, b) =>
-    a.heading_number - b.heading_number || a.line_number - b.line_number
+    a.heading_number - b.heading_number ||
+    (a.line_number ?? -1) - (b.line_number ?? -1) ||
+    (a.line_letter ?? "").localeCompare(b.line_letter ?? "")
   )
+}
+
+// "15" o "15A" — vacío si el video es de solo cabecera (sin línea).
+function lineLabel(video: OrchardVideo): string | undefined {
+  if (video.line_number == null) return undefined
+  return `${video.line_number}${video.line_letter ?? ""}`
 }
 
 export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: OrchardVideosModalProps) {
@@ -92,17 +101,46 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
     onClose()
   }
 
-  // Cerrar todo cuando se sale de pantalla completa (ESC, gesto del navegador, etc.)
+  // Bloquear el scroll de la página de fondo mientras el popup está abierto.
+  // overflow:hidden en el body no basta en iOS Safari (el "rubber-banding"
+  // sigue moviendo el fondo con gestos táctiles) — hay que fijar el body con
+  // position:fixed y restaurar el scroll exacto al cerrar.
   useEffect(() => {
-    const onFsChange = () => {
-      if (!document.fullscreenElement && selected) handleClose()
+    if (!isOpen) return
+    const scrollY = window.scrollY
+    const { style } = document.body
+    const original = {
+      position: style.position,
+      top: style.top,
+      left: style.left,
+      right: style.right,
+      width: style.width,
+      overflow: style.overflow,
     }
-    document.addEventListener("fullscreenchange", onFsChange)
-    return () => document.removeEventListener("fullscreenchange", onFsChange)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected])
+    style.position = "fixed"
+    style.top = `-${scrollY}px`
+    style.left = "0"
+    style.right = "0"
+    style.width = "100%"
+    style.overflow = "hidden"
+
+    return () => {
+      style.position = original.position
+      style.top = original.top
+      style.left = original.left
+      style.right = original.right
+      style.width = original.width
+      style.overflow = original.overflow
+      window.scrollTo(0, scrollY)
+    }
+  }, [isOpen])
 
   if (!isOpen || !orchardId) return null
+
+  // Listas independientes para los dos selectores: uno solo ve videos de
+  // cabecera (sin línea), el otro solo videos de línea.
+  const cabeceraVideos = videos.filter((v) => v.line_number == null)
+  const lineVideos = videos.filter((v) => v.line_number != null)
 
   return (
     <div ref={setFullscreenRef} className="fixed inset-0 z-[200] bg-black flex flex-col">
@@ -112,35 +150,68 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
           <div className="flex items-center gap-3 px-4 py-3 bg-black/80 text-white shrink-0">
             <span className="text-sm font-medium truncate">{orchardName}</span>
 
-            {/* Selector de video: navega a cualquier video de la huerta */}
-            <Select
-              value={String(selected.id)}
-              onValueChange={(value) => {
-                const video = videos.find((v) => v.id === Number(value))
-                if (video) handleSelect(video)
-              }}
-            >
-              <SelectTrigger className="ml-auto w-52 h-8 bg-white/10 border-white/20 text-white text-xs focus:ring-white/40 focus:ring-offset-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent container={fullscreenNode}>
-                {videos.map((video) => {
-                  const watched = watchedIds.has(video.id)
-                  return (
-                    <SelectItem
-                      key={video.id}
-                      value={String(video.id)}
-                      className={watched ? "text-purple-600 font-medium" : ""}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        Cabecera {video.heading_number} · Línea {video.line_number}
-                        {watched && <Check className="h-3 w-3 text-purple-600" />}
-                      </span>
-                    </SelectItem>
-                  )
-                })}
-              </SelectContent>
-            </Select>
+            {/* Dos selectores independientes: elegir una cabecera navega al
+                video de esa cabecera, elegir una línea navega al video de esa
+                línea — no dependen entre sí. */}
+            <div className="ml-auto flex items-center gap-2">
+              <Select
+                value={selected.line_number == null ? String(selected.id) : ""}
+                onValueChange={(value) => {
+                  const video = cabeceraVideos.find((v) => v.id === Number(value))
+                  if (video) handleSelect(video)
+                }}
+              >
+                <SelectTrigger className="w-32 h-8 bg-white/10 border-white/20 text-white text-xs focus:ring-white/40 focus:ring-offset-0">
+                  <SelectValue placeholder={`Cabecera ${selected.heading_number}`} />
+                </SelectTrigger>
+                <SelectContent container={fullscreenNode}>
+                  {cabeceraVideos.map((video) => {
+                    const watched = watchedIds.has(video.id)
+                    return (
+                      <SelectItem
+                        key={video.id}
+                        value={String(video.id)}
+                        className={watched ? "text-purple-600 font-medium" : ""}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          Cabecera {video.heading_number}
+                          {watched && <Check className="h-3 w-3 text-purple-600" />}
+                        </span>
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={selected.line_number != null ? String(selected.id) : ""}
+                onValueChange={(value) => {
+                  const video = lineVideos.find((v) => v.id === Number(value))
+                  if (video) handleSelect(video)
+                }}
+              >
+                <SelectTrigger className="w-36 h-8 bg-white/10 border-white/20 text-white text-xs focus:ring-white/40 focus:ring-offset-0">
+                  <SelectValue placeholder="Línea" />
+                </SelectTrigger>
+                <SelectContent container={fullscreenNode}>
+                  {lineVideos.map((video) => {
+                    const watched = watchedIds.has(video.id)
+                    return (
+                      <SelectItem
+                        key={video.id}
+                        value={String(video.id)}
+                        className={watched ? "text-purple-600 font-medium" : ""}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          Línea {lineLabel(video)}
+                          {watched && <Check className="h-3 w-3 text-purple-600" />}
+                        </span>
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button
               variant="ghost"
@@ -160,7 +231,7 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
               autoPlay
               className="h-full"
               headingNumber={selected.heading_number}
-              lineNumber={selected.line_number}
+              lineNumber={lineLabel(selected)}
               hasPrev={videos.findIndex((v) => v.id === selected.id) > 0}
               hasNext={videos.findIndex((v) => v.id === selected.id) < videos.length - 1}
               onNavigate={(direction) => {
