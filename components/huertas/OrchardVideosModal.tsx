@@ -69,8 +69,11 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
         const ready = data.filter((v) => v.status === 'ready')
         const sorted = sortByHeadingAndLine(ready)
         setVideos(sorted)
-        // Abrir directamente el primer video en orden (cabecera, luego línea)
-        if (sorted.length > 0) handleSelect(sorted[0])
+        // Abrir siempre con un video de cabecera primero (si existe alguno);
+        // si la huerta no tiene ningún video de cabecera, cae al primero
+        // disponible en el orden general.
+        const initial = sorted.find((v) => v.line_number == null) ?? sorted[0]
+        if (initial) handleSelect(initial)
       })
       .catch(() => setVideos([]))
       .finally(() => setLoading(false))
@@ -142,6 +145,11 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
   const cabeceraVideos = videos.filter((v) => v.line_number == null)
   const lineVideos = videos.filter((v) => v.line_number != null)
 
+  // Las flechas de navegación se quedan dentro del mismo tipo que el video
+  // actual: desde una cabecera solo se salta a otras cabeceras, desde una
+  // línea solo a otras líneas.
+  const navList = selected && selected.line_number == null ? cabeceraVideos : lineVideos
+
   return (
     <div ref={setFullscreenRef} className="fixed inset-0 z-[200] bg-black flex flex-col">
       {selected ? (
@@ -162,7 +170,7 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
                 }}
               >
                 <SelectTrigger className="w-32 h-8 bg-white/10 border-white/20 text-white text-xs focus:ring-white/40 focus:ring-offset-0">
-                  <SelectValue placeholder={`Cabecera ${selected.heading_number}`} />
+                  <SelectValue placeholder="Cabecera" />
                 </SelectTrigger>
                 <SelectContent container={fullscreenNode}>
                   {cabeceraVideos.map((video) => {
@@ -232,11 +240,11 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
               className="h-full"
               headingNumber={selected.heading_number}
               lineNumber={lineLabel(selected)}
-              hasPrev={videos.findIndex((v) => v.id === selected.id) > 0}
-              hasNext={videos.findIndex((v) => v.id === selected.id) < videos.length - 1}
+              hasPrev={navList.findIndex((v) => v.id === selected.id) > 0}
+              hasNext={navList.findIndex((v) => v.id === selected.id) < navList.length - 1}
               onNavigate={(direction) => {
-                const currentIndex = videos.findIndex((v) => v.id === selected.id)
-                const target = videos[currentIndex + (direction === "next" ? 1 : -1)]
+                const currentIndex = navList.findIndex((v) => v.id === selected.id)
+                const target = navList[currentIndex + (direction === "next" ? 1 : -1)]
                 if (target) handleSelect(target)
               }}
             />

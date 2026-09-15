@@ -15,12 +15,19 @@ import {
   Hash,
 } from "lucide-react";
 import { AppLayout } from "@/components/layouts/app-layout";
-import { offerService, Offer } from "@/services/offerService";
+import { offerService, Offer, COMPANY_OFFERS_SEEN_KEY } from "@/services/offerService";
 
 export default function CompanyNegotiations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Marca esta visita como el punto de referencia para el punto rojo del
+  // menú — así solo se enciende con actividad posterior a la última vez que
+  // el usuario realmente vio esta página.
+  useEffect(() => {
+    localStorage.setItem(COMPANY_OFFERS_SEEN_KEY, new Date().toISOString());
+  }, []);
 
   useEffect(() => {
     offerService

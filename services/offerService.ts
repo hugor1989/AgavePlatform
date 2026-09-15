@@ -51,6 +51,11 @@ export interface OfferFormData {
   logistics: string
 }
 
+// Última vez que la empresa visitó "Mis Ofertas" — usado por el layout para
+// decidir si mostrar el punto rojo de actividad nueva (oferta revisada,
+// aceptada o rechazada desde esa visita).
+export const COMPANY_OFFERS_SEEN_KEY = "agave_company_offers_last_seen"
+
 export const offerService = {
   getAll: async (status?: string): Promise<Offer[]> => {
     const params = status ? `?status=${status}` : ""

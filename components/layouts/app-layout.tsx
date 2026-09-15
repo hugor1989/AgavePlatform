@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +24,6 @@ import {
   Building2,
   DollarSign,
   CheckCircle,
-  Bell,
   Settings,
   LogOut,
   User,
@@ -39,6 +37,7 @@ import { AgaveIcon } from "@/components/icons/AgaveIcon";
 import { SearchDollarIcon } from "@/components/icons/SearchDollarIcon";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/useAuth";
+import { offerService, COMPANY_OFFERS_SEEN_KEY } from "@/services/offerService";
 
 type LayoutType = "admin" | "company" | "farmer";
 
@@ -47,17 +46,18 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
+// "badge" marca items que muestran un punto rojo cuando hay actividad
+// pendiente de revisar (ver NavBadges más abajo).
+type NavItem = { name: string; href: string; icon: any; badge?: "offers" };
+
 // --- Navegaciones por tipo ---
-const NAVIGATION: Record<
-  LayoutType,
-  { name: string; href: string; icon: any }[]
-> = {
+const NAVIGATION: Record<LayoutType, NavItem[]> = {
   admin: [
     { name: "Historias de Jima", href: "/admin/dashboard", icon: Home },
     { name: "Agricultores", href: "/admin/farmers", icon: User },
     { name: "Empresas", href: "/admin/companies", icon: Building2 },
     { name: "Huertas", href: "/admin/huertas", icon: AgaveIcon },
-    { name: "Ofertas", href: "/admin/ofertas", icon: DollarSign },
+    { name: "Ofertas", href: "/admin/ofertas", icon: DollarSign, badge: "offers" },
     {
       name: "Huertas Vendidas",
       href: "/admin/huertas-vendidas",
@@ -78,7 +78,7 @@ const NAVIGATION: Record<
       icon: LayoutDashboard,
     },
     { name: "Comprar Huertas", href: "/company/catalog", icon: SearchDollarIcon },
-    { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare },
+    { name: "Mis Ofertas", href: "/company/negotiations", icon: MessageSquare, badge: "offers" },
     { name: "Mis Compras", href: "/company/purchases", icon: ShoppingCart },
     {
       name: "Jimas Terminadas",
@@ -90,7 +90,7 @@ const NAVIGATION: Record<
     { name: "Historias de Jima", href: "/farmer/dashboard", icon: Home },
     { name: "Catálogo Huertas", href: "/farmer/catalog", icon: SearchDollarIcon },
     { name: "Mis Huertas", href: "/farmer/huertas", icon: AgaveIcon },
-    { name: "Ofertas", href: "/farmer/offers", icon: DollarSign },
+    { name: "Ofertas", href: "/farmer/offers", icon: DollarSign, badge: "offers" },
     { name: "Huertas Vendidas", href: "/farmer/sold", icon: ShoppingCart },
     {
       name: "Jimas Terminadas",
@@ -130,6 +130,13 @@ export function AppLayout({ type, children }: AppLayoutProps) {
 
   const navigation = NAVIGATION[type];
 
+  // Punto rojo en "Ofertas": para el admin indica ofertas nuevas de empresas
+  // sin revisar (status "pendiente"); para el agricultor, ofertas ya
+  // revisadas por el admin que aún no acepta ni rechaza (status "revisada").
+  // Al no depender de un flag de "visto" sino del propio estado del flujo,
+  // el punto desaparece solo cuando alguien realmente actúa sobre la oferta.
+  const [badges, setBadges] = useState<{ offers?: boolean }>({});
+
   const handleLogout = async () => {
     await logout(); // 🧹 limpia localStorage y user del contexto
     pathname.push("/login"); //redirige al login
@@ -143,6 +150,41 @@ export function AppLayout({ type, children }: AppLayoutProps) {
     }
   }, []);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    const checkOffers = async () => {
+      try {
+        if (type === "admin") {
+          const pending = await offerService.getAll("pendiente");
+          if (!cancelled) setBadges((prev) => ({ ...prev, offers: pending.length > 0 }));
+        } else if (type === "farmer") {
+          const pending = await offerService.getAll("revisada");
+          if (!cancelled) setBadges((prev) => ({ ...prev, offers: pending.length > 0 }));
+        } else if (type === "company") {
+          // Sin flag de "visto" en el backend: se compara updated_at de las
+          // ofertas propias contra la última vez que visitó "Mis Ofertas"
+          // (guardado por esa página en localStorage al montar).
+          const all = await offerService.getAll();
+          const lastSeen = localStorage.getItem(COMPANY_OFFERS_SEEN_KEY);
+          const lastSeenTime = lastSeen ? new Date(lastSeen).getTime() : 0;
+          const hasNew = all.some(
+            (o) => o.status !== "pendiente" && new Date(o.updated_at).getTime() > lastSeenTime
+          );
+          if (!cancelled) setBadges((prev) => ({ ...prev, offers: hasNew }));
+        }
+      } catch {
+        // Silencioso — un error de red no debe romper la navegación.
+      }
+    };
+
+    checkOffers();
+    const interval = setInterval(checkOffers, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [type]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Fondo móvil */}
@@ -153,14 +195,17 @@ export function AppLayout({ type, children }: AppLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — altura fija a la pantalla (h-screen) y en columna flex,
+          para que "Cerrar Sesión" quede siempre anclado abajo sin que el
+          menú crezca más allá del viewport; la navegación hace scroll
+          interno si hay muchos items. */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 h-screen bg-white shadow-lg transform transition-transform duration-300 ease-in-out flex flex-col lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 h-16 px-6 border-b bg-white">
+        <div className="flex items-center gap-3 h-16 px-6 border-b bg-white shrink-0">
           <Logo />
           <div className="flex-1">
             <h1 className="text-lg font-bold text-gray-900">
@@ -178,8 +223,8 @@ export function AppLayout({ type, children }: AppLayoutProps) {
           </Button>
         </div>
 
-        {/* Navegación */}
-        <nav className="mt-6 px-4">
+        {/* Navegación — scrollea internamente si no cabe, en vez de estirar el aside */}
+        <nav className="mt-6 px-4 flex-1 overflow-y-auto">
           <ul className="space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -194,7 +239,12 @@ export function AppLayout({ type, children }: AppLayoutProps) {
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <item.icon className="h-5 w-5" />
+                      {item.badge && badges[item.badge] && (
+                        <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
+                      )}
+                    </span>
                     {item.name}
                   </Link>
                 </li>
@@ -203,8 +253,8 @@ export function AppLayout({ type, children }: AppLayoutProps) {
           </ul>
         </nav>
 
-        {/* Logout */}
-        <div className="absolute bottom-4 left-4 right-4">
+        {/* Logout — fijo al fondo del sidebar (shrink-0), nunca se lo lleva el scroll */}
+        <div className="shrink-0 border-t p-4">
           <Button
             variant="ghost"
             className="w-full justify-start text-gray-700 hover:bg-gray-50"
@@ -216,8 +266,9 @@ export function AppLayout({ type, children }: AppLayoutProps) {
         </div>
       </aside>
 
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      {/* Contenido principal — con margen izquierdo en pantallas grandes para
+          compensar el sidebar, que ahora es `fixed` en todos los tamaños */}
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
         {/* Header */}
         <header className="bg-white shadow-sm border-b h-16">
           <div className="flex items-center justify-between h-full px-6">
@@ -236,16 +287,6 @@ export function AppLayout({ type, children }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Notificaciones (simple para todos los tipos) */}
-              <Link href={`/${type}/notifications`}>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs text-white flex items-center justify-center p-0">
-                    3
-                  </Badge>
-                </Button>
-              </Link>
-
               {/* Menú usuario */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -276,16 +317,6 @@ export function AppLayout({ type, children }: AppLayoutProps) {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href={`/${type}/profile`}
-                      className="flex items-center"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}

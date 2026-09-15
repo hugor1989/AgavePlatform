@@ -386,8 +386,10 @@ export function Video360Player({
         </div>
       )}
 
-      {/* Óvalo de cabecera (centrado, arriba) */}
-      {showControls && headingNumber != null && (
+      {/* Óvalo de cabecera (centrado, arriba) — solo en videos de cabecera
+          (sin línea); en videos de línea solo se muestran las flechas y el
+          círculo de línea de la derecha. */}
+      {showControls && headingNumber != null && lineNumber == null && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-sm font-semibold px-5 py-1.5 rounded-full shadow-md pointer-events-none">
           Cabecera {headingNumber}
         </div>
@@ -400,10 +402,11 @@ export function Video360Player({
         </div>
       )}
 
-      {/* Navegación entre videos por línea (centrada, a la derecha): cada
-          flecha en su propio recuadro negro, el círculo de línea flota
-          libre entre ambos, sin fondo propio. */}
-      {lineNumber != null && onNavigate && (
+      {/* Navegación entre videos (centrada, a la derecha): cada flecha en su
+          propio recuadro negro. El indicador del centro muestra el círculo
+          azul con el número de línea en videos de línea, o una píldora
+          naranja "Cabecera" en videos de cabecera (sin línea). */}
+      {onNavigate && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
           <Button
             variant="ghost"
@@ -416,12 +419,18 @@ export function Video360Player({
             <ChevronUp className="h-5 w-5" />
           </Button>
 
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm shadow-md">
-              {lineNumber}
+          {lineNumber != null ? (
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm shadow-md">
+                {lineNumber}
+              </div>
+              <span className="text-white text-[10px] leading-none drop-shadow">Línea</span>
             </div>
-            <span className="text-white text-[10px] leading-none drop-shadow">Línea</span>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center rounded-full bg-orange-500 text-white font-bold text-xs px-3 py-2 shadow-md whitespace-nowrap">
+              Cabecera {headingNumber}
+            </div>
+          )}
 
           <Button
             variant="ghost"
