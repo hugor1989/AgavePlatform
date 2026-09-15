@@ -361,7 +361,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                       <div>
                         <p className="text-sm text-gray-500">Edad</p>
                         <p className="text-sm font-medium text-gray-900">
-                          {huerta.age ?? "-"}
+                          {huerta.age_formatted || (huerta.age != null ? `${huerta.age} años` : "-")}
                         </p>
                       </div>
                     </div>

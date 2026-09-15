@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { InstallAppButton } from "@/components/InstallAppButton"
 import { AuthProvider } from '@/hooks/useAuth' // 👈 importa tu AuthProvider
 
 
@@ -52,10 +53,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192x192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   appleWebApp: {
     capable: true,
@@ -91,22 +93,17 @@ export default function RootLayout({
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="msapplication-TileColor" content="#0d9488" />
         <meta name="msapplication-tap-highlight" content="no" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
-       {/* 🧹 SCRIPT TEMPORAL PARA LIMPIAR SW - ELIMINAR DESPUÉS DE 1 SEMANA */}
+        {/* Registra el service worker — requisito para que Chrome/Android
+            ofrezca instalar la app (evento beforeinstallprompt). */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                  for(let registration of registrations) {
-                    registration.unregister();
-                  }
-                });
-                caches.keys().then(function(names) {
-                  for (let name of names) {
-                    caches.delete(name);
-                  }
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
                 });
               }
             `,
@@ -119,6 +116,7 @@ export default function RootLayout({
           <AuthProvider>
             {children}
             <Toaster />
+            <InstallAppButton />
           </AuthProvider>
         </ThemeProvider>
         

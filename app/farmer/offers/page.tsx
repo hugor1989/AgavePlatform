@@ -449,11 +449,12 @@ export default function FarmerOffersPage() {
                   >
                     {/* ── Precio final al tope (solo visible tras revisión del admin) ── */}
                     {offer.status !== "pendiente" && offer.farmer_price !== null && (
-                      <div className="bg-blue-50 border-b border-blue-200 p-4 text-center">
-                        <p className="text-xs font-medium text-blue-700 mb-1">Tu precio de venta</p>
-                        <p className="text-2xl font-bold text-blue-900">
+                      <div className="bg-green-50 border-b border-green-200 p-4 text-center">
+                        <p className="text-xs font-medium text-green-700 mb-1">Tu precio de venta</p>
+                        <p className="text-2xl font-bold text-green-900">
                           ${Number(offer.farmer_price).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                         </p>
+                        <p className="text-xs font-medium text-green-700 mt-1">Libre de gastos</p>
                       </div>
                     )}
 
