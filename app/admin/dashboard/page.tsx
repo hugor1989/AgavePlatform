@@ -24,6 +24,7 @@ import { orchardService, Orchard } from "@/services/orchardService"
 import { companiService } from "@/services/companiService"
 import { toast } from "sonner"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
+import { JimaStoryFullscreenViewer } from "@/components/huertas/JimaStoryFullscreenViewer"
 
 export default function AdminDashboard() {
   const { isAuthenticated, isLoading } = useRequireAuth()
@@ -45,10 +46,8 @@ export default function AdminDashboard() {
   const [isUploading, setIsUploading]               = useState(false)
   const fileInputRef                                = useRef<HTMLInputElement>(null)
 
-  // Video playback dialog
-  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
-  const [videoUrl, setVideoUrl]               = useState<string | null>(null)
-  const [loadingVideo, setLoadingVideo]       = useState(false)
+  // Video playback
+  const [viewerIndex, setViewerIndex]         = useState<number | null>(null)
   const [deletingId, setDeletingId]           = useState<number | null>(null)
   const [thumbnails, setThumbnails]           = useState<Record<number, string>>({})
   const blobUrlCache                          = useRef<Record<number, string>>({})
@@ -144,27 +143,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const handlePlay = async (story: JimaStory) => {
-    setVideoDialogOpen(true)
-    // Reutiliza el blob URL ya cacheado por el thumbnail
-    const cached = blobUrlCache.current[story.id]
-    if (cached) {
-      setVideoUrl(cached)
-      setLoadingVideo(false)
-      return
-    }
-    setVideoUrl(null)
-    setLoadingVideo(true)
-    try {
-      const url = await jimaStoryService.getVideoUrl(story.id)
-      blobUrlCache.current[story.id] = url
-      setVideoUrl(url)
-    } catch {
-      toast.error("No se pudo cargar el video.")
-      setVideoDialogOpen(false)
-    } finally {
-      setLoadingVideo(false)
-    }
+  const getVideoUrl = async (storyId: number) => {
+    const cached = blobUrlCache.current[storyId]
+    if (cached) return cached
+    const url = await jimaStoryService.getVideoUrl(storyId)
+    blobUrlCache.current[storyId] = url
+    return url
   }
 
   const handleDelete = async (id: number) => {
@@ -346,7 +330,7 @@ export default function AdminDashboard() {
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
-                  <div onClick={() => handlePlay(story)} className="cursor-pointer">
+                  <div onClick={() => setViewerIndex(activeStories.indexOf(story))} className="cursor-pointer">
                     <HuertaVideoCard
                       thumbnailUrl={thumbnails[story.id]}
                       huerta={{
@@ -406,17 +390,18 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Dialog reproducir video */}
-      <Dialog open={videoDialogOpen} onOpenChange={setVideoDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>Video de Jima</DialogTitle></DialogHeader>
-          {loadingVideo ? (
-            <p className="text-center text-gray-500 py-8">Cargando video...</p>
-          ) : videoUrl ? (
-            <video src={videoUrl} className="w-full rounded-lg" controls autoPlay />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      <JimaStoryFullscreenViewer
+        open={viewerIndex !== null}
+        stories={activeStories.map((s) => ({
+          id: s.id,
+          orchardName: s.orchard?.name ?? `Huerta #${s.orchard_id}`,
+          farmerName: s.farmer?.full_name ?? "—",
+          daysRemaining: getDaysRemaining(s.expires_at),
+        }))}
+        startIndex={viewerIndex ?? 0}
+        getVideoUrl={getVideoUrl}
+        onClose={() => setViewerIndex(null)}
+      />
     </AppLayout>
   )
 }

@@ -142,6 +142,18 @@ export function SaleCardsPanel({
       day: "numeric",
     });
 
+  // Para fechas sin hora (YYYY-MM-DD) — new Date(string) las interpreta como
+  // UTC medianoche y, al convertir a hora local (México, UTC-6), muestra el
+  // día anterior. Se arman los componentes en hora local para evitar el salto.
+  const formatDateOnly = (d: string) => {
+    const [y, m, day] = d.substring(0, 10).split("-").map(Number);
+    return new Date(y, m - 1, day).toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   const handleUploadGuide = async (
     tripId: number,
     saleId: number,
@@ -1041,7 +1053,7 @@ export function SaleCardsPanel({
                         <div className="bg-gray-50 px-4 py-2 flex items-center gap-2 border-b border-gray-200">
                           <Calendar className="w-4 h-4 text-teal-600" />
                           <span className="font-semibold text-sm text-gray-800">
-                            {formatDate(date)}
+                            {formatDateOnly(date)}
                           </span>
                           <span className="ml-auto text-xs text-gray-500">
                             {dayTrips.length} viaje

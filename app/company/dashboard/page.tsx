@@ -1,18 +1,16 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { Play } from "lucide-react"
 import HuertaVideoCard from "@/components/huertas/HuertaVideoCard"
-import { JimaStoryVideoModal } from "@/components/huertas/JimaStoryVideoModal"
+import { JimaStoryFullscreenViewer } from "@/components/huertas/JimaStoryFullscreenViewer"
 import { AppLayout } from "@/components/layouts/app-layout"
 import { jimaStoryService, JimaStory } from "@/services/jimaStoryService"
-import { toast } from "sonner"
 
 export default function CompanyDashboard() {
   const [stories, setStories] = useState<JimaStory[]>([])
   const [loading, setLoading] = useState(true)
-  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-  const [loadingVideo, setLoadingVideo] = useState(false)
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null)
   const [thumbnails, setThumbnails] = useState<Record<number, string>>({})
   const blobUrlCache = useRef<Record<number, string>>({})
 
@@ -66,27 +64,12 @@ export default function CompanyDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stories])
 
-  const handlePlay = async (story: JimaStory) => {
-    setVideoUrl(null)
-    setVideoDialogOpen(true)
-    setLoadingVideo(true)
-    // Reutiliza el blob URL ya cacheado por el thumbnail
-    const cached = blobUrlCache.current[story.id]
-    if (cached) {
-      setVideoUrl(cached)
-      setLoadingVideo(false)
-      return
-    }
-    try {
-      const url = await jimaStoryService.getVideoUrl(story.id)
-      blobUrlCache.current[story.id] = url
-      setVideoUrl(url)
-    } catch {
-      toast.error("No se pudo cargar el video.")
-      setVideoDialogOpen(false)
-    } finally {
-      setLoadingVideo(false)
-    }
+  const getVideoUrl = async (storyId: number) => {
+    const cached = blobUrlCache.current[storyId]
+    if (cached) return cached
+    const url = await jimaStoryService.getVideoUrl(storyId)
+    blobUrlCache.current[storyId] = url
+    return url
   }
 
   const getDaysRemaining = (expiresAt: string) => {
@@ -97,24 +80,29 @@ export default function CompanyDashboard() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })
 
-  const active = stories.filter(s => !s.is_expired)
+  const activeStories = stories.filter(s => !s.is_expired)
+  const expiredStories = stories.filter(s => s.is_expired)
 
   return (
     <AppLayout type="company">
       <div className="min-w-0 overflow-x-hidden">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Historias de Jima</h1>
-            <p className="text-gray-500 text-sm">Videos recientes de jimas activas</p>
+            <h1 className="flex items-center gap-2 text-lg sm:text-xl font-semibold text-gray-900">
+              <Play className="h-5 w-5 text-teal-600" />
+              Historias de Jimas
+            </h1>
+            <p className="text-sm text-gray-600">Videos recientes del proceso de jima en las huertas.</p>
           </div>
 
           {loading ? (
             <p className="text-gray-500 text-sm">Cargando historias...</p>
-          ) : active.length === 0 ? (
-            <p className="text-gray-500 text-sm">No hay historias activas por el momento.</p>
+          ) : stories.length === 0 ? (
+            <p className="text-gray-500 text-sm">No hay historias creadas aún.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {active.map((story) => (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeStories.map((story) => (
                   <HuertaVideoCard
                     key={story.id}
                     thumbnailUrl={thumbnails[story.id]}
@@ -127,27 +115,57 @@ export default function CompanyDashboard() {
                       municipality: story.orchard?.municipality ?? "—",
                       daysRemaining: getDaysRemaining(story.expires_at),
                       createdAt: formatDate(story.created_at),
-                      expired: story.is_expired,
+                      expired: false,
                       companyName: story.company?.business_name ?? null,
                       plantQuantity: story.plant_quantity ?? null,
                     }}
-                    onPlay={() => handlePlay(story)}
+                    onPlay={() => setViewerIndex(activeStories.indexOf(story))}
                   />
                 ))}
+              </div>
+
+              {expiredStories.length > 0 && (
+                <>
+                  <p className="text-sm font-medium text-gray-500">Expiradas</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+                    {expiredStories.map((story) => (
+                      <HuertaVideoCard
+                        key={story.id}
+                        thumbnailUrl={thumbnails[story.id]}
+                        huerta={{
+                          id: story.id,
+                          orchardName: story.orchard?.name ?? `Huerta #${story.orchard_id}`,
+                          farmerName: story.farmer?.full_name ?? "—",
+                          agaveType: story.orchard?.agave_type?.name ?? "—",
+                          state: story.orchard?.state ?? "—",
+                          municipality: story.orchard?.municipality ?? "—",
+                          daysRemaining: 0,
+                          createdAt: formatDate(story.created_at),
+                          expired: true,
+                          companyName: story.company?.business_name ?? null,
+                          plantQuantity: story.plant_quantity ?? null,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
-
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-sm">Has visto todas las historias recientes</p>
-          </div>
         </div>
       </div>
 
-      <JimaStoryVideoModal
-        open={videoDialogOpen}
-        videoUrl={videoUrl}
-        loading={loadingVideo}
-        onClose={() => setVideoDialogOpen(false)}
+      <JimaStoryFullscreenViewer
+        open={viewerIndex !== null}
+        stories={activeStories.map((s) => ({
+          id: s.id,
+          orchardName: s.orchard?.name ?? `Huerta #${s.orchard_id}`,
+          farmerName: s.farmer?.full_name ?? "—",
+          daysRemaining: getDaysRemaining(s.expires_at),
+        }))}
+        startIndex={viewerIndex ?? 0}
+        getVideoUrl={getVideoUrl}
+        onClose={() => setViewerIndex(null)}
       />
     </AppLayout>
   )

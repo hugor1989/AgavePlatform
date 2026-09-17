@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface LogoProps {
@@ -5,23 +6,29 @@ interface LogoProps {
   className?: string
 }
 
-export function Logo({ size = "md", className }: LogoProps) {
-  const sizeClasses = {
-    sm: "w-8 h-8",
-    md: "w-12 h-12",
-    lg: "w-16 h-16",
-  }
+const sizeClasses = {
+  sm: "w-8 h-8",
+  md: "w-12 h-12",
+  lg: "w-16 h-16",
+}
 
+const sizePx = {
+  sm: 32,
+  md: 48,
+  lg: 64,
+}
+
+export function Logo({ size = "md", className }: LogoProps) {
   return (
     <div className={cn("flex items-center justify-center", className)}>
-      <div
-        className={cn(
-          "rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white font-bold shadow-lg",
-          sizeClasses[size],
-        )}
-      >
-        <span className={cn("font-bold", size === "sm" ? "text-xs" : size === "md" ? "text-lg" : "text-2xl")}>PA</span>
-      </div>
+      <Image
+        src="/logo_agave.jpeg"
+        alt="Agave"
+        width={sizePx[size]}
+        height={sizePx[size]}
+        className={cn("rounded-full object-cover shadow-lg", sizeClasses[size])}
+        priority
+      />
     </div>
   )
 }

@@ -796,23 +796,23 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                         <span className="text-2xl font-bold text-blue-600">{orchard.plant_quantity.toLocaleString()}</span>
                       </div>
 
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <MapPin className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-500">Estado</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Estado</p>
+                            <p className="text-sm font-medium text-gray-900">{orchard.state || 'N/A'}</p>
                           </div>
-                          <span className="text-sm font-medium text-gray-900 ml-6">{orchard.state || 'N/A'}</span>
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="w-4 h-4 flex items-center justify-center">
-                              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                            </div>
-                            <span className="text-sm text-gray-500">Municipio</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
                           </div>
-                          <span className="text-sm font-medium text-gray-900 ml-6">{orchard.municipality || 'N/A'}</span>
+                          <div>
+                            <p className="text-sm text-gray-500">Municipio</p>
+                            <p className="text-sm font-medium text-gray-900">{orchard.municipality || 'N/A'}</p>
+                          </div>
                         </div>
                       </div>
 

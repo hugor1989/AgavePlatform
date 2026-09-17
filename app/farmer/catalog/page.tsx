@@ -311,17 +311,19 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Estado</p>
                       <p className="text-sm font-medium text-gray-900">{huerta.state}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full mt-2" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    </div>
                     <div>
                       <p className="text-sm text-gray-500">Municipio</p>
                       <p className="text-sm font-medium text-gray-900">{huerta.municipality}</p>

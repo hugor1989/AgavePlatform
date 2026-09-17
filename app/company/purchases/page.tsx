@@ -37,6 +37,16 @@ import { orchardService } from "@/services/orchardService";
 import { jimaTripService, JimaTrip } from "@/services/jimaTripService";
 import { toast } from "sonner";
 
+// Formatea un Date a "YYYY-MM-DD" en hora LOCAL — toISOString() convierte a
+// UTC y en zonas horarias negativas (México) puede devolver el día anterior,
+// haciendo que el backend rechace "hoy" como fecha pasada (422).
+const toLocalDateStr = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 export default function CompanyPurchasesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sales, setSales] = useState<OrchardSale[]>([]);
@@ -188,7 +198,7 @@ export default function CompanyPurchasesPage() {
     if (!jimaSale || !selectedDate || !numTrips) return;
     setIsSavingJima(true);
     try {
-      const dateStr = selectedDate.toISOString().split("T")[0];
+      const dateStr = toLocalDateStr(selectedDate);
       const newTrips = await jimaTripService.schedule(
         jimaSale.id,
         dateStr,
@@ -976,9 +986,7 @@ export default function CompanyPurchasesPage() {
                                       type="date"
                                       className="text-sm border border-gray-300 rounded px-2 py-1 flex-1"
                                       value={editingGroupNewDate}
-                                      min={
-                                        new Date().toISOString().split("T")[0]
-                                      }
+                                      min={toLocalDateStr(new Date())}
                                       onChange={(e) =>
                                         setEditingGroupNewDate(e.target.value)
                                       }

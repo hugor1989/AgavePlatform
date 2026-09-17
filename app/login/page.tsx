@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { Logo } from '@/components/logo'
+import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 
 import { alert } from "@/lib/alert"
@@ -73,7 +73,14 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Logo size="lg" />
+            <Image
+              src="/logo_agave.jpeg"
+              alt="Agave"
+              width={96}
+              height={96}
+              className="rounded-full object-cover w-24 h-24 shadow-lg"
+              priority
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-teal-800">Productores Agave</CardTitle>
           <CardDescription>Inicia sesión en tu cuenta</CardDescription>
