@@ -104,6 +104,23 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
     onClose()
   }
 
+  // En escritorio, salir del fullscreen nativo (ESC o la X del navegador)
+  // cierra el visor por completo en vez de dejarlo reproduciéndose en ventana.
+  // En móviles/tablets no: ahí el navegador sale del fullscreen por gestos y
+  // cerrar el visor rompía la reproducción — allí solo se cierra con la X.
+  const handleCloseRef = useRef(handleClose)
+  handleCloseRef.current = handleClose
+  useEffect(() => {
+    if (!isOpen) return
+    const isDesktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches
+    if (!isDesktop) return
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) handleCloseRef.current()
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+  }, [isOpen])
+
   // Bloquear el scroll de la página de fondo mientras el popup está abierto.
   // overflow:hidden en el body no basta en iOS Safari (el "rubber-banding"
   // sigue moviendo el fondo con gestos táctiles) — hay que fijar el body con
@@ -145,10 +162,9 @@ export function OrchardVideosModal({ orchardId, orchardName, isOpen, onClose }: 
   const cabeceraVideos = videos.filter((v) => v.line_number == null)
   const lineVideos = videos.filter((v) => v.line_number != null)
 
-  // Las flechas de navegación se quedan dentro del mismo tipo que el video
-  // actual: desde una cabecera solo se salta a otras cabeceras, desde una
-  // línea solo a otras líneas.
-  const navList = selected && selected.line_number == null ? cabeceraVideos : lineVideos
+  // Las flechas recorren la huerta en orden: Cabecera 1, sus líneas,
+  // Cabecera 2, sus líneas... (`videos` ya viene ordenado así).
+  const navList = videos
 
   return (
     <div ref={setFullscreenRef} className="fixed inset-0 z-[200] bg-black flex flex-col">

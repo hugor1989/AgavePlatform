@@ -411,7 +411,7 @@ export function Video360Player({
           <Button
             variant="ghost"
             size="sm"
-            className="text-white hover:text-white hover:bg-white/20 bg-black/50 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
+            className="text-white hover:text-white bg-black/50 hover:bg-black/50 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/20 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
             disabled={!hasNext}
             onClick={() => onNavigate("next")}
             title="Video siguiente"
@@ -435,7 +435,7 @@ export function Video360Player({
           <Button
             variant="ghost"
             size="sm"
-            className="text-white hover:text-white hover:bg-white/20 bg-black/50 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
+            className="text-white hover:text-white bg-black/50 hover:bg-black/50 [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white/20 h-9 w-9 p-0 rounded-lg disabled:opacity-30"
             disabled={!hasPrev}
             onClick={() => onNavigate("prev")}
             title="Video anterior"

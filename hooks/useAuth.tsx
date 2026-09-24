@@ -39,6 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.data) {
         setUser(response.data)
         localStorage.setItem('auth_user', JSON.stringify(response.data))
+        // InstallAppButton lo lee para mostrar el aviso de instalar la app
+        // una vez tras iniciar sesión.
+        try {
+          sessionStorage.setItem('agave_install_after_login', '1')
+        } catch {
+          // sessionStorage no disponible — simplemente no se muestra el aviso
+        }
       }
       return response
     } finally {

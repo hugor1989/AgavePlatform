@@ -198,13 +198,13 @@ export default function CompanyNegotiations() {
   return (
     <AppLayout type="company">
       <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
-        <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">
+        <div className="w-full max-w-7xl mx-auto">
           <div className="space-y-4 sm:space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Mis Negociaciones
               </h1>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Seguimiento de todas tus ofertas enviadas
               </p>
             </div>
@@ -223,8 +223,8 @@ export default function CompanyNegotiations() {
               <p className="text-gray-500">Cargando ofertas...</p>
             ) : (
               <Tabs defaultValue="all" className="w-full">
-                <div className="overflow-x-auto">
-                  <TabsList className="grid w-full grid-cols-5 mb-4 sm:mb-6 min-w-max">
+                <div className="overflow-x-auto -mx-1 px-1 pb-1">
+                  <TabsList className="inline-flex w-max justify-start mb-4 sm:mb-6 md:grid md:w-full md:grid-cols-5">
                     <TabsTrigger
                       value="all"
                       className="text-xs sm:text-sm whitespace-nowrap"
@@ -260,7 +260,7 @@ export default function CompanyNegotiations() {
 
                 <TabsContent value="all" className="w-full">
                   {filtered.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {filtered.map((o) => (
                         <OfferCard key={o.id} offer={o} />
                       ))}
@@ -272,7 +272,7 @@ export default function CompanyNegotiations() {
 
                 <TabsContent value="process" className="w-full">
                   {byStatus("pendiente").length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {byStatus("pendiente").map((o) => (
                         <OfferCard key={o.id} offer={o} />
                       ))}
@@ -284,7 +284,7 @@ export default function CompanyNegotiations() {
 
                 <TabsContent value="sent" className="w-full">
                   {byStatus("revisada").length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {byStatus("revisada").map((o) => (
                         <OfferCard key={o.id} offer={o} />
                       ))}
@@ -296,7 +296,7 @@ export default function CompanyNegotiations() {
 
                 <TabsContent value="accepted" className="w-full">
                   {byStatus("aceptada").length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {byStatus("aceptada").map((o) => (
                         <OfferCard key={o.id} offer={o} />
                       ))}
@@ -308,7 +308,7 @@ export default function CompanyNegotiations() {
 
                 <TabsContent value="rejected" className="w-full">
                   {byStatus("rechazada").length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                       {byStatus("rechazada").map((o) => (
                         <OfferCard key={o.id} offer={o} />
                       ))}

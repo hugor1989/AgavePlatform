@@ -101,6 +101,13 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Chrome puede disparar beforeinstallprompt antes de que React
+              // hidrate; se guarda aquí para que InstallAppButton no lo pierda.
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__deferredInstallPrompt = e;
+                window.dispatchEvent(new Event('installpromptready'));
+              });
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').catch(function() {});

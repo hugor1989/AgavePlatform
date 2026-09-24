@@ -267,8 +267,10 @@ export function AppLayout({ type, children }: AppLayoutProps) {
       </aside>
 
       {/* Contenido principal — con margen izquierdo en pantallas grandes para
-          compensar el sidebar, que ahora es `fixed` en todos los tamaños */}
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+          compensar el sidebar, que ahora es `fixed` en todos los tamaños.
+          min-w-0: sin él, contenido ancho (p. ej. tabs que no caben) estira
+          toda la página en móvil en vez de hacer scroll dentro de su caja. */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 lg:ml-64">
         {/* Header */}
         <header className="bg-white shadow-sm border-b h-16">
           <div className="flex items-center justify-between h-full px-6">
