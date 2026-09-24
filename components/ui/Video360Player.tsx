@@ -15,6 +15,7 @@ import {
 
 interface QualityLevel {
   index: number
+  width: number
   height: number
 }
 
@@ -89,10 +90,26 @@ export function Video360Player({
   const fmtTime = (s: number) =>
     `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`
 
-  // El backend solo genera una rendition > 1080p cuando es la resolución
-  // original de la fuente (4K/5.7K/8K), así que cualquier altura > 1080
-  // identifica de forma inequívoca la calidad "Original".
-  const qualityLabel = (height: number) => (height > 1080 ? `Original (${height}p)` : `${height}p`)
+  // Etiquetas estilo YouTube 360: el sufijo "s" (esférico) se basa en el
+  // ancho equirectangular 2:1, no en la altura — p.ej. 3840×1920 es "2160s".
+  // Se usa max(ancho, 2×alto) para tolerar fuentes que no sean exactamente 2:1
+  // (ej. 3840×2160) y un margen del 10% por redondeos del escalado.
+  const QUALITY_TIERS = [
+    { width: 5760, label: "2880s", badge: "5.7K" },
+    { width: 3840, label: "2160s", badge: "4K" },
+    { width: 2880, label: "1440s", badge: "QHD" },
+    { width: 2160, label: "1080s", badge: "Full HD" },
+    { width: 1440, label: "720s", badge: "HD" },
+    { width: 960, label: "480s", badge: null },
+  ]
+
+  const qualityTier = (q?: QualityLevel): { label: string; badge: string | null } => {
+    if (!q) return { label: "", badge: null }
+    const w = Math.max(q.width || 0, q.height * 2)
+    return QUALITY_TIERS.find((t) => w >= t.width * 0.9) ?? { label: `${Math.round(w / 2)}s`, badge: null }
+  }
+
+  const qualityLabel = (q?: QualityLevel) => qualityTier(q).label
 
   const resetView = () => {
     spherical.current = { phi: Math.PI / 2, theta: 0 }
@@ -157,7 +174,7 @@ export function Video360Player({
           hls.attachMedia(video)
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
             const levels: QualityLevel[] = hls!.levels
-              .map((lvl, index) => ({ index, height: lvl.height }))
+              .map((lvl, index) => ({ index, width: lvl.width, height: lvl.height }))
               .sort((a, b) => b.height - a.height)
             setQualityLevels(levels)
             startPlayback()
@@ -498,8 +515,8 @@ export function Video360Player({
                   >
                     <Settings className="h-4 w-4" />
                     {selectedLevel === -1
-                      ? `Auto${activeLevel >= 0 ? ` (${qualityLabel(qualityLevels.find((q) => q.index === activeLevel)?.height ?? 0)})` : ""}`
-                      : qualityLabel(qualityLevels.find((q) => q.index === selectedLevel)?.height ?? 0)}
+                      ? `Auto${activeLevel >= 0 ? ` (${qualityLabel(qualityLevels.find((q) => q.index === activeLevel))})` : ""}`
+                      : qualityLabel(qualityLevels.find((q) => q.index === selectedLevel))}
                   </Button>
                 </DropdownMenuTrigger>
                 {/*
@@ -525,7 +542,14 @@ export function Video360Player({
                       onClick={() => selectQuality(q.index)}
                       className="justify-between"
                     >
-                      {qualityLabel(q.height)}
+                      <span className="flex items-center gap-1.5">
+                        {qualityTier(q).label}
+                        {qualityTier(q).badge && (
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {qualityTier(q).badge}
+                          </span>
+                        )}
+                      </span>
                       {selectedLevel === q.index && <Check className="h-4 w-4" />}
                     </DropdownMenuItem>
                   ))}
