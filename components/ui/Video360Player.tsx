@@ -256,15 +256,24 @@ export function Video360Player({
     })
     ro.observe(mount)
 
-    // ── Mouse drag ─────────────────────────────────────────────
-    const onMouseDown = (e: MouseEvent) => {
+    // ── Arrastre / tap (Pointer Events: mouse y touch unificados) ──
+    // Con touchstart/touchend + mousedown/mouseup por separado, en móviles el
+    // navegador dispara además los eventos de mouse emulados tras el touch, y
+    // togglePlay() corría dos veces (pausa y vuelve a reproducir al instante).
+    // touch-action:none evita que el navegador cancele el gesto para hacer scroll.
+    mount.style.touchAction = "none"
+    const activePointer = { id: -1 }
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return
+      activePointer.id = e.pointerId
       isDragging.current = true
       dragDistance.current = 0
       lastMouse.current = { x: e.clientX, y: e.clientY }
       showControlsTemporarily()
     }
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging.current || e.pointerId !== activePointer.id) return
       const dx = e.clientX - lastMouse.current.x
       const dy = e.clientY - lastMouse.current.y
       lastMouse.current = { x: e.clientX, y: e.clientY }
@@ -272,39 +281,23 @@ export function Video360Player({
       spherical.current.theta -= dx * 0.005
       spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi - dy * 0.005))
     }
-    const onMouseUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
+      if (!isDragging.current || e.pointerId !== activePointer.id) return
       isDragging.current = false
-      // Sin apenas movimiento: fue un click, no un arrastre de cámara.
+      activePointer.id = -1
+      // Sin apenas movimiento: fue un tap/click, no un arrastre de cámara.
       if (dragDistance.current < TAP_THRESHOLD) togglePlay()
     }
-
-    // ── Touch drag ─────────────────────────────────────────────
-    const onTouchStart = (e: TouchEvent) => {
-      isDragging.current = true
-      dragDistance.current = 0
-      lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-      showControlsTemporarily()
-    }
-    const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging.current) return
-      const dx = e.touches[0].clientX - lastMouse.current.x
-      const dy = e.touches[0].clientY - lastMouse.current.y
-      lastMouse.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-      dragDistance.current += Math.abs(dx) + Math.abs(dy)
-      spherical.current.theta -= dx * 0.005
-      spherical.current.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.current.phi - dy * 0.005))
-    }
-    const onTouchEnd = () => {
+    const onPointerCancel = (e: PointerEvent) => {
+      if (e.pointerId !== activePointer.id) return
       isDragging.current = false
-      if (dragDistance.current < TAP_THRESHOLD) togglePlay()
+      activePointer.id = -1
     }
 
-    mount.addEventListener("mousedown", onMouseDown)
-    window.addEventListener("mousemove", onMouseMove)
-    window.addEventListener("mouseup", onMouseUp)
-    mount.addEventListener("touchstart", onTouchStart, { passive: true })
-    window.addEventListener("touchmove", onTouchMove, { passive: true })
-    window.addEventListener("touchend", onTouchEnd)
+    mount.addEventListener("pointerdown", onPointerDown)
+    window.addEventListener("pointermove", onPointerMove)
+    window.addEventListener("pointerup", onPointerUp)
+    window.addEventListener("pointercancel", onPointerCancel)
 
     // Show controls initially then hide
     showControlsTemporarily()
@@ -318,12 +311,10 @@ export function Video360Player({
       setActiveLevel(-1)
       cancelAnimationFrame(frameRef.current)
       ro.disconnect()
-      mount.removeEventListener("mousedown", onMouseDown)
-      window.removeEventListener("mousemove", onMouseMove)
-      window.removeEventListener("mouseup", onMouseUp)
-      mount.removeEventListener("touchstart", onTouchStart)
-      window.removeEventListener("touchmove", onTouchMove)
-      window.removeEventListener("touchend", onTouchEnd)
+      mount.removeEventListener("pointerdown", onPointerDown)
+      window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener("pointerup", onPointerUp)
+      window.removeEventListener("pointercancel", onPointerCancel)
       renderer.dispose()
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
       video.pause()
@@ -336,7 +327,11 @@ export function Video360Player({
   const togglePlay = () => {
     const v = videoRef.current
     if (!v) return
-    if (v.paused) { v.play(); setIsPlaying(true); flashCenterIcon("play") }
+    if (v.paused) {
+      v.play().catch(() => setIsPlaying(false))
+      setIsPlaying(true)
+      flashCenterIcon("play")
+    }
     else { v.pause(); setIsPlaying(false); flashCenterIcon("pause") }
   }
 
