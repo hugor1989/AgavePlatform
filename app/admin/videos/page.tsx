@@ -219,7 +219,7 @@ export default function VideosPage() {
               </div>
             </div>
             <p className="text-xs text-blue-700 mt-1">
-              Formatos aceptados: <strong>MP4, MOV, WEBM</strong>. Tamaño máximo: <strong>2 GB</strong>.
+              Formatos aceptados: <strong>MP4, MOV, WEBM</strong>. Tamaño máximo: <strong>4 GB</strong>.
             </p>
           </CardContent>
         </Card>

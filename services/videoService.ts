@@ -46,7 +46,7 @@ export const videoService = {
           onProgress(Math.round((event.loaded * 100) / event.total))
         }
       },
-      timeout: 1200000, // 20 min — solo cubre la transferencia del archivo
+      timeout: 3600000, // 60 min — solo cubre la transferencia del archivo
     })
     return data.data as OrchardVideo
   },
