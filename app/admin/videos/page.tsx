@@ -30,7 +30,7 @@ import { toast } from "sonner"
 import { videoService, OrchardVideo } from "@/services/videoService"
 import { Video360Player } from "@/components/ui/Video360Player"
 
-const NOMENCLATURE_EXAMPLES = ["HRT-001_2.mp4", "HRT-001_2_15.mp4", "HRT-001_2_15_A.mp4"]
+const NOMENCLATURE_EXAMPLES = ["Id145152_2.mp4", "Id145152_2_15.mp4", "Id145152_2_15_A.mp4"]
 
 // Mismo orden que el backend (más específico primero): con letra, con línea,
 // solo cabecera. {orchard_number} puede contener guiones bajos.
