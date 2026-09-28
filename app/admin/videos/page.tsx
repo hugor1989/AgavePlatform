@@ -87,7 +87,7 @@ export default function VideosPage() {
   // navegador que disparó la subida siga abierto.
   useEffect(() => {
     if (!videos.some((v) => v.status === 'processing')) return
-    const interval = setInterval(loadVideos, 5000)
+    const interval = setInterval(loadVideos, 60000)
     return () => clearInterval(interval)
   }, [videos])
 
@@ -314,6 +314,15 @@ export default function VideosPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {videos.some((v) => v.status === 'processing') && (
+              <div className="flex items-start gap-2 rounded-lg p-3 mb-4 text-sm bg-amber-50 border border-amber-200 text-amber-800">
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                <p>
+                  Hay videos en procesamiento. El estado se actualiza automáticamente cada 1 minuto;
+                  también puedes recargar la página para ver el avance.
+                </p>
+              </div>
+            )}
             {isLoading ? (
               <p className="text-center text-gray-500 py-8">Cargando videos...</p>
             ) : filtered.length === 0 ? (
