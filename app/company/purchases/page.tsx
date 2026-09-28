@@ -36,6 +36,7 @@ import { saleService, OrchardSale } from "@/services/saleService";
 import { orchardService } from "@/services/orchardService";
 import { jimaTripService, JimaTrip } from "@/services/jimaTripService";
 import { toast } from "sonner";
+import { shareLocation } from "@/lib/share";
 
 // Formatea un Date a "YYYY-MM-DD" en hora LOCAL — toISOString() convierte a
 // UTC y en zonas horarias negativas (México) puede devolver el día anterior,
@@ -155,17 +156,7 @@ export default function CompanyPurchasesPage() {
     window.open(finalUrl, "_blank");
   };
 
-  const handleShareLocation = async (url: string) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ url });
-      } catch {
-        /* cancelled */
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-    }
-  };
+  const handleShareLocation = (url: string) => shareLocation(url);
 
   const openJimaDialog = async (sale: OrchardSale) => {
     setJimaSale(sale);

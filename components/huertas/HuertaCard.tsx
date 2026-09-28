@@ -15,6 +15,7 @@ import {
   Share2,
   ImageIcon,
 } from "lucide-react"
+import { shareLocation } from "@/lib/share"
 
 interface Huerta {
   id: string | number
@@ -130,7 +131,13 @@ export default function HuertaCard({
               <p className="text-sm text-green-700 font-medium">Ubicación</p>
               <p className="text-sm font-mono text-green-800">{huerta.location}</p>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-green-100">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-green-100"
+              aria-label="Compartir ubicación"
+              onClick={() => shareLocation(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(huerta.location)}`)}
+            >
               <Share2 className="w-4 h-4 text-green-700" />
             </Button>
           </div>

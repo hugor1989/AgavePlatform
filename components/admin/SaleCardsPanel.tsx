@@ -39,6 +39,7 @@ import { OrchardSale } from "@/services/saleService";
 import { JimaTrip, jimaTripService } from "@/services/jimaTripService";
 import { orchardService } from "@/services/orchardService";
 import { saleService } from "@/services/saleService";
+import { shareLocation } from "@/lib/share";
 
 interface SaleCardsPanelProps {
   sales: OrchardSale[];
@@ -116,22 +117,7 @@ export function SaleCardsPanel({
     }
   };
 
-  const handleShareLocation = async (url: string) => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Ubicación de la huerta",
-          text: "Mira la ubicación de esta huerta",
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success("Enlace copiado al portapapeles");
-      }
-    } catch (error) {
-      console.error("Error al compartir ubicación:", error);
-    }
-  };
+  const handleShareLocation = (url: string) => shareLocation(url);
 
   const tripsOf = (saleId: number) => tripsMap[saleId] ?? [];
 

@@ -29,6 +29,7 @@ import { orchardService, OrchardFormData } from "@/services/orchardService"
 import { useFarmers } from "@/hooks/useFarmers"
 import { useAgaveTypes } from "@/hooks/useAgaveTypes"
 import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
+import { shareLocation } from "@/lib/share"
 
 
 export default function AdminHuertasPage() {
@@ -251,22 +252,7 @@ export default function AdminHuertasPage() {
     }
   }
 
-  const handleShareLocation = async (url: string) => {
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Ubicación de la huerta",
-        text: "Mira la ubicación de esta huerta",
-        url,
-      })
-    } else {
-      await navigator.clipboard.writeText(url)
-      toast.success("Enlace copiado al portapapeles")
-    }
-  } catch (error) {
-    console.error("Error al compartir ubicación:", error)
-  }
-}
+  const handleShareLocation = (url: string) => shareLocation(url)
 
 const handleTouchStart = (e: React.TouchEvent) => {
   touchStartX.current = e.touches[0].clientX

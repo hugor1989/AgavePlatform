@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/layouts/app-layout"
 import { orchardService } from "@/services/orchardService"
 import { ZoomableImage } from "@/components/ui/ZoomableImage"
 import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
+import { shareLocation } from "@/lib/share"
 
 export default function FarmerHuertasPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -136,22 +137,7 @@ const handleTouchEnd = (e: React.TouchEvent, huertaId: number) => {
     }
   }
 
-  const handleShareLocation = async (url: string) => {
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Ubicación de la huerta",
-        text: "Mira la ubicación de esta huerta",
-        url,
-      })
-    } else {
-      await navigator.clipboard.writeText(url)
-      //toast.success("Enlace copiado al portapapeles")
-    }
-  } catch (error) {
-    console.error("Error al compartir ubicación:", error)
-  }
-}
+  const handleShareLocation = (url: string) => shareLocation(url)
 
   const handleViewPhoto = (photoPath: string | null) => {
       const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"

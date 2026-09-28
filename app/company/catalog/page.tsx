@@ -31,6 +31,7 @@ import { OrchardVideosModal } from "@/components/huertas/OrchardVideosModal"
 import { offerService } from "@/services/offerService"
 import { alert } from "@/lib/alert"
 import { toast } from "sonner"
+import { shareLocation } from "@/lib/share"
 
 const emptyForm = {
   price: "",
@@ -159,17 +160,7 @@ export default function CompanyCatalogPage() {
     }
   }
 
-  const handleShareLocation = async (url: string) => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Ubicación de la huerta", text: "Mira la ubicación de esta huerta", url })
-      } else {
-        await navigator.clipboard.writeText(url)
-      }
-    } catch (error) {
-      console.error("Error al compartir ubicación:", error)
-    }
-  }
+  const handleShareLocation = (url: string) => shareLocation(url)
 
   const handleViewPhoto = (photoPath: string | null) => {
     const photoUrl = orchardService.getPhotoUrl(photoPath) || "/placeholder.svg"
